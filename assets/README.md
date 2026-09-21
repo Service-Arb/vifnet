@@ -2,7 +2,7 @@
 
 ### Categories
 
-- `before_after_<room>` — transformation pairs or comparison imagery, named for the cleaned space.
+- `before_after_<room>` — transformation pairs or comparison imagery, named for the cleaned space; descriptive qualifiers such as `luxury` or `vertical` may follow the prefix.
 - `final_<space>_<number>` — finished spaces and portfolio scenes, named for the space or property.
 - `staff_in_<setting>_<number>` — staff or service scenes, named for the setting.
 
