@@ -1,0 +1,39 @@
+@import "tailwindcss";
+@import "@evinvest/uikit/styles/tokens.css";
+/* Generated from assets/brand.toml by `npm run palette`; a test holds the
+ * committed copy to its source. */
+@import "./brand.css";
+
+/* The kit and the marketing layer ship class literals in their bundles, which
+ * Tailwind's detection skips with the rest of node_modules. */
+@source "../node_modules/@evinvest/uikit/dist";
+@source "../node_modules/@evinvest/marketing/dist";
+
+/* Layout scalars the kit's `Section` reads. Placeholder geometry until the
+ * design exists; scoped to the brand so it outranks the kit's defaults. */
+[data-brand="vifnet"] {
+  --page-min-px: 1.25rem;
+  --page-max: 72rem;
+  --page-px: max(var(--page-min-px), (100% - var(--page-max)) / 2);
+  --measure: 40rem;
+  --band-py: 4rem;
+  --band-py-tight: 2.5rem;
+}
+
+@media (min-width: 768px) {
+  [data-brand="vifnet"] {
+    --page-min-px: 3rem;
+    --band-py: 6rem;
+    --band-py-tight: 3rem;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background font-sans text-ink antialiased;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}

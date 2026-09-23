@@ -1,0 +1,95 @@
+# TEMPORARY. There is no Vifnet design yet; this palette exists so the site
+# builds on the kit's token contract and `evinvest-palette` has both scopes to
+# check. Replace it wholesale when the Figma file lands — nothing here is a
+# brand decision.
+#
+# The brand's single source for colour, in the `@evinvest/uikit` token
+# vocabulary. `npm run palette` emits `app/brand.css` from it and fails on a
+# hole in either scope or a pair under the kit's contrast floors; a test holds
+# the committed copy to this file.
+#
+# Two scopes, because a `<Section polarity=…>` re-themes its subtree: both carry
+# every name. A surface takes its ink from its scope; a filled role carries its
+# own `on-*`. Accents are ordered quiet to loud (ev_lib docs/spec/accents.md);
+# trace/debug/info share one quiet value until a design separates them.
+#
+# Values only, no layout: geometry lives in `app/globals.css`.
+
+wordmark = ["VIF", "NET"] # the second half takes primary
+
+[colors.light]
+background = "#ffffff"
+card = "#f4f8f7"
+muted = "#d3e2df"
+popover = "#ffffff"
+hover = "#e8f0ee"
+ink = "#0b1f1d"
+ink-mid = "#2f4a47"
+ink-soft = "#566f6b"
+border = "#d7e3e0"
+input = "#d7e3e0"
+ring = "#0f7a6c"
+brand = "#0c2f2c"
+primary = "#0f7a6c"
+on-primary = "#ffffff"
+primary-ink = "#0c6a5e"
+secondary = "#e8f0ee"
+on-secondary = "#0b1f1d"
+positive = "#1e8a5a"
+on-positive = "#ffffff"
+accent-trace = "#566f6b"
+on-accent-trace = "#ffffff"
+accent-debug = "#566f6b"
+on-accent-debug = "#ffffff"
+accent-info = "#566f6b"
+on-accent-info = "#ffffff"
+accent-warn = "#d9892f"
+on-accent-warn = "#0b1f1d"
+accent-error = "#c8352a"
+on-accent-error = "#ffffff"
+chart-1 = "#0c6a5e"
+chart-2 = "#1e8a5a"
+chart-3 = "#d9892f"
+chart-4 = "#c8352a"
+chart-5 = "#0c2f2c"
+
+[colors.dark]
+background = "#071a18"
+card = "#0c2f2c"
+muted = "#134440"
+popover = "#134440"
+hover = "#134440"
+ink = "#ffffff"
+ink-mid = "#d2e3e0"
+ink-soft = "#a3c0bb"
+border = "#1c4a45"
+input = "#1c4a45"
+ring = "#3cc2ad"
+brand = "#0c2f2c"
+primary = "#3cc2ad"
+on-primary = "#071a18"
+primary-ink = "#5fd3c0"
+secondary = "#134440"
+on-secondary = "#ffffff"
+positive = "#2fae74"
+on-positive = "#071a18"
+accent-trace = "#a3c0bb"
+on-accent-trace = "#071a18"
+accent-debug = "#a3c0bb"
+on-accent-debug = "#071a18"
+accent-info = "#a3c0bb"
+on-accent-info = "#071a18"
+accent-warn = "#e39a45"
+on-accent-warn = "#071a18"
+accent-error = "#e0564b"
+on-accent-error = "#071a18"
+chart-1 = "#5fd3c0"
+chart-2 = "#2fae74"
+chart-3 = "#e39a45"
+chart-4 = "#e0564b"
+chart-5 = "#a3c0bb"
+
+[fonts]
+# The kit's defaults until the design picks faces; self-hosting comes with them.
+display = "Inter"
+text = "Inter"
