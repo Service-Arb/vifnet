@@ -14,10 +14,12 @@ a site with or without a domain — which is how the tests exercise both.
 
 ## A place without an address
 
-Vifnet goes to its customers. `Place.presence` is a union: a `storefront` has
-an address, a `service-area` has only `kind` — there is no field a placeholder
-address could be written into. The JSON-LD follows: a service-area business
-names `areaServed`, never `address`, `geo` or a map.
+Vifnet goes to its customers. `Place.presence` is only `{ kind: "service-area" }`
+and a service area is a list of named communes: there is no field a
+placeholder address or a coordinate could be written into, and
+`tests/place.test.ts` holds that at compile time. The storefront half of the
+landing model belongs with a shared package, not here. The JSON-LD follows: the
+business names `areaServed` cities, never `address`, `geo` or a map.
 
 ## Nothing is indexable yet
 
