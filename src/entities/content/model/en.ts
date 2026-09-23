@@ -6,7 +6,7 @@ export const EN = {
     home: {
       title: "Vifnet — cleaning for homes and premises",
       description:
-        "Vifnet cleans homes and premises: regular cleaning, deep cleans, end of tenancy, after building works, upholstery and outdoor areas. Site in preparation.",
+        "Vifnet cleans homes and premises: deep cleans, after building works, upholstery and outdoor areas. Site in preparation.",
     },
   },
   home: {
@@ -17,9 +17,7 @@ export const EN = {
     servicesTitle: "What we clean",
   },
   services: {
-    regular: { name: "Regular cleaning", body: "Routine cleaning of a home or premises." },
     deep: { name: "Deep clean", body: "Kitchen, bathroom, floors and corners, thoroughly." },
-    end_of_tenancy: { name: "End of tenancy", body: "Getting a flat ready for the move-out inspection." },
     after_works: { name: "After building works", body: "The dust and marks that works leave behind." },
     upholstery: { name: "Upholstery", body: "Sofas, armchairs, mattresses and rugs." },
     exterior: { name: "Outdoor areas", body: "Terraces, paths and paving." },

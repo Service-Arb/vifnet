@@ -4,18 +4,10 @@ import { PLACES } from "./places";
 
 /**
  * The kinds of job the quote form offers — the values it posts and the lead
- * store keeps. Chosen from what the portfolio in `assets/profile_images/`
- * shows; the owner confirms the list (`OWNER_TODO`).
+ * store keeps. Only what the portfolio in `assets/profile_images/` actually
+ * shows; routine cleaning and end-of-tenancy wait for the owner (`OWNER_TODO`).
  */
-export const CLEANING_TYPES = [
-  "regular",
-  "deep",
-  "end_of_tenancy",
-  "after_works",
-  "upholstery",
-  "exterior",
-  "other",
-] as const;
+export const CLEANING_TYPES = ["deep", "after_works", "upholstery", "exterior", "other"] as const;
 export type CleaningType = (typeof CLEANING_TYPES)[number];
 
 /** Whole square metres; a quote for a flat and one for a hotel floor differ by the surface. */
@@ -64,7 +56,11 @@ export const OWNER_TODO: readonly OwnerTodo[] = [
   { field: "places[vifnet].serviceArea", why: "which communes the crew covers — the publication gate needs it", blocksLaunch: true },
   { field: "places[vifnet].hours", why: "working hours — the publication gate needs them", blocksLaunch: true },
   { field: "places[vifnet].gbpName", why: "the Google Business Profile's exact name, once it exists", blocksLaunch: false },
-  { field: "CLEANING_TYPES", why: "inferred from the portfolio photos, not confirmed", blocksLaunch: false },
+  {
+    field: "CLEANING_TYPES",
+    why: "read off the portfolio photos, not confirmed; routine cleaning and end of tenancy held back until the owner says",
+    blocksLaunch: true,
+  },
   { field: "prices", why: "no price list yet — the page states none", blocksLaunch: false },
   { field: "assets/brand.toml", why: "a placeholder palette until the design exists", blocksLaunch: false },
 ];

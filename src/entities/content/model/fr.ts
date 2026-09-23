@@ -7,7 +7,7 @@ export const FR = {
     home: {
       title: "Vifnet — nettoyage de logements et de locaux",
       description:
-        "Vifnet nettoie logements et locaux : entretien, grand ménage, fin de bail, fin de chantier, textiles et extérieurs. Site en préparation.",
+        "Vifnet nettoie logements et locaux : grand ménage, fin de chantier, textiles et extérieurs. Site en préparation.",
     },
   },
   home: {
@@ -18,9 +18,7 @@ export const FR = {
     servicesTitle: "Ce que nous nettoyons",
   },
   services: {
-    regular: { name: "Entretien régulier", body: "Le ménage courant d’un logement ou d’un local." },
     deep: { name: "Grand ménage", body: "Cuisine, salle de bain, sols et recoins, à fond." },
-    end_of_tenancy: { name: "Fin de bail", body: "La remise en état avant l’état des lieux de sortie." },
     after_works: { name: "Fin de chantier", body: "Poussière et traces laissées par des travaux." },
     upholstery: { name: "Textiles", body: "Canapés, fauteuils, matelas et tapis." },
     exterior: { name: "Extérieurs", body: "Terrasses, allées et pavés." },
