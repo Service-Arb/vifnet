@@ -1,43 +1,30 @@
-import { assertLaunchable, defineSite, SERVICE_AREA_GATE, type LeadSchema, type OwnerTodo } from "@/shared/landing";
+import { assertLaunchable, cardFact, defineSite, SERVICE_AREA_GATE, type OwnerTodo } from "@evinvest/kitstart";
 import { i18n } from "./i18n";
+import { LEAD } from "./lead";
 import { PLACES } from "./places";
 
 /**
- * The kinds of job the quote form offers — the values it posts and the lead
- * store keeps. Only what the portfolio in `assets/profile_images/` actually
- * shows; routine cleaning and end-of-tenancy wait for the owner (`OWNER_TODO`).
+ * Vifnet as the machinery sees it — routing, the lead funnel, schema.org,
+ * analytics and mail read their facts from this one object. The contact facts
+ * come from `assets/card.toml` (inlined at build): today the card has none,
+ * so the site has no phone, no mailbox and no domain — noindex everywhere,
+ * robots disallow, an empty sitemap, and the quote form as the only channel.
  */
-export const CLEANING_TYPES = ["deep", "after_works", "upholstery", "exterior", "other"] as const;
-export type CleaningType = (typeof CLEANING_TYPES)[number];
-
-/** Whole square metres; a quote for a flat and one for a hotel floor differ by the surface. */
-export const SURFACE_M2 = { name: "surface_m2", min: 1, max: 100_000 } as const;
-
-export const LEAD = {
-  subjects: CLEANING_TYPES,
-  extras: [{ name: SURFACE_M2.name, max: String(SURFACE_M2.max).length }],
-  validate(lead) {
-    const raw = lead.extras[SURFACE_M2.name];
-    if (raw === undefined || raw === "") return null;
-    if (!/^\d+$/.test(raw)) return `${SURFACE_M2.name} must be a whole number`;
-    const m2 = Number(raw);
-    return m2 >= SURFACE_M2.min && m2 <= SURFACE_M2.max ? null : `${SURFACE_M2.name} out of range`;
-  },
-} satisfies LeadSchema<CleaningType>;
-
-export const SITE = defineSite({
+export const site = defineSite({
   brand: {
-    /** `data-brand` palette scope, `brand_id` in analytics. */
     id: "vifnet",
     name: "Vifnet",
+    // The brand name stands in until the owner gives the raison sociale.
     legalName: "Vifnet",
-    email: null,
-    phone: null,
-    domain: null,
-    // No schema.org subtype names cleaning; the job types go on `Service.serviceType`.
+    email: cardFact("SITE_CARD_EMAIL", process.env.SITE_CARD_EMAIL),
+    phone: cardFact("SITE_CARD_PHONE", process.env.SITE_CARD_PHONE),
+    domain: cardFact("SITE_CARD_SITE", process.env.SITE_CARD_SITE),
+    // No schema.org subtype names cleaning; the job types go on the offers.
     businessType: "LocalBusiness",
   },
   i18n,
+  ogLocale: { fr: "fr_FR", en: "en_GB" },
+  // One place, served at the apex: the crew goes to the customer.
   topology: { kind: "single", place: "vifnet" },
   pages: { home: "" },
   places: PLACES,
@@ -45,24 +32,36 @@ export const SITE = defineSite({
   lead: LEAD,
 });
 
-export type Page = keyof typeof SITE.pages;
+export type PageKey = (typeof site.pageKeys)[number];
 
+/**
+ * Facts the owner has not given, listed once rather than found on the page.
+ * The Figma note "Copy that states a term" (9:529) proposed promises the
+ * company would pay for; none ships until the owner confirms it, so each is a
+ * line here and nowhere in the copy.
+ */
 export const OWNER_TODO: readonly OwnerTodo[] = [
-  { field: "brand.domain", why: "no domain yet — the site is noindex and robots Disallow until there is", blocksLaunch: true },
-  { field: "brand.phone", why: "no public number; the page has no tel: channel", blocksLaunch: true },
-  { field: "brand.email", why: "no public mailbox", blocksLaunch: true },
-  { field: "brand.legalName", why: "raison sociale as registered; the brand name stands in", blocksLaunch: true },
-  { field: "SIRET", why: "mentions légales (LCEN) need the operating entity's SIRET", blocksLaunch: true },
-  { field: "places[vifnet].serviceArea", why: "which communes the crew covers — the publication gate needs it", blocksLaunch: true },
-  { field: "places[vifnet].hours", why: "working hours — the publication gate needs them", blocksLaunch: true },
-  { field: "places[vifnet].gbpName", why: "the Google Business Profile's exact name, once it exists", blocksLaunch: false },
+  { field: "assets/card.toml site", why: "no domain yet — the site is noindex and robots Disallow until there is", blocksLaunch: true },
+  { field: "assets/card.toml phone", why: "no public number: no tel: channel, the WhatsApp slot stays hidden", blocksLaunch: false },
+  { field: "assets/card.toml email", why: "no public mailbox; lead mail needs LEAD_NOTIFY_TO", blocksLaunch: false },
+  { field: "site.brand.legalName", why: "raison sociale as registered; the brand name stands in", blocksLaunch: true },
+  { field: "SIRET", why: "mentions légales (LCEN) need the operating entity's SIRET, in the footer's legal line", blocksLaunch: true },
   {
-    field: "CLEANING_TYPES",
-    why: "read off the portfolio photos, not confirmed; routine cleaning and end of tenancy held back until the owner says",
+    field: "places[vifnet].serviceArea",
+    why: "which communes the crew covers; the Figma chips are guesses, so the service-area band stays hidden",
     blocksLaunch: true,
   },
-  { field: "prices", why: "no price list yet — the page states none", blocksLaunch: false },
-  { field: "assets/brand.toml", why: "a placeholder palette until the design exists", blocksLaunch: false },
+  { field: "places[vifnet].hours", why: "working hours — the publication gate needs them", blocksLaunch: true },
+  { field: "places[vifnet].gbpName", why: "the Google Business Profile's exact name; reviews show once it has some", blocksLaunch: false },
+  { field: "SUBJECTS", why: "regular cleaning and end of tenancy are held back until the owner confirms them", blocksLaunch: false },
+  { field: "PRICES", why: "no price list: the price-table band ships only with real numbers", blocksLaunch: false },
+  { field: "copy: fixed price", why: "« prix ferme avant de venir / confirmé par écrit, ne change pas sur place » (hero, FAQ, how-it-works)", blocksLaunch: false },
+  { field: "copy: supplies", why: "« produits et matériel apportés par l’équipe » (hero, FAQ, how-it-works)", blocksLaunch: false },
+  { field: "copy: re-clean", why: "« signalez-le dans les 24 heures : l’équipe revient sans frais » (FAQ)", blocksLaunch: false },
+  { field: "copy: keys", why: "« vous pouvez confier les clés » (FAQ)", blocksLaunch: false },
+  { field: "copy: offices", why: "« bureaux et commerces, tôt le matin ou après la fermeture » (hero, FAQ)", blocksLaunch: false },
+  { field: "copy: methods", why: "four / réfrigérateur, injection-extraction, haute pression in the service lines", blocksLaunch: false },
+  { field: "copy: consent", why: "« rien n’est facturé sans votre accord » (closing, thank-you page)", blocksLaunch: false },
 ];
 
-assertLaunchable(SITE, OWNER_TODO);
+assertLaunchable(site, OWNER_TODO);
