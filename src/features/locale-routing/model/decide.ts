@@ -27,7 +27,9 @@ export interface RequestFacts {
 
 /**
  * The language of the path, for the one render that gets no params:
- * `not-found.tsx`. Only the proxy sets it; a client-sent value is dropped.
+ * `app/global-not-found.tsx`. The proxy deletes any client-sent value and sets
+ * its own on every path it runs on — every path but `/_next/static/`, whose
+ * misses never render the 404 page (see the matcher in `proxy.ts`).
  */
 export const LOCALE_HEADER = "x-vifnet-locale";
 
