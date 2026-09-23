@@ -1,5 +1,5 @@
 import { JsonLd } from "@evinvest/marketing";
-import { Section } from "@evinvest/uikit";
+import { Footer } from "@evinvest/uikit";
 import type { Copy } from "@/entities/content";
 import { PLACE } from "@/entities/place";
 import { pageGraph } from "@/features/seo";
@@ -15,12 +15,8 @@ export function HomeView({ copy }: { copy: Copy }) {
         <HoldingHero copy={copy} brand={SITE.brand.name} />
         <ServiceList copy={copy} />
       </main>
-      <Section tight>
-        <footer className="flex flex-col gap-1 text-sm text-ink-soft">
-          <span>© {SITE.brand.name}</span>
-          <span>{copy.t.footer.legal}</span>
-        </footer>
-      </Section>
+      {/* No `offices`: a service-area business has no address to list. */}
+      <Footer brand={SITE.brand.name} description={copy.t.footer.legal} copyright={`© ${SITE.brand.name}`} />
     </>
   );
 }
