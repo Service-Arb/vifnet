@@ -14,10 +14,57 @@ jobs:
         primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
         restore-prefixes-first-match: nix-${{ runner.os }}-
     - name: Boot the image
-      run: bash nix/container-smoke.sh
+      run: nix run .#container-smoke
     timeout-minutes: 45
+  e2e:
+    name: Playwright (1440 + 390)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Nix
+      uses: DeterminateSystems/nix-installer-action@main
+      with:
+        extra-conf: lazy-trees = true
+    - name: Setup Nix cache
+      uses: nix-community/cache-nix-action@v7
+      with:
+        primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
+        restore-prefixes-first-match: nix-${{ runner.os }}-
+    - name: Setup npm cache
+      uses: actions/cache@v4
+      with:
+        key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+        path: ~/.npm
+        restore-keys: npm-${{ runner.os }}-
+    - name: npm ci
+      run: nix develop --command npm ci
+    - name: next build
+      run: nix develop --command npm run build
+    - name: Link @playwright/test
+      run: nix develop --command bash -c 'ln -sfn "$E2E_PLAYWRIGHT_MODULES" tests/e2e/node_modules'
+    - name: tsc (e2e)
+      run: nix develop --command npx tsc --noEmit -p tests/e2e
+    - name: Playwright
+      run: nix develop --command playwright test -c tests/e2e
+    - if: always()
+      name: Upload screenshots
+      uses: actions/upload-artifact@v4
+      with:
+        if-no-files-found: ignore
+        name: visual-snapshots
+        path: tests/e2e/__screenshots__/
+    - if: failure()
+      name: Upload Playwright report
+      uses: actions/upload-artifact@v4
+      with:
+        if-no-files-found: ignore
+        name: playwright-report
+        path: 'test-results/
+
+          playwright-report/'
+    timeout-minutes: 30
   hermetic:
-    name: nix flake check (hermetic build)
+    name: nix flake check (hermetic build + budget)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -33,7 +80,7 @@ jobs:
     - run: nix flake check -L
     timeout-minutes: 45
   node:
-    name: tsc · eslint · vitest · build
+    name: tsc · lint · vitest · build · bundle budget
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -56,12 +103,14 @@ jobs:
       run: nix develop --command npm ci
     - name: tsc
       run: nix develop --command npm run typecheck
-    - name: eslint
-      run: nix develop --command npx eslint .
+    - name: eslint · steiger
+      run: nix develop --command npm run lint
     - name: vitest
       run: nix develop --command npx vitest run
     - name: next build
       run: nix develop --command npm run build
+    - name: Bundle budget
+      run: nix develop --command npm run -s size
     timeout-minutes: 30
 name: Errors
 'on':

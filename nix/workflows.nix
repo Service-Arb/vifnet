@@ -1,8 +1,7 @@
 # The Node workflows, written to .github/workflows/ by the devShell. v_flakes
 # generates the container release, the LoC badge and the Claude review; its
-# language jobs are Rust's, so these are authored here in the same shape.
-# aquafix's, less the Playwright and visual-baseline jobs this site has no
-# specs for yet.
+# language jobs are Rust's, so these are authored here in the same shape as
+# aquafix's.
 { pkgs }:
 let
   lib = pkgs.lib;
@@ -11,8 +10,8 @@ let
   on = { pull_request = { }; push = { }; workflow_dispatch = { }; };
   permissions = { contents = "read"; };
 
-  # Everything runs inside `nix develop`, so CI has the node the flake pins,
-  # not the runner's.
+  # Everything runs inside `nix develop`, so CI has the node, the Playwright
+  # and the browsers the lockfile and the flake pin — not the runner's.
   setup = [
     { uses = "actions/checkout@v4"; }
     {
@@ -41,36 +40,74 @@ let
   ];
   dev = name: cmd: { inherit name; run = "nix develop --command ${cmd}"; };
 
+  # The spec's @playwright/test is the flake's, linked where tsc resolves it.
+  playwright = args: [
+    (dev "Link @playwright/test" "bash -c 'ln -sfn \"$E2E_PLAYWRIGHT_MODULES\" tests/e2e/node_modules'")
+    (dev "tsc (e2e)" "npx tsc --noEmit -p tests/e2e")
+    (dev "Playwright" "playwright test -c tests/e2e${lib.optionalString (args != "") " ${args}"}")
+  ];
+
+  # Missing baselines are written by the run that finds them missing, so this
+  # artifact is also how the first set is produced — README, "Visual baselines".
+  uploadShots = {
+    name = "Upload screenshots";
+    "if" = "always()";
+    uses = "actions/upload-artifact@v4";
+    "with" = {
+      name = "visual-snapshots";
+      path = "tests/e2e/__screenshots__/";
+      if-no-files-found = "ignore";
+    };
+  };
+  uploadReport = {
+    name = "Upload Playwright report";
+    "if" = "failure()";
+    uses = "actions/upload-artifact@v4";
+    "with" = {
+      name = "playwright-report";
+      path = "test-results/\nplaywright-report/";
+      if-no-files-found = "ignore";
+    };
+  };
+
   errors = {
     name = "Errors";
     inherit on permissions;
     jobs = {
       node = {
-        name = "tsc · eslint · vitest · build";
+        name = "tsc · lint · vitest · build · bundle budget";
         runs-on = "ubuntu-latest";
         timeout-minutes = 30;
         steps = setup ++ [
           (dev "tsc" "npm run typecheck")
-          (dev "eslint" "npx eslint .")
+          (dev "eslint · steiger" "npm run lint")
           (dev "vitest" "npx vitest run")
           (dev "next build" "npm run build")
+          # The one hard gate.
+          (dev "Bundle budget" "npm run -s size")
         ];
+      };
+      e2e = {
+        name = "Playwright (1440 + 390)";
+        runs-on = "ubuntu-latest";
+        timeout-minutes = 30;
+        steps = setup ++ [ (dev "next build" "npm run build") ] ++ playwright "" ++ [ uploadShots uploadReport ];
       };
       # The image is built from this derivation; a sandbox that cannot reach
       # the network is where a missing lockfile hash or traced file shows up.
       hermetic = {
-        name = "nix flake check (hermetic build)";
+        name = "nix flake check (hermetic build + budget)";
         runs-on = "ubuntu-latest";
         timeout-minutes = 45;
         steps = lib.take 3 setup ++ [{ run = "nix flake check -L"; }];
       };
       # The release pushes this image on a tag; this is the last place its
-      # contract (port, prod env, noindex) is exercised before that.
+      # contract (port, /data, prod env, the form POST, noindex) is exercised.
       container = {
         name = "Container smoke (the release image)";
         runs-on = "ubuntu-latest";
         timeout-minutes = 45;
-        steps = lib.take 3 setup ++ [{ name = "Boot the image"; run = "bash nix/container-smoke.sh"; }];
+        steps = lib.take 3 setup ++ [{ name = "Boot the image"; run = "nix run .#container-smoke"; }];
       };
     };
   };
@@ -87,9 +124,23 @@ let
     };
   };
 
+  # Rewrites every baseline from this ref; the artifact is committed by hand.
+  visualBaselines = {
+    name = "Visual baselines";
+    on.workflow_dispatch = { };
+    inherit permissions;
+    jobs.shoot = {
+      name = "Shoot every section (Linux)";
+      runs-on = "ubuntu-latest";
+      timeout-minutes = 30;
+      steps = setup ++ [ (dev "next build" "npm run build") ] ++ playwright "--update-snapshots=all" ++ [ uploadShots uploadReport ];
+    };
+  };
+
   files = {
     "errors.yml" = yaml "errors.yml" errors;
     "warnings.yml" = yaml "warnings.yml" warnings;
+    "visual-baselines.yml" = yaml "visual-baselines.yml" visualBaselines;
   };
 in
 {
