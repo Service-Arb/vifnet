@@ -39,43 +39,49 @@ const DEEP = {
   message: "Import a slice through its index.ts (or server.ts), not a file inside it.",
 };
 
+// A relative path that climbs out into a layer directory would slip past every
+// `@/` pattern above; across layers the alias is the only way, so the rules
+// that read it apply.
+const CLIMB = {
+  regex: `^(\\.\\./)+(src/)?(${LAYERS.join("|")})(/|$)`,
+  message: "Across layers, import through `@/<layer>/<slice>`, not a relative path.",
+};
+
+const escape = name => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const layerPatterns = (layer, slice) => {
+  const siblings = slice === null ? [] : slicesOf(layer).filter(other => other !== slice);
+  return [
+    ...(layer === "views" ? [] : [{ group: upward(layer), message: `${layer} may import only the layers below it.` }]),
+    DEEP,
+    CLIMB,
+    ...(siblings.length === 0
+      ? []
+      : [
+          {
+            group: siblings.flatMap(other => [`@/${layer}/${other}`, `@/${layer}/${other}/**`]),
+            message: `Slices of ${layer} do not import each other; move the shared part down a layer.`,
+          },
+          {
+            // `../place` from a slice's index, `../../place` from a segment.
+            regex: `^(\\.\\./)+(${siblings.map(escape).join("|")})(/|$)`,
+            message: `Slices of ${layer} do not import each other; move the shared part down a layer.`,
+          },
+        ]),
+  ];
+};
+
 const layerRules = LAYERS.map(layer => ({
   files: [`src/${layer}/**/*.{ts,tsx}`],
-  rules: {
-    "no-restricted-imports": [
-      "error",
-      {
-        patterns: [
-          ...(layer === "views" ? [] : [{ group: upward(layer), message: `${layer} may import only the layers below it.` }]),
-          DEEP,
-        ],
-      },
-    ],
-  },
+  rules: { "no-restricted-imports": ["error", { patterns: layerPatterns(layer, null) }] },
 }));
 
 // One block per slice, so a slice may not import its siblings. Later blocks
-// replace the rule wholesale, so the upward and deep bans are restated.
+// replace the rule wholesale, so the layer-wide bans are restated.
 const sliceRules = SLICED.flatMap(layer =>
   slicesOf(layer).map(slice => ({
     files: [`src/${layer}/${slice}/**/*.{ts,tsx}`],
-    rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            ...(layer === "views" ? [] : [{ group: upward(layer), message: `${layer} may import only the layers below it.` }]),
-            DEEP,
-            {
-              group: slicesOf(layer)
-                .filter(other => other !== slice)
-                .flatMap(other => [`@/${layer}/${other}`, `@/${layer}/${other}/**`]),
-              message: `Slices of ${layer} do not import each other; move the shared part down a layer.`,
-            },
-          ].filter(pattern => pattern.group.length > 0),
-        },
-      ],
-    },
+    rules: { "no-restricted-imports": ["error", { patterns: layerPatterns(layer, slice) }] },
   })),
 );
 
@@ -93,7 +99,7 @@ export default defineConfig([
   // through their public API.
   {
     files: ["app/**/*.{ts,tsx}", "proxy.ts"],
-    rules: { "no-restricted-imports": ["error", { patterns: [DEEP] }] },
+    rules: { "no-restricted-imports": ["error", { patterns: [DEEP, CLIMB] }] },
   },
   ...layerRules,
   ...sliceRules,
