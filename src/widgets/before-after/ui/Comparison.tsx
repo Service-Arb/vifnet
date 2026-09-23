@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
 // The file, not the `shared/ui` barrel: the barrel carries the lock-up and
 // every photo's URLs, which have no business in this island's bundle.
 import { Picture, type PhotoSet } from "@/shared/ui/Picture";
+import { TYPE } from "@/shared/ui/type";
 
 export interface ComparisonPair {
   caption: string;
@@ -20,7 +21,14 @@ export interface ComparisonProps {
 }
 
 const VIEWER_SIZES = "(width < 48rem) calc(100vw - 2.5rem), 560px";
-const TAG = "absolute bottom-3 rounded-full bg-background px-2.5 py-[5px] text-[13px] font-semibold text-ink md:bottom-4";
+const TAG = `absolute bottom-3 rounded-full bg-background px-2.5 py-[5px] ${TYPE.fine} font-semibold text-ink md:bottom-4`;
+
+const noop = () => () => {};
+
+/** `false` in the server HTML and until hydration, `true` after: no effect, no flash. */
+function useHydrated(): boolean {
+  return useSyncExternalStore(noop, () => true, () => false);
+}
 
 /**
  * The compare slider and its pair picker. The slider is a native range input
@@ -31,13 +39,14 @@ const TAG = "absolute bottom-3 rounded-full bg-background px-2.5 py-[5px] text-[
 export function Comparison({ pairs, words, head }: ComparisonProps) {
   const [index, setIndex] = useState(0);
   const [position, setPosition] = useState(50);
+  const hydrated = useHydrated();
   const pair = pairs[index] ?? pairs[0];
   if (!pair) return null;
   return (
     <div className="flex flex-col gap-7 md:grid md:grid-cols-[minmax(0,1fr)_560px] md:grid-rows-[1fr_auto_auto_auto_1fr] md:gap-x-20 md:gap-y-6">
       <div className="flex flex-col gap-7 md:col-start-1 md:row-start-2 md:gap-6">{head}</div>
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[var(--radius)] bg-muted md:col-start-2 md:row-span-5 md:row-start-1">
-        <Picture set={pair.after} alt="" sizes={VIEWER_SIZES} className="absolute inset-0 size-full object-cover" />
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-muted md:col-start-2 md:row-span-5 md:row-start-1">
+        <Picture set={pair.after} alt={`${pair.caption} — ${words.after}`} sizes={VIEWER_SIZES} className="absolute inset-0 size-full object-cover" />
         <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}>
           <Picture set={pair.before} alt="" sizes={VIEWER_SIZES} className="absolute inset-0 size-full object-cover" />
         </div>
@@ -53,10 +62,13 @@ export function Comparison({ pairs, words, head }: ComparisonProps) {
           min={0}
           max={100}
           value={position}
+          // Until the script runs, dragging would move nothing: the control
+          // is off rather than dead.
+          disabled={!hydrated}
           onChange={e => setPosition(Number(e.target.value))}
           aria-label={`${words.slider} — ${pair.caption}`}
           aria-valuetext={words.position.replace("{n}", String(position))}
-          className="peer absolute inset-0 size-full cursor-ew-resize opacity-0"
+          className="peer absolute inset-0 size-full cursor-ew-resize touch-pan-y opacity-0 disabled:cursor-default"
         />
         <span
           aria-hidden="true"

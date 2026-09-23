@@ -16,7 +16,7 @@ export function Closing({ id, ...form }: QuoteFormProps & { id: string }) {
           <h2 className={`${TYPE.h2Closing} md:max-w-[520px]`}>{t.title}</h2>
           <p className={`${TYPE.lede} md:max-w-[480px]`}>{t.lede}</p>
           <div className="hidden md:block">
-            <Photo stem="closing" alt={t.photoAlt} sizes="520px" className="h-[340px] w-[520px] rounded-[var(--radius)] object-cover" />
+            <Photo stem="closing" alt={t.photoAlt} sizes="520px" className="h-[340px] w-[520px] rounded-lg object-cover" />
           </div>
         </div>
         <div className="md:w-[520px] md:shrink-0">

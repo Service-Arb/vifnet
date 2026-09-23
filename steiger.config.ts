@@ -18,9 +18,10 @@ export default defineConfig([
     rules: { "fsd/public-api": "off" },
   },
   {
-    // The same reason for the sidestep rule, which cannot tell a layer apart:
-    // everything reaching `shared/config/<file>` would trip it. Slices above
-    // `shared` still export through `index.ts` / `server.ts`.
+    // The same reason for the sidestep rule: `shared/config/<file>`, and the
+    // client islands reaching `shared/ui/<file>` past a barrel that would carry
+    // every photo URL. Slices above `shared` still export through `index.ts`.
+    files: ["./src/shared/**"],
     rules: { "fsd/no-public-api-sidestep": "off" },
   },
 ]);

@@ -15,6 +15,8 @@ export const TYPE = {
   lede: "text-ink-mid text-[17px] leading-[1.58] md:text-lg md:leading-[1.6]",
   /** A row's title (service, step): 18 → 21. */
   itemTitle: "font-semibold text-ink text-lg leading-[1.3] tracking-[-0.01em] md:text-[21px]",
+  /** Captions, hints, legal lines, table heads: 13. */
+  fine: "text-[13px]",
   /** A row's body: 15 → 16. */
   itemBody: "text-ink-mid text-[15px] leading-[1.55] md:text-base",
 } as const;

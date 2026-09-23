@@ -10,6 +10,7 @@ import {
 } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { LEAD, SURFACE_M2 } from "@/shared/config/lead";
+import { TYPE } from "@/shared/ui";
 
 export interface QuoteFormProps {
   copy: Copy;
@@ -35,7 +36,7 @@ export function QuoteForm({ copy, placeSlug, renderedAt, formId }: QuoteFormProp
       locale={locale}
       renderedAt={renderedAt}
       honeypotLabel={t.quoteForm.honeypotLabel}
-      className="gap-[18px] rounded-[var(--radius)] border border-border bg-card p-5 md:p-8"
+      className="gap-[18px] rounded-lg border border-border bg-card p-5 md:p-8"
     >
       <Field className="flex flex-col gap-2">
         <FieldLabel>{l.subject}</FieldLabel>
@@ -60,12 +61,12 @@ export function QuoteForm({ copy, placeSlug, renderedAt, formId }: QuoteFormProp
       <Field className="flex flex-col gap-2">
         <FieldLabel>{l.mobile}</FieldLabel>
         <Input name={LEAD.wire.mobile} size="lg" {...PHONE_INPUT_PROPS} placeholder={l.mobileHint} required />
-        <p className="text-[13px] leading-[1.4] text-ink-soft">{l.callback}</p>
+        <p className={`${TYPE.fine} leading-[1.4] text-ink-soft`}>{l.callback}</p>
       </Field>
       <Button type="submit" size="xl" className="w-full font-semibold">
         {t.quoteForm.submit}
       </Button>
-      <p className="text-[13px] leading-[1.45] text-ink-soft">{t.quoteForm.privacy}</p>
+      <p className={`${TYPE.fine} leading-[1.45] text-ink-soft`}>{t.quoteForm.privacy}</p>
     </QuoteFormShell>
   );
 }

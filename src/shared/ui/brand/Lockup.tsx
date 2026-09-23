@@ -18,6 +18,7 @@ export function Lockup({ className, title }: { className?: string; title?: strin
       aria-hidden={title ? undefined : true}
       xmlns="http://www.w3.org/2000/svg"
     >
+      {title && <title>{title}</title>}
       <path className="vifnet-mark-house" d="M47.4972 20.0407L43.5028 24.2927L26.2511 8.08692L9.33333 24.0095V37.3333H3.5V21.4899L26.2483 0.0797577L47.4972 20.0407Z" />
       <path
         className="vifnet-mark-house"

@@ -27,9 +27,9 @@ export function Hero({ copy, quoteHref, workHref }: { copy: Copy; quoteHref: str
         <Photo
           stem="hero"
           alt={hero.photoAlt}
-          sizes="(width < 48rem) 100vw, 528px"
+          sizes="(width < 48rem) calc(100vw - 2.5rem), 528px"
           priority
-          className="h-[400px] w-full rounded-[var(--radius)] object-cover md:h-[640px] md:w-[528px] md:shrink-0"
+          className="h-[400px] w-full rounded-lg object-cover md:h-[640px] md:w-[528px] md:shrink-0"
         />
       </div>
     </Section>

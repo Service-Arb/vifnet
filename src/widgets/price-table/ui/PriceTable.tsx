@@ -24,8 +24,8 @@ export function PriceTable({ copy, id, prices }: { copy: Copy; id: string; price
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-[13px] font-medium text-ink-soft">{t.service}</TableHead>
-                <TableHead className="text-right text-[13px] font-medium text-ink-soft">{t.price}</TableHead>
+                <TableHead className={`${TYPE.fine} font-medium text-ink-soft`}>{t.service}</TableHead>
+                <TableHead className={`text-right ${TYPE.fine} font-medium text-ink-soft`}>{t.price}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

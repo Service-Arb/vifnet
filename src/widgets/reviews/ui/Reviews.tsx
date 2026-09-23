@@ -17,9 +17,9 @@ export function Reviews({ copy, id, rating }: { copy: Copy; id: string; rating: 
     <Section id={id} className="pt-0">
       <h2 className={`${TYPE.h2} md:max-w-[720px]`}>{t.title}</h2>
       <p className="mt-6 flex items-center gap-3 text-lg font-medium text-ink md:mt-12">
-        <span aria-hidden="true" className="text-2xl text-accent-warn">
-          ★
-        </span>
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" className="shrink-0 fill-accent-warn">
+          <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z" />
+        </svg>
         {t.summary(value, rating.count)}
       </p>
     </Section>
