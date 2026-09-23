@@ -43,6 +43,36 @@ test.describe("without JavaScript", () => {
     await page.goto("/fr");
     await expect(page.locator('a[href^="tel:"], a[href*="wa.me"]')).toHaveCount(0);
   });
+
+  test("a dead path is a 404 rendered on the server, with its headline", async ({ page }) => {
+    const response = await page.goto("/fr/nope");
+    expect(response?.status()).toBe(404);
+    await expect(page.locator("h1")).toContainText("n’existe pas");
+  });
+
+  test("the slider is off until the script runs", async ({ page }) => {
+    await page.goto("/fr#avant-apres");
+    await expect(page.getByRole("slider")).toBeDisabled();
+  });
+});
+
+// No domain yet: nothing may be indexed, whatever the page.
+test.describe("before launch", () => {
+  test("the page is noindex", async ({ page }) => {
+    await page.goto("/fr");
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  });
+
+  test("robots.txt disallows everything", async ({ request }) => {
+    const body = await (await request.get("/robots.txt")).text();
+    expect(body).toMatch(/^Disallow: \/$/m);
+  });
+
+  test("the sitemap lists no URL", async ({ request }) => {
+    const response = await request.get("/sitemap.xml");
+    expect(response.status()).toBe(200);
+    expect(await response.text()).not.toContain("<url>");
+  });
 });
 
 test("a service link picks its service in the form", async ({ page }) => {
@@ -55,6 +85,7 @@ test("a service link picks its service in the form", async ({ page }) => {
 test("the before/after slider moves with the keyboard", async ({ page }) => {
   await page.goto("/fr#avant-apres");
   const slider = page.getByRole("slider");
+  await expect(slider).toBeEnabled();
   await slider.focus();
   await page.keyboard.press("ArrowRight");
   await expect(slider).toHaveAttribute("aria-valuetext", "Avant 51 %");
