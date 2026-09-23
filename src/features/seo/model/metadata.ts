@@ -35,8 +35,3 @@ export function pageMetadata(site: AnySite, place: Place<string>, copy: Copy, pa
     },
   };
 }
-
-/** Status pages are never indexed, whatever the site's state. */
-export function statusMetadata(site: Pick<typeof SITE, "brand">, title: string): Metadata {
-  return { title: `${title} · ${site.brand.name}`, robots: { index: false, follow: false } };
-}
