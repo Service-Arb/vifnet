@@ -1,44 +1,68 @@
-env:
-  CARGO_INCREMENTAL: '0'
-  CARGO_NET_RETRY: '10'
-  RUSTC_WRAPPER: ''
-  RUSTUP_MAX_RETRIES: '10'
-  RUST_BACKTRACE: short
 jobs:
-  pre_ci:
-    uses: valeratrades/.github/.github/workflows/pre_ci.yml@main
-  rust-tests:
-    if: needs.pre_ci.outputs.continue
-    name: Rust ${{matrix.rust}}
-    needs: pre_ci
+  container:
+    name: Container smoke (the release image)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: dtolnay/rust-toolchain@master
+    - name: Install Nix
+      uses: DeterminateSystems/nix-installer-action@main
       with:
-        toolchain: ${{matrix.rust}}
-    - name: Install mold
-      uses: rui314/setup-mold@v1
-    - if: github.ref == 'refs/heads/release'
-      name: Set RUSTFLAGS for release branch
-      run: echo "RUSTFLAGS=-Dwarnings" >> $GITHUB_ENV
-    - if: matrix.rust == 'nightly'
-      name: Enable type layout randomization
-      run: echo RUSTFLAGS=${RUSTFLAGS}\ -Zrandomize-layout\ --cfg=exhaustive >> $GITHUB_ENV
-    - name: Download modified by pre-ci Cargo.toml files
-      uses: actions/download-artifact@v4
+        extra-conf: lazy-trees = true
+    - name: Setup Nix cache
+      uses: nix-community/cache-nix-action@v7
       with:
-        name: modified-cargo-files
-    - run: cargo update
-    - run: cargo check
-    - run: cargo test
-    strategy:
-      fail-fast: false
-      matrix:
-        rust:
-        - nightly
-        - nightly-2026-09-14
+        primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
+        restore-prefixes-first-match: nix-${{ runner.os }}-
+    - name: Boot the image
+      run: bash nix/container-smoke.sh
     timeout-minutes: 45
+  hermetic:
+    name: nix flake check (hermetic build)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Nix
+      uses: DeterminateSystems/nix-installer-action@main
+      with:
+        extra-conf: lazy-trees = true
+    - name: Setup Nix cache
+      uses: nix-community/cache-nix-action@v7
+      with:
+        primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
+        restore-prefixes-first-match: nix-${{ runner.os }}-
+    - run: nix flake check -L
+    timeout-minutes: 45
+  node:
+    name: tsc · eslint · vitest · build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Nix
+      uses: DeterminateSystems/nix-installer-action@main
+      with:
+        extra-conf: lazy-trees = true
+    - name: Setup Nix cache
+      uses: nix-community/cache-nix-action@v7
+      with:
+        primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
+        restore-prefixes-first-match: nix-${{ runner.os }}-
+    - name: Setup npm cache
+      uses: actions/cache@v4
+      with:
+        key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+        path: ~/.npm
+        restore-keys: npm-${{ runner.os }}-
+    - name: npm ci
+      run: nix develop --command npm ci
+    - name: tsc
+      run: nix develop --command npm run typecheck
+    - name: eslint
+      run: nix develop --command npx eslint .
+    - name: vitest
+      run: nix develop --command npx vitest run
+    - name: next build
+      run: nix develop --command npm run build
+    timeout-minutes: 30
 name: Errors
 'on':
   pull_request: {}
