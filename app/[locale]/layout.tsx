@@ -1,46 +1,27 @@
 import "../globals.css";
+import { loadLocale, metadataBase } from "@evinvest/kitstart/next";
 import type { Metadata, Viewport } from "next";
-import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { isLocale, LOCALES } from "@/shared/config/i18n";
-import { SITE } from "@/shared/config/site";
-import { siteOrigin } from "@/shared/landing";
+import { site } from "@/shared/config/site";
+import { text } from "@/shared/ui/fonts";
 
 /**
  * The root layout lives under `[locale]` so `<html lang>` is the page's own
- * language on the first byte — both languages are prefixed, so every page has
- * one. The brand scope and the light polarity sit on `<html>`: overlays portal
- * to `body` and stay inside both without a provider.
+ * language on the first byte. The brand scope and the polarity sit on
+ * `<html>`, so overlays portalled to `body` stay inside both.
  */
-const origin = siteOrigin(SITE);
-
 export const metadata: Metadata = {
-  ...(origin === null ? {} : { metadataBase: new URL(origin) }),
-  applicationName: SITE.brand.name,
+  metadataBase: metadataBase(site),
+  applicationName: site.brand.name,
   formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 
-// Any other first segment is not a route at all, so it reaches
-// `global-not-found.tsx` instead of failing inside this layout.
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return LOCALES.map(locale => ({ locale }));
-}
-
-export default async function RootLayout({
-  children,
-  params,
-}: {
-  children: ReactNode;
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
-  if (!isLocale(locale)) notFound();
+export default async function RootLayout({ children, params }: { children: ReactNode; params: Promise<{ locale: string }> }) {
+  const locale = await loadLocale(site, params);
   return (
-    <html lang={locale} data-brand={SITE.brand.id} className="light">
+    <html lang={locale} data-brand={site.brand.id} className={`light ${text.variable}`}>
       <body>{children}</body>
     </html>
   );

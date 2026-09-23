@@ -1,35 +1,27 @@
 import "./globals.css";
-import { StatusScreen } from "@evinvest/uikit";
+import { GONE_HEADER, parseGoneHeader } from "@evinvest/kitstart";
 import { headers } from "next/headers";
-import { copyFor } from "@/entities/content";
-import { LOCALE_HEADER } from "@/features/locale-routing";
-import { DEFAULT_LOCALE, isLocale } from "@/shared/config/i18n";
-import { SITE } from "@/shared/config/site";
+import { site } from "@/shared/config/site";
+import { text } from "@/shared/ui/fonts";
+import { Gone } from "@/views/not-found/server";
 
 /**
- * The 404 for any URL no route matches. The root layout sits under `[locale]`,
- * so a segment `not-found.tsx` never reaches the HTML shell for an unmatched
- * path; Next's answer for that layout is this file, which renders its own
- * `<html>`. The language is the path's, passed on by the proxy. Next emits
- * `noindex` for it on its own.
+ * Every path no route matches — among them each dead path the proxy sends
+ * here (`gone`) — answered 404 with the brand's screen rendered on the
+ * server, so a visitor without JavaScript still gets the offer and the phone.
+ * A document of its own: the root layout lives under `[locale]`.
+ *
+ * It reads the proxy's header, which only this route does: it is not a
+ * boundary inside the cached pages, so they stay static. The proxy strips a
+ * client-sent copy. No `robots` here: Next already emits `noindex` for a 404.
  */
 export default async function GlobalNotFound() {
-  const asked = (await headers()).get(LOCALE_HEADER);
-  const locale = isLocale(asked) ? asked : DEFAULT_LOCALE;
-  const status = copyFor(locale).t.notFound;
+  const gone = parseGoneHeader((await headers()).get(GONE_HEADER));
+  const locale = site.i18n.isLocale(gone.locale) ? gone.locale : site.i18n.defaultLocale;
   return (
-    <html lang={locale} data-brand={SITE.brand.id} className="light">
+    <html lang={locale} data-brand={site.brand.id} className={`light ${text.variable}`}>
       <body>
-        <title>{`${status.title} · ${SITE.brand.name}`}</title>
-        <StatusScreen
-          accent="warn"
-          eyebrow={status.eyebrow}
-          code="404"
-          headlineLead={status.headline[0]}
-          headlineAccent={status.headline[1]}
-          subtext={status.body}
-          links={[{ label: status.action, href: `/${locale}` }]}
-        />
+        <Gone locale={locale} location={gone.location ?? null} />
       </body>
     </html>
   );

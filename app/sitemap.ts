@@ -1,8 +1,8 @@
-import type { MetadataRoute } from "next";
-import { PLACE } from "@/entities/place";
-import { sitemapFor } from "@/features/seo";
-import { SITE } from "@/shared/config/site";
+import { sitemapRoute } from "@evinvest/kitstart/next";
+import { places } from "@/shared/config/env";
+import { site } from "@/shared/config/site";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  return sitemapFor(SITE, PLACE);
-}
+/** Per host, strict: a failing live source is a 5xx, never a shorter list. */
+export const dynamic = "force-dynamic";
+
+export default sitemapRoute(site, places);
