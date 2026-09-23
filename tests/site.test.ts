@@ -32,7 +32,7 @@ describe("Vifnet before launch", () => {
   });
 
   it("offers only the confirmed cleaning types", () => {
-    expect(SUBJECTS).toEqual(["deep", "after_works", "upholstery", "exterior", "other"]);
+    expect(SUBJECTS).toEqual(["deep", "upholstery", "exterior", "other"]);
   });
 });
 

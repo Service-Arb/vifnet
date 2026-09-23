@@ -3,9 +3,10 @@ import type { LeadSchema } from "@evinvest/kitstart";
 /**
  * The kinds of job the quote form offers — the values it posts and the lead
  * store keeps. Only what the portfolio in `assets/profile_images/` shows;
- * routine cleaning and end of tenancy wait for the owner (`OWNER_TODO`).
+ * routine cleaning, end of tenancy and after-works cleaning wait for the owner
+ * (`OWNER_TODO`).
  */
-export const SUBJECTS = ["deep", "after_works", "upholstery", "exterior", "other"] as const;
+export const SUBJECTS = ["deep", "upholstery", "exterior", "other"] as const;
 export type Subject = (typeof SUBJECTS)[number];
 
 /** Whole square metres: a quote for a studio and one for a hotel floor differ by the surface. */

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { copyFor, TEXT, type Facts } from "@/entities/content";
+import { COPY_TODO } from "@/shared/config/copy-todo";
 import { i18n, type Locale } from "@/shared/config/i18n";
 import { SUBJECTS } from "@/shared/config/lead";
 import { OWNER_TODO, site } from "@/shared/config/site";
@@ -22,14 +23,36 @@ function leaves(value: unknown, f: Facts, path = ""): [string, string][] {
 
 const copyOf = (locale: Locale) => leaves(TEXT[locale], facts());
 
-/**
- * The owner-unconfirmed terms of the Figma note 9:529, as they would read in
- * either language. Each is an `OWNER_TODO` "copy:" line; none may ship.
- * Photo descriptions (`photoAlt`) say what a picture shows, not a promise.
- */
-const UNCONFIRMED: Record<Locale, RegExp> = {
-  fr: /prix ferme|par écrit|ne change pas|matériel|apport|24 ?h|sans frais|clés|tôt le matin|fermeture|facturé|réfrigérateur|injection|haute pression|fin de bail|entretien régulier/i,
-  en: /fixed price|in writing|does not change|equipment|supplies|24 ?h|free of charge|keys|early morning|closing time|charged|fridge|extraction|pressure|end of tenancy|regular cleaning/i,
+/** The wording the design proposed for each unconfirmed term: each must trip its own pattern. */
+const PROPOSED: Record<Locale, Readonly<Record<string, string>>> = {
+  fr: {
+    "fixed price": "Prix confirmé avant l’intervention — il ne change pas sur place",
+    supplies: "Produits et matériel apportés par l’équipe",
+    "re-clean": "Signalez-le dans les 24 heures : l’équipe revient sans frais",
+    keys: "Vous pouvez confier les clés à l’équipe",
+    offices: "Le ménage fait à fond, chez vous et dans vos locaux.",
+    methods: "four et réfrigérateur compris",
+    consent: "rien n’est facturé sans votre accord",
+    "no retouching": "Des interventions réelles, sans retouche.",
+    "taken on site": "Photos prises par l’équipe sur place.",
+    "joint check": "Vous vérifiez le résultat avec l’équipe avant son départ.",
+    "no sales calls": "Pas de démarchage.",
+    "service types": "Fin de chantier",
+  },
+  en: {
+    "fixed price": "The price is confirmed in writing and does not change",
+    supplies: "Equipment and products brought by the team",
+    "re-clean": "Tell us within 24 hours: the team comes back free of charge",
+    keys: "You can leave the keys with the team",
+    offices: "Cleaning for homes and premises",
+    methods: "oven and fridge included",
+    consent: "nothing is charged without your consent",
+    "no retouching": "Real jobs, no retouching.",
+    "taken on site": "Photos taken by the team on site.",
+    "joint check": "You check the result with the team before it leaves.",
+    "no sales calls": "No sales calls.",
+    "service types": "After building works",
+  },
 };
 
 describe("the copy", () => {
@@ -41,13 +64,29 @@ describe("the copy", () => {
     expect(copyOf("en").map(([p]) => p)).toEqual(copyOf("fr").map(([p]) => p));
   });
 
+  // One pattern per `copy:` line of OWNER_TODO, in each language: confirming a
+  // term is deleting its line, which is what lets the copy say it.
   it.each(i18n.locales)("states no term the owner has not confirmed (%s)", locale => {
-    const said = copyOf(locale).filter(([path, s]) => !path.endsWith("photoAlt") && UNCONFIRMED[locale].test(s));
+    const said = COPY_TODO.flatMap(todo =>
+      copyOf(locale)
+        .filter(([, s]) => todo.said[locale].test(s))
+        .map(([path, s]) => `${todo.field} @ ${path}: ${s}`),
+    );
     expect(said).toEqual([]);
   });
 
-  it("keeps each of those terms listed for the owner", () => {
-    expect(OWNER_TODO.filter(t => t.field.startsWith("copy:")).length).toBeGreaterThanOrEqual(7);
+  it("lists every unconfirmed term for the owner", () => {
+    const copyLines = OWNER_TODO.filter(t => t.field.startsWith("copy: ")).map(t => t.field);
+    expect(copyLines).toEqual(COPY_TODO.map(t => t.field));
+    expect(Object.keys(PROPOSED.fr).map(f => `copy: ${f}`).sort()).toEqual([...copyLines].sort());
+  });
+
+  it.each(i18n.locales)("catches the wording the design proposed (%s)", locale => {
+    const missed = COPY_TODO.filter(todo => {
+      const line = PROPOSED[locale][todo.field.replace(/^copy: /, "")];
+      return line === undefined || !todo.said[locale].test(line);
+    }).map(t => t.field);
+    expect(missed).toEqual([]);
   });
 
   it.each(i18n.locales)("writes no phone number by hand (%s)", locale => {

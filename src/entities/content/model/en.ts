@@ -14,16 +14,16 @@ const status = (
 export const EN = {
   pages: {
     home: {
-      title: () => "Vifnet — home cleaning, for homes and premises",
+      title: () => "Vifnet — home cleaning",
       description: () =>
-        "Deep cleans, after building works, upholstery and outdoor areas, at your place. Describe the job in a minute: we call you back.",
+        "Deep cleans, upholstery and outdoor areas, at your place. Describe the job in a minute: we call you back.",
     },
   },
   quoteForm: {
     title: "Get your quote.",
     lede: "Four fields, one minute.",
     submit: "Get my quote",
-    privacy: "Your number is used for this request only. No sales calls.",
+    privacy: "Your number is used for this request only.",
     reassurance: () => "We call you back on the number you give.",
     honeypotLabel: "Website",
   },
@@ -56,15 +56,15 @@ export const EN = {
   facts: () => ["Vifnet", "Legal notice in preparation"],
   header: { cta: "Get a quote", home: "Vifnet — home" },
   hero: {
-    title: "Cleaning done thoroughly, at home and at work.",
-    lede: "Deep cleans, after building works, upholstery or outdoor areas. Describe the job in a minute: we call you back.",
+    title: "Cleaning done thoroughly, at your place.",
+    lede: "Deep cleans, upholstery or outdoor areas, in your house or flat. Describe the job in a minute: we call you back.",
     cta: "Get a quote",
     toWork: "See before / after ↓",
     photoAlt: "The Vifnet team in aprons, in a living room",
   },
   beforeAfter: {
-    title: "Before, after. Real jobs, no retouching.",
-    lede: "Photos taken by the team on site. Drag the handle to compare.",
+    title: "Before, after.",
+    lede: "Drag the handle to compare.",
     before: "Before",
     after: "After",
     slider: "Compare before and after",
@@ -85,14 +85,9 @@ export const EN = {
     onQuote: "On quote",
     ask: "Ask for this quote →",
     items: {
-      deep: { name: "Deep clean", body: "Kitchen, bathroom, floors and corners, thoroughly.", photoAlt: "A cleaned oven, racks included" },
-      after_works: {
-        name: "After building works",
-        body: "The dust and marks that works leave behind.",
-        photoAlt: "A corridor under works, floors covered in sheeting",
-      },
+      deep: { name: "Deep clean", body: "Kitchen, bathroom, floors and corners, thoroughly.", photoAlt: "The kitchen of a Paris flat" },
       upholstery: { name: "Upholstery", body: "Sofas, armchairs, mattresses and rugs.", photoAlt: "An upholstery cleaning machine in front of a sofa" },
-      exterior: { name: "Outdoor areas", body: "Terraces, paths and paving.", photoAlt: "A pressure washer on a gravel terrace" },
+      exterior: { name: "Outdoor areas", body: "Terraces, paths and paving.", photoAlt: "Cleaning a gravel terrace" },
       other: { name: "Something else", body: "A job that is not on this list? Describe it.", photoAlt: "Cleaning a mirror in a gilded salon" },
     },
   },
@@ -103,7 +98,6 @@ export const EN = {
     price: "Price incl. VAT",
     detail: {
       deep: "per visit, by surface",
-      after_works: "per m²",
       upholstery: "sofa, mattress or rug, per piece",
       exterior: "per m²",
       other: "on quote",
@@ -114,13 +108,13 @@ export const EN = {
     steps: [
       { title: "You describe the job", body: "Type of cleaning, surface, town and a number: the form takes a minute." },
       { title: "We call you back", body: "We ask what matters and agree the price and the time with you." },
-      { title: "The team comes", body: "At the agreed time. You check the result with the team before it leaves." },
+      { title: "The team comes", body: "The team comes to your place at the agreed time." },
     ],
   },
   reviews: { title: "Reviews", summary: (value, count) => `Google rating ${value} / 5 — ${count} reviews` },
   serviceArea: {
     title: "We come to you",
-    lede: "No office to visit: the team travels to the towns listed here. Yours is not there? Ask all the same.",
+    lede: "Nowhere to visit: the team travels to the towns listed here. Yours is not there? Ask all the same.",
   },
   faqTitle: "Questions",
   faqs: [
@@ -130,7 +124,7 @@ export const EN = {
     },
     {
       q: "What kinds of cleaning do you do?",
-      a: "Deep cleans, cleaning after building works, upholstery (sofas, armchairs, mattresses, rugs) and outdoor areas (terraces, paths, paving). For anything else, describe the job.",
+      a: "Deep cleans, upholstery (sofas, armchairs, mattresses, rugs) and outdoor areas (terraces, paths, paving). For anything else, describe the job.",
     },
   ],
   closing: {
@@ -140,7 +134,6 @@ export const EN = {
   },
   subjects: {
     deep: "Deep clean",
-    after_works: "After building works",
     upholstery: "Upholstery",
     exterior: "Outdoor areas",
     other: "Something else",
@@ -157,11 +150,11 @@ export const EN = {
     callback: "We call you back to agree the price and the time.",
   },
   footer: {
-    tagline: "Cleaning for homes and premises, at your place.",
+    tagline: "Home cleaning, house or flat.",
     legal: "Legal notice (in preparation)",
     copyright: year => `© ${year} Vifnet`,
   },
-  brandPage: { title: "Vifnet", description: "Home cleaning, for homes and premises.", open: "Open" },
+  brandPage: { title: "Vifnet", description: "Home cleaning.", open: "Open" },
   contactLabel: "Contact us",
   langLabel: "Language",
 } satisfies Text;

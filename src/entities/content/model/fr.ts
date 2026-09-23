@@ -15,16 +15,16 @@ const status = (
 export const FR = {
   pages: {
     home: {
-      title: () => "Vifnet — ménage à domicile, logements et locaux",
+      title: () => "Vifnet — ménage à domicile",
       description: () =>
-        "Grand ménage, fin de chantier, textiles et extérieurs, chez vous. Décrivez le besoin en une minute : nous vous rappelons.",
+        "Grand ménage, textiles et extérieurs, chez vous. Décrivez le besoin en une minute : nous vous rappelons.",
     },
   },
   quoteForm: {
     title: "Recevez votre devis.",
     lede: "Quatre champs, une minute.",
     submit: "Recevoir mon devis",
-    privacy: "Votre numéro ne sert qu’à cette demande. Pas de démarchage.",
+    privacy: "Votre numéro ne sert qu’à cette demande.",
     reassurance: () => "Nous vous rappelons au numéro indiqué.",
     honeypotLabel: "Site web",
   },
@@ -57,15 +57,15 @@ export const FR = {
   facts: () => ["Vifnet", "Mentions légales en cours de rédaction"],
   header: { cta: "Demander un devis", home: "Vifnet — accueil" },
   hero: {
-    title: "Le ménage fait à fond, chez vous et dans vos locaux.",
-    lede: "Grand ménage, fin de chantier, textiles ou extérieurs. Décrivez le besoin en une minute : nous vous rappelons.",
+    title: "Le ménage fait à fond, chez vous.",
+    lede: "Grand ménage, textiles ou extérieurs, à la maison ou dans l’appartement. Décrivez le besoin en une minute : nous vous rappelons.",
     cta: "Demander un devis",
     toWork: "Voir avant / après ↓",
     photoAlt: "L’équipe Vifnet en tablier, dans un salon",
   },
   beforeAfter: {
-    title: "Avant, après. Des interventions réelles, sans retouche.",
-    lede: "Photos prises par l’équipe sur place. Faites glisser la poignée pour comparer.",
+    title: "Avant, après.",
+    lede: "Faites glisser la poignée pour comparer.",
     before: "Avant",
     after: "Après",
     slider: "Comparer avant et après",
@@ -86,14 +86,9 @@ export const FR = {
     onQuote: "Sur devis",
     ask: "Demander ce devis →",
     items: {
-      deep: { name: "Grand ménage", body: "Cuisine, salle de bain, sols et recoins, à fond.", photoAlt: "Four nettoyé, grilles comprises" },
-      after_works: {
-        name: "Fin de chantier",
-        body: "Poussière et traces laissées par des travaux.",
-        photoAlt: "Couloir en travaux, sols protégés par des bâches",
-      },
+      deep: { name: "Grand ménage", body: "Cuisine, salle de bain, sols et recoins, à fond.", photoAlt: "Cuisine d’un appartement parisien" },
       upholstery: { name: "Textiles", body: "Canapés, fauteuils, matelas et tapis.", photoAlt: "Machine de nettoyage des textiles devant un canapé" },
-      exterior: { name: "Extérieurs", body: "Terrasses, allées et pavés.", photoAlt: "Nettoyeur haute pression sur une terrasse gravillonnée" },
+      exterior: { name: "Extérieurs", body: "Terrasses, allées et pavés.", photoAlt: "Nettoyage d’une terrasse gravillonnée" },
       other: { name: "Autre demande", body: "Un besoin qui n’est pas dans la liste ? Décrivez-le.", photoAlt: "Nettoyage d’un miroir dans un salon doré" },
     },
   },
@@ -104,7 +99,6 @@ export const FR = {
     price: "Prix TTC",
     detail: {
       deep: "par intervention, selon la surface",
-      after_works: "par m²",
       upholstery: "canapé, matelas ou tapis, à la pièce",
       exterior: "par m²",
       other: "sur devis",
@@ -115,7 +109,7 @@ export const FR = {
     steps: [
       { title: "Vous décrivez le besoin", body: "Type de ménage, surface, ville et un numéro : le formulaire prend une minute." },
       { title: "Nous vous rappelons", body: "Nous posons les questions utiles et convenons avec vous du prix et du créneau." },
-      { title: "L’équipe intervient", body: "Au créneau convenu. Vous vérifiez le résultat avec l’équipe avant son départ." },
+      { title: "L’équipe intervient", body: "L’équipe vient chez vous au créneau convenu." },
     ],
   },
   reviews: { title: "Avis clients", summary: (value, count) => `Note Google ${value} / 5 — ${count} avis` },
@@ -131,7 +125,7 @@ export const FR = {
     },
     {
       q: "Quels types de ménage faites-vous ?",
-      a: "Le grand ménage, la fin de chantier, les textiles (canapés, fauteuils, matelas, tapis) et les extérieurs (terrasses, allées, pavés). Pour autre chose, décrivez le besoin.",
+      a: "Le grand ménage, les textiles (canapés, fauteuils, matelas, tapis) et les extérieurs (terrasses, allées, pavés). Pour autre chose, décrivez le besoin.",
     },
   ],
   closing: {
@@ -141,7 +135,6 @@ export const FR = {
   },
   subjects: {
     deep: "Grand ménage",
-    after_works: "Fin de chantier",
     upholstery: "Textiles",
     exterior: "Extérieurs",
     other: "Autre demande",
@@ -158,11 +151,11 @@ export const FR = {
     callback: "Nous vous rappelons pour convenir du prix et du créneau.",
   },
   footer: {
-    tagline: "Nettoyage de logements et de locaux, chez vous.",
+    tagline: "Ménage à domicile, maison ou appartement.",
     legal: "Mentions légales (en cours de rédaction)",
     copyright: year => `© ${year} Vifnet`,
   },
-  brandPage: { title: "Vifnet", description: "Ménage à domicile, logements et locaux.", open: "Ouvrir" },
+  brandPage: { title: "Vifnet", description: "Ménage à domicile.", open: "Ouvrir" },
   contactLabel: "Nous contacter",
   langLabel: "Langue",
 } satisfies Text;

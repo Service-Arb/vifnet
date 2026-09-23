@@ -56,8 +56,9 @@ export const CUTS: Cut[] = [
   // 520×340 on desktop; not shown on a phone.
   { stem: "closing", source: "staff_in_modern_kitchen_cleaning_cabinets.png", widths: [560, 1040] },
   // Service rows: 168 px squares on desktop, 96 on a phone.
-  { stem: "svc-deep", source: "final_clean_oven_interior.png", widths: [192, 336], square: true },
-  { stem: "svc-after-works", source: "protected_renovation_corridor_with_plastic_sheeting.png", widths: [192, 336], square: true },
+  // A finished room, not the oven: cleaning an oven is a method the owner has
+  // not confirmed (OWNER_TODO "copy: methods").
+  { stem: "svc-deep", source: "final_parisian_kitchen_with_black_countertop.png", widths: [192, 336], square: true },
   { stem: "svc-upholstery", source: "in_progress_gray_sofa_upholstery_cleaning.png", widths: [192, 336], square: true },
   { stem: "svc-exterior", source: "before_after_pressure_washing_gravel_patio.png", widths: [192, 336], square: true },
   { stem: "svc-other", source: "staff_in_gilded_salon_mirror_cleaning.png", widths: [192, 336], square: true },

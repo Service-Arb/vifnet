@@ -1,4 +1,5 @@
 import { assertLaunchable, cardFact, defineSite, SERVICE_AREA_GATE, type OwnerTodo } from "@evinvest/kitstart";
+import { COPY_TODO } from "./copy-todo";
 import { i18n } from "./i18n";
 import { LEAD } from "./lead";
 import { PLACES } from "./places";
@@ -38,7 +39,8 @@ export type PageKey = (typeof site.pageKeys)[number];
  * Facts the owner has not given, listed once rather than found on the page.
  * The Figma note "Copy that states a term" (9:529) proposed promises the
  * company would pay for; none ships until the owner confirms it, so each is a
- * line here and nowhere in the copy.
+ * `copy:` line here (`COPY_TODO`, with how it would read) and nowhere in the
+ * copy.
  */
 export const OWNER_TODO: readonly OwnerTodo[] = [
   { field: "assets/card.toml site", why: "no domain yet — the site is noindex and robots Disallow until there is", blocksLaunch: true },
@@ -53,15 +55,9 @@ export const OWNER_TODO: readonly OwnerTodo[] = [
   },
   { field: "places[vifnet].hours", why: "working hours — the publication gate needs them", blocksLaunch: true },
   { field: "places[vifnet].gbpName", why: "the Google Business Profile's exact name; reviews show once it has some", blocksLaunch: false },
-  { field: "SUBJECTS", why: "regular cleaning and end of tenancy are held back until the owner confirms them", blocksLaunch: false },
+  { field: "SUBJECTS", why: "regular cleaning, end of tenancy and after-works cleaning are held back until the owner confirms them", blocksLaunch: false },
   { field: "PRICES", why: "no price list: the price-table band ships only with real numbers", blocksLaunch: false },
-  { field: "copy: fixed price", why: "« prix ferme avant de venir / confirmé par écrit, ne change pas sur place » (hero, FAQ, how-it-works)", blocksLaunch: false },
-  { field: "copy: supplies", why: "« produits et matériel apportés par l’équipe » (hero, FAQ, how-it-works)", blocksLaunch: false },
-  { field: "copy: re-clean", why: "« signalez-le dans les 24 heures : l’équipe revient sans frais » (FAQ)", blocksLaunch: false },
-  { field: "copy: keys", why: "« vous pouvez confier les clés » (FAQ)", blocksLaunch: false },
-  { field: "copy: offices", why: "« bureaux et commerces, tôt le matin ou après la fermeture » (hero, FAQ)", blocksLaunch: false },
-  { field: "copy: methods", why: "four / réfrigérateur, injection-extraction, haute pression in the service lines", blocksLaunch: false },
-  { field: "copy: consent", why: "« rien n’est facturé sans votre accord » (closing, thank-you page)", blocksLaunch: false },
+  ...COPY_TODO,
 ];
 
 assertLaunchable(site, OWNER_TODO);

@@ -12,10 +12,6 @@ import svc_deep_192_avif from "../../../assets/photos/svc-deep-192.avif";
 import svc_deep_336_avif from "../../../assets/photos/svc-deep-336.avif";
 import svc_deep_192_webp from "../../../assets/photos/svc-deep-192.webp";
 import svc_deep_336_webp from "../../../assets/photos/svc-deep-336.webp";
-import svc_after_works_192_avif from "../../../assets/photos/svc-after-works-192.avif";
-import svc_after_works_336_avif from "../../../assets/photos/svc-after-works-336.avif";
-import svc_after_works_192_webp from "../../../assets/photos/svc-after-works-192.webp";
-import svc_after_works_336_webp from "../../../assets/photos/svc-after-works-336.webp";
 import svc_upholstery_192_avif from "../../../assets/photos/svc-upholstery-192.avif";
 import svc_upholstery_336_avif from "../../../assets/photos/svc-upholstery-336.avif";
 import svc_upholstery_192_webp from "../../../assets/photos/svc-upholstery-192.webp";
@@ -101,11 +97,6 @@ export const PHOTO_SETS = {
     avif: [`${svc_deep_192_avif.src} 192w`, `${svc_deep_336_avif.src} 336w`].join(", "),
     webp: [`${svc_deep_192_webp.src} 192w`, `${svc_deep_336_webp.src} 336w`].join(", "),
     src: svc_deep_336_webp.src,
-  },
-  "svc-after-works": {
-    avif: [`${svc_after_works_192_avif.src} 192w`, `${svc_after_works_336_avif.src} 336w`].join(", "),
-    webp: [`${svc_after_works_192_webp.src} 192w`, `${svc_after_works_336_webp.src} 336w`].join(", "),
-    src: svc_after_works_336_webp.src,
   },
   "svc-upholstery": {
     avif: [`${svc_upholstery_192_avif.src} 192w`, `${svc_upholstery_336_avif.src} 336w`].join(", "),

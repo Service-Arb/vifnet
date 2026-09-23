@@ -8,7 +8,6 @@ import { Photo, TYPE } from "@/shared/ui";
 /** A real job photo per service, not an icon tile. */
 const PHOTO: Record<Subject, PhotoStem> = {
   deep: "svc-deep",
-  after_works: "svc-after-works",
   upholstery: "svc-upholstery",
   exterior: "svc-exterior",
   other: "svc-other",
@@ -32,7 +31,7 @@ export function Services({ copy, id, quote }: { copy: Copy; id: string; quote: {
           const item = t.items[subject];
           return (
             <li key={subject} className="flex items-start gap-4 md:gap-6">
-              <Photo stem={PHOTO[subject]} alt={item.photoAlt} sizes="(width < 48rem) 96px, 168px" className="size-24 shrink-0 rounded-[var(--radius)] object-cover md:size-[168px]" />
+              <Photo stem={PHOTO[subject]} alt={item.photoAlt} sizes="(width < 48rem) 96px, 168px" className="size-24 shrink-0 rounded-lg object-cover md:size-[168px]" />
               <div className="flex min-w-0 flex-1 flex-col gap-1.5 md:gap-2.5">
                 <h3 className={TYPE.itemTitle}>{item.name}</h3>
                 <p className={TYPE.itemBody}>{item.body}</p>
