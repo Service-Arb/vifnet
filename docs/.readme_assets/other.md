@@ -11,5 +11,4 @@ scripts/         photos.ts: the AVIF/WebP cuts of the portfolio
 tests/           vitest; tests/e2e/ Playwright; bundle_budget.txt
 deploy/          production config, authored in Nix
 nix/             the generated CI workflows' source
-vendor/          the unpublished @evinvest packages, until they are on npm
 ```
