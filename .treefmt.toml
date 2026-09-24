@@ -1,6 +1,3 @@
 [formatter.nix]
 command = "nixpkgs-fmt"
 includes = ["*.nix"]
-
-[global]
-excludes = ["vendor/**"]

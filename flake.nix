@@ -6,9 +6,9 @@
 
   inputs = {
     v_flakes.url = "github:valeratrades/v_flakes?ref=v1.6";
-    # TODO: re-pin to ?ref=@evinvest/kitstart-v0.1.0 once it is published —
-    # the tag does not exist yet, so this is lib main at the kitstart merge.
-    ev.url = "github:EV-invest/lib?rev=3c0eea0a7e1c18d8f818528a1d9c18e750395c94";
+    # The lib flake at the tag of the @evinvest/kitstart version in
+    # package-lock.json — mkLanding refuses a mismatch.
+    ev.url = "github:EV-invest/lib?ref=@evinvest/kitstart-v0.1.0";
     ev.inputs.v_flakes.follows = "v_flakes";
   };
 
@@ -57,64 +57,8 @@
             og = "/og?l=vifnet";
             quote = { location = "vifnet"; subject = "deep"; locality = "75015"; mobile = "0612345678"; surface_m2 = "65"; };
           };
-          # TODO: drop with the re-pin above — the lock's @evinvest/kitstart is
-          # 0.1.0 and this lib revision still says 0.0.0 until it is published.
-          checkKitstartVersion = false;
         };
 
-        # ── until @evinvest/{uikit,marketing,kitstart} are on npm ────────────
-        # TODO: delete this block with the npm swap (package.json `file:` →
-        # versions) and take `landing`'s outputs as they are. `importNpmLock`
-        # reads a `file:` spec as a path under the lock's directory with the
-        # scheme still on it, and mkLanding has no source-override input, so
-        # the vendored tarballs are handed to it here, and the site, the image
-        # and the budget are rebuilt on top.
-        npmLock = lib.importJSON ./package-lock.json;
-        npmOs = if pkgs.stdenv.hostPlatform.isDarwin then "darwin" else "linux";
-        npmCpu = if pkgs.stdenv.hostPlatform.isAarch64 then "arm64" else "x64";
-        fits = want: list:
-          let positive = builtins.filter (x: !(lib.hasPrefix "!" x)) list;
-          in !(builtins.elem "!${want}" list) && (positive == [ ] || builtins.elem want positive);
-        foreign = m: (m ? os && !(fits npmOs m.os)) || (m ? cpu && !(fits npmCpu m.cpu)) || (m ? libc && !(fits "glibc" m.libc));
-        npmSourceOverrides = lib.concatMapAttrs
-          (path: m:
-            if lib.hasPrefix "file:" (m.resolved or "") then
-              { ${path} = ./. + "/${lib.removePrefix "file:" m.resolved}"; }
-            else if (m.optional or false) && foreign m then
-              { ${path} = pkgs.emptyFile; }
-            else { })
-          npmLock.packages;
-        site = landing.site.overrideAttrs {
-          npmDeps = pkgs.importNpmLock {
-            npmRoot = lib.fileset.toSource {
-              root = ./.;
-              fileset = lib.fileset.unions [ ./package.json ./package-lock.json ./vendor/evinvest ];
-            };
-            packageSourceOverrides = npmSourceOverrides;
-          };
-        };
-        bundleBudget = pkgs.runCommand "${pname}-bundle-budget"
-          {
-            nativeBuildInputs = [ pkgs.nodejs_22 ];
-            budget = lib.fileset.toSource { root = ./.; fileset = ./tests/bundle_budget.txt; };
-          } ''
-          cd "$budget"
-          node --experimental-strip-types --disable-warning=ExperimentalWarning ${ev}/ts/kitstart/src/cli/kitstart-size.ts ${site} --route '/[locale]/[location]' --budget tests/bundle_budget.txt
-          touch "$out"
-        '';
-        containerStd = v_flakes.container.implement {
-          inherit pkgs pname;
-          containers."" = {
-            port = lib.toInt sitePort;
-            mounts = [ "/data" ];
-            criticality = "high";
-            healthPath = "/health";
-            entrypoint = [ "${pkgs.nodejs-slim_22}/bin/node" "${site}/server.js" ];
-            workingDir = "/data";
-            imageEnv = [ "HOME=/data" ] ++ lib.mapAttrsToList (n: v: "${n}=${v}") prodEnv;
-          };
-        };
-        # ── end of the vendored-tarball block ────────────────────────────────
 
         # ── bump the latest remote vX.Y.Z tag and push: `.#publish major|minor|patch [note]` ──
         # The version lives in the tag, not in a file. The tag is the release:
@@ -183,7 +127,6 @@
             playwright-report/'';
         };
         treefmt = (pkgs.formats.toml { }).generate "treefmt.toml" {
-          global.excludes = [ "vendor/**" ];
           formatter.nix = { command = "nixpkgs-fmt"; includes = [ "*.nix" ]; };
         };
         readme = v_flakes.readme-fw {
@@ -238,18 +181,7 @@
           generate = { type = "app"; program = "${runGenerate}/bin/generate"; };
         };
 
-        packages = containerStd.packages // {
-          default = site;
-          inherit site;
-          container = containerStd.packages."${pname}-container";
-        };
-
-        containers = containerStd.containers;
-
-        checks = {
-          inherit site;
-          bundle-budget = bundleBudget;
-        };
+        inherit (landing) packages checks containers;
 
         devShells.default = landing.devShell.overrideAttrs (old: {
           shellHook = (old.shellHook or "") + pre-commit-check.shellHook + ''
