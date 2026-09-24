@@ -31,6 +31,8 @@ export const site = defineSite({
   places: PLACES,
   publication: SERVICE_AREA_GATE,
   lead: LEAD,
+  // What app/ serves as a file besides the routes every landing has.
+  publicFiles: ["/icon.svg"],
 });
 
 export type PageKey = (typeof site.pageKeys)[number];

@@ -50,6 +50,13 @@ test.describe("without JavaScript", () => {
     await expect(page.locator("h1")).toContainText("n’existe pas");
   });
 
+  test("a file path nobody serves is the same 404; the icon is served", async ({ page, request }) => {
+    const response = await page.goto("/wp-login.php");
+    expect(response?.status()).toBe(404);
+    await expect(page.locator("h1")).toBeVisible();
+    expect((await request.get("/icon.svg")).status()).toBe(200);
+  });
+
   test("the slider is off until the script runs", async ({ page }) => {
     await page.goto("/fr#avant-apres");
     await expect(page.getByRole("slider")).toBeDisabled();
