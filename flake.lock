@@ -67,6 +67,27 @@
         "type": "github"
       }
     },
+    "ev": {
+      "inputs": {
+        "v_flakes": [
+          "v_flakes"
+        ]
+      },
+      "locked": {
+        "lastModified": 1790249306,
+        "narHash": "sha256-vx0QpI5Ot1tzUenG+0aQQI4DiGFfcQjKdPC1LwxAioQ=",
+        "owner": "EV-invest",
+        "repo": "lib",
+        "rev": "662ee06c5e95414b64e5b1f7895d490cf109a21b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "EV-invest",
+        "ref": "@evinvest/kitstart-v0.1.0",
+        "repo": "lib",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -236,6 +257,7 @@
     },
     "root": {
       "inputs": {
+        "ev": "ev",
         "v_flakes": "v_flakes"
       }
     },

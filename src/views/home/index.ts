@@ -1,1 +1,1 @@
-export { HomeView } from "./ui/HomeView";
+export { PlaceHome, SECTION_IDS } from "./ui/PlaceHome";

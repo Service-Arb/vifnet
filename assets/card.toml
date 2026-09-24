@@ -1,0 +1,9 @@
+# The one place a contact fact is written — the site reads it (`withLanding`
+# inlines it at build), and a printed card or a vCard would too.
+#
+# Vifnet has no domain, no public number and no public mailbox yet
+# (OWNER_TODO in src/shared/config/site.ts). Without `site` the whole site is
+# noindex and robots disallow everything; without `phone` there is no tel:
+# channel and the WhatsApp slot stays hidden — the quote form is the only way
+# in. Add them when the owner has them; `phone` must be international ("+33 …").
+name = "Vifnet"

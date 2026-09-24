@@ -1,7 +1,6 @@
-import type { MetadataRoute } from "next";
-import { robotsFor } from "@/features/seo";
-import { SITE } from "@/shared/config/site";
+import { robotsRoute } from "@evinvest/kitstart/next";
+import { site } from "@/shared/config/site";
 
-export default function robots(): MetadataRoute.Robots {
-  return robotsFor(SITE);
-}
+export const dynamic = "force-dynamic";
+
+export default robotsRoute(site);

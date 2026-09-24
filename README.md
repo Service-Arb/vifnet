@@ -7,17 +7,20 @@
 The landing site of Vifnet, a cleaning business in France that works at the
 customer's address and has no storefront of its own.
 
-This is the foundation, not the site: a Next.js app on the EV kit with one
-placeholder page in French and English. There is no domain and no public phone
-number yet, so every page is `noindex`, `robots.txt` disallows everything and
-the sitemap is empty. The facts still missing are listed once, in `OWNER_TODO`
-(`src/shared/config/site.ts`); giving the site a domain while a launch-blocking
-one is open fails the build.
+A Next.js app on [`@evinvest/kitstart`](https://github.com/EV-invest/lib/tree/main/ts/kitstart),
+the machinery the Service-Arb landings share (routing, the place model and its
+publication gate, the quote form and its lead store, SEO), built to the Figma
+file `11BVyibSdB8fBYrfBiLX3C`. What is Vifnet's own is the copy, the palette,
+the lock-up and the sections: hero, before/after, services, how it works,
+FAQ, the quote band.
 
-It follows the Service-Arb landing layout of
-[aquafix](https://github.com/Service-Arb/aquafix), with one deliberate
-difference: the business is modelled as a service area, so the type of a place
-has no field an address could be written into.
+There is no domain and no public phone number yet, so every page is `noindex`,
+`robots.txt` disallows everything, the sitemap is empty and the quote form is
+the only channel. The facts still missing — and every term the design proposes
+that the owner has not confirmed — are listed once, in `OWNER_TODO`
+(`src/shared/config/site.ts`); giving the site a domain while a launch-blocking
+one is open fails the build. The price table, the reviews and the service-area
+chips render nothing until their facts exist.
 <!-- markdownlint-disable -->
 <details>
 <summary>
@@ -30,14 +33,15 @@ The repo builds with Nix. Determinate Nix with `lazy-trees = true` is required.
 nix develop
 ```
 
-This gives you Node 22 and writes the generated files — `.github/workflows/`,
-`.gitignore`, `.treefmt.toml` and this README — from `flake.nix`. Edit the
-flake and `docs/.readme_assets/`, not them.
+This gives you Node 22, Playwright with its pinned browsers and vips, and
+writes the generated files — `.github/workflows/`, `.gitignore`,
+`.treefmt.toml` and this README — from `flake.nix`. Edit the flake and
+`docs/.readme_assets/`, not them.
 
 Plain npm works for the app itself:
 
 ```sh
-npm ci && npm run typecheck && npx eslint . && npx vitest run && npm run build && npm start
+npm ci && npm run typecheck && npm run lint && npx vitest run && npm run build && npm run size && npm start
 ```
 
 </details>
@@ -53,8 +57,9 @@ nix run .#dev            # http://localhost:59082/fr
 Run the checks:
 
 ```sh
-nix run .#test           # tsc, eslint, vitest, build
-nix flake check          # the hermetic Nix build
+nix run .#test           # tsc, lint (eslint + steiger), vitest, build, size, Playwright
+nix run .#size           # first-load JS against tests/bundle_budget.txt — the one hard gate
+nix flake check          # the hermetic Nix build and the budget against it
 ```
 
 Build the server and the container image:
@@ -62,29 +67,48 @@ Build the server and the container image:
 ```sh
 nix build                # the standalone server
 nix build .#container    # OCI image, on Linux
+nix run .#container-smoke  # boot it and hold it to its contract (Linux + docker)
 ```
 
-The image listens on 59082. Its settings come from `deploy/config.nix`.
-Pushing a `v*` tag builds the image and publishes it to
+The image listens on 59082 and keeps leads in `/data`. Its settings come from
+`deploy/config.nix`. Pushing a `v*` tag builds the image and publishes it to
 `ghcr.io/service-arb/vifnet`: `nix run .#publish` makes the tag.
 
-The palette in `assets/brand.toml` is a placeholder until the design exists;
-`npm run palette` regenerates `app/brand.css` from it, and a test fails when
-the two disagree.
+The palette is `assets/brand.toml`; `npm run palette` regenerates
+`app/brand.css` from it, and a test fails when the two disagree. The photos on
+the page are cut from `assets/profile_images/` by
+`nix shell nixpkgs#vips -c npm run photos`; a test fails when the committed
+cuts and `scripts/photos.ts` disagree.
+
+##### Visual baselines
+
+Screenshot baselines are Linux's, because CI is: a mac rasterises glyphs
+differently, so locally the pixel comparison is skipped. To refresh them after
+changing a section:
+
+1. Run the **Visual baselines** workflow on the branch
+   (`gh workflow run visual-baselines.yml --ref <branch>`). Before that workflow
+   exists on `main`, a CI run of **Errors** on the branch writes any missing
+   baseline and publishes the same artifact.
+2. `gh run download <run-id> -n visual-snapshots -D tests/e2e/__screenshots__`
+3. Look at the images, then commit them alone:
+   `test: refresh visual baselines (run <run-id>)`.
 
 `nix run .#help` prints the list of commands.
 
 ## Layout
 
 ```text
-app/             Next routes: /[locale], robots, sitemap, /health, the global 404
+app/             Next routes, each a few lines over a kitstart factory: pages under
+                 [locale]/[location], /quote, /og, /health, robots, sitemap, the global 404
 src/             the site in Feature-Sliced layers (shared → entities → features → widgets → views);
-                 eslint rejects an upward, sideways or deep import
-src/shared/landing/  the place, publication and site model of the landing vertical
-assets/          brand.toml (placeholder palette), profile_images/ (the portfolio)
-tests/           vitest
+                 widgets/ are named after the Figma frames (hero, before-after, services, …)
+assets/          brand.toml (the palette), card.toml (contact facts), the mark and lock-up,
+                 fonts/, profile_images/ (the portfolio) and photos/ (its web cuts)
+scripts/         photos.ts: the AVIF/WebP cuts of the portfolio
+tests/           vitest; tests/e2e/ Playwright; bundle_budget.txt
 deploy/          production config, authored in Nix
-nix/             the generated CI workflows' source, the container smoke test
+nix/             the generated CI workflows' source
 ```
 
 

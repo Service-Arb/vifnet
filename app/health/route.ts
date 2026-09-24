@@ -1,6 +1,6 @@
-/** The container's readiness probe: the process answers. */
+import { healthRoute } from "@evinvest/kitstart/next";
+
+/** The container's readiness probe. */
 export const dynamic = "force-dynamic";
 
-export function GET(): Response {
-  return new Response("ok", { headers: { "Content-Type": "text/plain; charset=utf-8" } });
-}
+export const GET = healthRoute();
