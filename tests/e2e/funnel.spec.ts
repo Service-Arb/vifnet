@@ -85,9 +85,21 @@ test.describe("before launch", () => {
 
 test("a service link picks its service in the form", async ({ page }) => {
   await page.goto("/fr#prestations");
-  await page.locator("#prestations li", { hasText: "Textiles" }).getByRole("link").click();
+  // Hydrated: before that the click lands on a plain link and picks nothing.
+  await expect(page.locator("form#quote select")).toHaveCount(0);
+  const link = page.locator("#prestations li", { hasText: "Textiles" }).getByRole("link");
+  await link.click();
   await expect(page).toHaveURL(/#devis$/);
-  await expect(page.getByRole("combobox", { name: "Type de ménage" })).toHaveText("Textiles");
+  const trigger = page.getByRole("combobox", { name: "Type de ménage" });
+  await expect(trigger).toHaveText("Textiles");
+  await expect(page.locator("form#quote input[name=subject]")).toHaveValue("upholstery");
+
+  // The visitor changes it by hand; the same link again puts its service back.
+  await trigger.click();
+  await page.getByRole("listbox").getByRole("option", { name: "Extérieurs" }).click();
+  await expect(trigger).toHaveText("Extérieurs");
+  await link.click();
+  await expect(trigger).toHaveText("Textiles");
   await expect(page.locator("form#quote input[name=subject]")).toHaveValue("upholstery");
 });
 
