@@ -3,12 +3,11 @@ import {
   Field,
   FieldLabel,
   Input,
-  NativeSelect,
-  NativeSelectOption,
   PHONE_INPUT_PROPS,
   QuoteFormShell,
 } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
+import { SubjectSelect } from "@/features/pick-subject";
 import { LEAD, SURFACE_M2 } from "@/shared/config/lead";
 import { TYPE } from "@/shared/ui";
 
@@ -24,7 +23,9 @@ export interface QuoteFormProps {
  * The four fields, on the kit's headless shell: a plain POST to `/quote`
  * answered with a 303, so it works before any JavaScript arrives. Field names
  * are `site.lead.wire` and the surface extra; controls are the kit's at
- * size `lg` (48 px, 16 px text — no zoom on iOS).
+ * size `lg` (48 px, 16 px text — no zoom on iOS). The subject is the kit's
+ * `FormSelect`: a native select until hydration, the kit's list after — never
+ * the platform's menu once a script runs.
  */
 export function QuoteForm({ copy, placeSlug, renderedAt, formId }: QuoteFormProps) {
   const { t, locale } = copy;
@@ -40,13 +41,14 @@ export function QuoteForm({ copy, placeSlug, renderedAt, formId }: QuoteFormProp
     >
       <Field className="flex flex-col gap-2">
         <FieldLabel>{l.subject}</FieldLabel>
-        <NativeSelect name={LEAD.wire.subject} size="lg" placeholder={l.choose} defaultValue="" required>
-          {LEAD.subjects.map(s => (
-            <NativeSelectOption key={s} value={s}>
-              {t.subjects[s]}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+        <SubjectSelect
+          form={formId}
+          name={LEAD.wire.subject}
+          size="lg"
+          placeholder={l.choose}
+          required
+          options={LEAD.subjects.map(s => ({ value: s, label: t.subjects[s] }))}
+        />
       </Field>
       <div className="flex gap-3">
         <Field className="flex w-[140px] shrink-0 flex-col gap-2">

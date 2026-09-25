@@ -2,7 +2,7 @@ import { Section } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { SubjectLink } from "@/features/pick-subject";
 import type { PhotoStem } from "@/shared/portfolio";
-import { LEAD, SUBJECTS, type Subject } from "@/shared/config/lead";
+import { SUBJECTS, type Subject } from "@/shared/config/lead";
 import { Photo, TYPE } from "@/shared/ui";
 
 /** A real job photo per service, not an icon tile. */
@@ -37,7 +37,7 @@ export function Services({ copy, id, quote }: { copy: Copy; id: string; quote: {
                 <p className={TYPE.itemBody}>{item.body}</p>
                 <p className="flex flex-wrap items-center gap-3 pt-1 text-sm">
                   <span className="text-ink-soft">{t.onQuote}</span>
-                  <SubjectLink href={quote.href} form={quote.form} field={LEAD.wire.subject} subject={subject} className="font-medium text-primary-ink hover:underline">
+                  <SubjectLink href={quote.href} form={quote.form} subject={subject} className="font-medium text-primary-ink hover:underline">
                     {t.ask}
                   </SubjectLink>
                 </p>
