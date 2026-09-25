@@ -1,5 +1,5 @@
 import { MIN_FILL_MS } from "@evinvest/kitstart";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 // The subject is kitstart's FormSelect: the platform's select until the page
 // hydrates (the no-JS post is in funnel.spec.ts), the kit's list after — never
@@ -48,19 +48,35 @@ test("an unchosen subject stops the submit and opens the list", async ({ page })
 });
 
 test("the field is the same box before and after hydration", async ({ browser }, testInfo) => {
-  const box = async (javaScriptEnabled: boolean) => {
+  const open = async (javaScriptEnabled: boolean) => {
     const context = await browser.newContext({ javaScriptEnabled, viewport: testInfo.project.use.viewport ?? null });
     const page = await context.newPage();
     await page.goto(`${testInfo.project.use.baseURL ?? ""}/fr#devis`);
-    const control = javaScriptEnabled ? page.getByRole("combobox", { name: LABEL }) : page.locator("form#quote select[name=subject]");
-    await expect(control).toBeVisible();
-    const rect = await control.evaluate(el => {
+    return page;
+  };
+  const measure = (control: Locator) =>
+    control.evaluate(el => {
       const r = el.getBoundingClientRect();
       const style = getComputedStyle(el);
       return { width: r.width, height: r.height, x: r.x, border: style.borderTopWidth, radius: style.borderTopLeftRadius };
     });
-    await context.close();
-    return rect;
-  };
-  expect(await box(true)).toEqual(await box(false));
+
+  // The server's select is a combobox of the same name, so until the page
+  // hydrates the role finds it — and hydration detaches it, leaving a
+  // measurement of zeros. Measure only once the kit's button has replaced it.
+  const scripted = await open(true);
+  await expect(scripted.locator("form#quote select")).toHaveCount(0);
+  const kit = scripted.getByRole("combobox", { name: LABEL });
+  await expect(kit).toHaveJSProperty("tagName", "BUTTON");
+  await expect(kit).toBeVisible();
+  const hydrated = await measure(kit);
+  await scripted.context().close();
+
+  const bare = await open(false);
+  const native = bare.locator("form#quote select[name=subject]");
+  await expect(native).toBeVisible();
+  const server = await measure(native);
+  await bare.context().close();
+
+  expect(hydrated).toEqual(server);
 });
