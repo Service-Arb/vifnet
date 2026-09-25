@@ -4,6 +4,12 @@ import { useSyncExternalStore } from "react";
  * The subject a service link picked, per form. `n` counts the picks, so a
  * second click on the same service still reaches a control the visitor has
  * changed since.
+ *
+ * The store is module state: it lives as long as the tab and is keyed by the
+ * form's id (`FORM_ID` in `views/home`). That holds because the site has no
+ * client-side navigation — every page is a full load, which starts it empty.
+ * A soft navigation between two pages with the same form id would carry the
+ * pick over.
  */
 export interface Pick {
   subject: string;
