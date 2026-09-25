@@ -74,16 +74,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1790321346,
-        "narHash": "sha256-i/at+U3QrNRsb6MlDLCrcsAPIi2pYt8qPsGctx1YIsY=",
+        "lastModified": 1790358232,
+        "narHash": "sha256-pLiHT21a/YZ7B9aYLZoswomiX7k7PrqWV8hzPysHsnw=",
         "owner": "EV-invest",
         "repo": "lib",
-        "rev": "662f592221d7cf8a0555c7ee14bb4999bd067ab5",
+        "rev": "2747d17ad554ad682b6f91ca7dd1e1876d69f4dc",
         "type": "github"
       },
       "original": {
         "owner": "EV-invest",
-        "ref": "@evinvest/kitstart-v0.3.0",
+        "ref": "@evinvest/kitstart-v0.4.0",
         "repo": "lib",
         "type": "github"
       }
