@@ -16,6 +16,7 @@ test.describe("without JavaScript", () => {
 
     await page.goto("/fr#devis");
     const form = page.locator("form#quote");
+    // Without a script the subject is the platform's own select, which posts as is.
     await form.locator("select[name=subject]").selectOption("upholstery");
     await form.locator("input[name=surface_m2]").fill("65");
     await form.locator("input[name=locality]").fill(locality);
@@ -86,7 +87,8 @@ test("a service link picks its service in the form", async ({ page }) => {
   await page.goto("/fr#prestations");
   await page.locator("#prestations li", { hasText: "Textiles" }).getByRole("link").click();
   await expect(page).toHaveURL(/#devis$/);
-  await expect(page.locator("form#quote select[name=subject]")).toHaveValue("upholstery");
+  await expect(page.getByRole("combobox", { name: "Type de ménage" })).toHaveText("Textiles");
+  await expect(page.locator("form#quote input[name=subject]")).toHaveValue("upholstery");
 });
 
 test("the before/after slider moves with the keyboard", async ({ page }) => {

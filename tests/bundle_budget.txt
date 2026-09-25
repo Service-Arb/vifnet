@@ -6,4 +6,9 @@
 # the kitstart template's 152,780 plus the before/after island and the
 # service links. Set from that measurement plus ~2.5 %; raise it only in a
 # commit that says why.
-158000
+#
+# Raised for the quote form's subject: kitstart's FormSelect brings the kit's
+# Select (the list drawn in the palette, not the platform's menu) into the
+# page — 153,993 → 158,522 B gz (+4,529, the one island chunk that holds it;
+# kitstart's README measures 3.8 KB on its template). Again that plus ~2.5 %.
+162500
