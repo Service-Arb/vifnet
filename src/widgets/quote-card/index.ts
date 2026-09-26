@@ -1,1 +1,1 @@
-export { QuoteCard } from "./ui/QuoteCard";
+export { QuoteCard, type QuoteCardProps } from "./ui/QuoteCard";

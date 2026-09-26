@@ -9,6 +9,10 @@
 @source "../node_modules/@evinvest/uikit/dist";
 @source "../node_modules/@evinvest/kitstart/dist";
 
+/* A browser that runs no script: the quote card shows its two steps as one
+   form there (src/widgets/quote-card). */
+@custom-variant noscript (@media (scripting: none));
+
 /* Geometry of the Figma file 1wXlPmnmOdKYPDWz6N5EB8, whose names are
    Tailwind's: `--radius` 8 makes the kit's `rounded-md/lg/xl/2xl` 6/8/12/16 as
    the frame draws them; a control (field, large button) is `rounded-xl`, and
