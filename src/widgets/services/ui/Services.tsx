@@ -34,7 +34,7 @@ export function Services({ copy, id, quote }: { copy: Copy; id: string; quote: {
               <Photo stem={PHOTO[subject]} alt={item.photoAlt} sizes="(width < 48rem) 96px, 168px" className="size-24 shrink-0 rounded-lg object-cover md:size-[168px]" />
               <div className="flex min-w-0 flex-1 flex-col gap-1.5 md:gap-2.5">
                 <h3 className={TYPE.itemTitle}>{item.name}</h3>
-                <p className={TYPE.itemBody}>{item.body}</p>
+                <p className={`${TYPE.body} text-ink-mid`}>{item.body}</p>
                 <p className="flex flex-wrap items-center gap-3 pt-1 text-sm">
                   <span className="text-ink-soft">{t.onQuote}</span>
                   <SubjectLink href={quote.href} form={quote.form} subject={subject} className="font-medium text-primary-ink hover:underline">

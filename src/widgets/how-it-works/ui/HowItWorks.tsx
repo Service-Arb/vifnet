@@ -13,7 +13,7 @@ export function HowItWorks({ copy, id }: { copy: Copy; id: string }) {
           <li key={step.title} className="flex flex-1 flex-col gap-2.5 border-t border-border pt-6 pb-4 md:pb-0">
             <span className="text-[40px] font-semibold leading-none text-primary-ink">{i + 1}</span>
             <h3 className={`${TYPE.itemTitle} md:text-xl`}>{step.title}</h3>
-            <p className={TYPE.itemBody}>{step.body}</p>
+            <p className={`${TYPE.body} text-ink-mid`}>{step.body}</p>
           </li>
         ))}
       </ol>

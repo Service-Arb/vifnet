@@ -9,21 +9,25 @@
 @source "../node_modules/@evinvest/uikit/dist";
 @source "../node_modules/@evinvest/kitstart/dist";
 
-/* Geometry decided in Figma (note "read first", 9:526): radii, the control
-   and the page grid — 1152 px of content, a 20 px gutter on a phone and 48+
-   from a tablet up, bands of 64/96 px. Scoped to the brand so it outranks the
-   kit's `:where()` defaults and their scale-ups. */
+/* Geometry of the Figma file 1wXlPmnmOdKYPDWz6N5EB8: radii (`rounded-sm` 8
+   for small buttons, `rounded-lg` 12 for fields and large buttons,
+   `rounded-xl` 16 for cards), the control (`Button size="xl"` is the frame's
+   Button lg: 32 × 14, 16 px) and the page grid — 1152 px of content, a 16 px
+   gutter on a phone and 48+ from a tablet up, bands of 64/80 px. The gold
+   band is tighter on a wide screen than on a phone, as the frames draw it.
+   Scoped to the brand so it outranks the kit's `:where()` defaults and their
+   scale-ups. */
 [data-brand="vifnet"] {
   --radius: 12px;
-  --control-radius: 8px;
-  --control-px: 28px;
-  --control-py: 16px;
+  --control-radius: 12px;
+  --control-px: 32px;
+  --control-py: 14px;
   --control-text: 16px;
   --page-max: 72rem;
-  --page-min-px: 1.25rem;
+  --page-min-px: 1rem;
   --page-px: max(var(--page-min-px), (100% - var(--page-max)) / 2);
   --band-py: 4rem;
-  --band-py-tight: 2.5rem;
+  --band-py-tight: 4rem;
   /* The face is the one `next/font` loaded (src/shared/ui/fonts.ts), not the
      family name brand.toml can spell. */
   --brand-font-sans: var(--font-instrument-sans);
@@ -33,7 +37,7 @@
 @media (min-width: 768px) {
   [data-brand="vifnet"] {
     --page-min-px: 3rem;
-    --band-py: 6rem;
+    --band-py: 5rem;
     --band-py-tight: 3rem;
   }
 }
@@ -68,6 +72,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* The header sticks: an anchor lands below it, not under it. */
+  scroll-padding-top: 5rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
