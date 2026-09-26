@@ -55,7 +55,8 @@ export const FR = {
   statusStrip: [],
   langName: "Français",
   facts: () => ["Vifnet", "Mentions légales en cours de rédaction"],
-  header: { cta: "Demander un devis", home: "Vifnet — accueil" },
+  header: { cta: "Demander un devis", ctaCompact: "Devis", home: "Vifnet — accueil" },
+  nav: { services: "Prestations", work: "Avant / après", steps: "Étapes", faq: "FAQ", menu: "Menu" },
   hero: {
     title: "Le ménage fait à fond, chez vous.",
     lede: "Grand ménage, textiles ou extérieurs, à la maison ou dans l’appartement. Décrivez le besoin en une minute : nous vous rappelons.",
@@ -64,6 +65,7 @@ export const FR = {
     photoAlt: "L’équipe Vifnet en tablier, dans un salon",
   },
   beforeAfter: {
+    eyebrow: "Nos réalisations",
     title: "Avant, après.",
     lede: "Faites glisser la poignée pour comparer.",
     before: "Avant",
@@ -81,6 +83,7 @@ export const FR = {
     },
   },
   services: {
+    eyebrow: "Nos prestations",
     title: "Ce que nous nettoyons",
     lede: "Choisissez un type : le formulaire s’ouvre déjà rempli.",
     onQuote: "Sur devis",
@@ -105,6 +108,7 @@ export const FR = {
     },
   },
   howItWorks: {
+    eyebrow: "En trois étapes",
     title: "Comment ça se passe",
     steps: [
       { title: "Vous décrivez le besoin", body: "Type de ménage, surface, ville et un numéro : le formulaire prend une minute." },
@@ -117,6 +121,7 @@ export const FR = {
     title: "Nous venons chez vous",
     lede: "Pas d’agence à visiter : l’équipe se déplace dans les communes ci-contre. Votre ville n’y est pas ? Demandez quand même.",
   },
+  faqEyebrow: "Bon à savoir",
   faqTitle: "Questions fréquentes",
   faqs: [
     {

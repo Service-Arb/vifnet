@@ -27,9 +27,13 @@ export type Said = CoreSaid<Facts>;
  * "copy:" lines): no fixed price, no supplies, no re-clean, no keys.
  */
 export interface Text extends CoreText<PageKey, Facts> {
-  header: { cta: string; home: string };
+  /** `ctaCompact` fits the phone's header beside the lock-up and the menu. */
+  header: { cta: string; ctaCompact: string; home: string };
+  /** The header's links to the bands; `menu` names the phone's menu button. */
+  nav: { services: string; work: string; steps: string; faq: string; menu: string };
   hero: { title: string; lede: string; cta: string; toWork: string; photoAlt: string };
   beforeAfter: {
+    eyebrow: string;
     title: string;
     lede: string;
     before: string;
@@ -43,6 +47,7 @@ export interface Text extends CoreText<PageKey, Facts> {
     pairs: Record<PairKey, string>;
   };
   services: {
+    eyebrow: string;
     title: string;
     lede: string;
     onQuote: string;
@@ -50,9 +55,10 @@ export interface Text extends CoreText<PageKey, Facts> {
     items: Record<Subject, { name: string; body: string; photoAlt: string }>;
   };
   priceTable: { title: string; lede: string; service: string; price: string; detail: Record<Subject, string> };
-  howItWorks: { title: string; steps: readonly { title: string; body: string }[] };
+  howItWorks: { eyebrow: string; title: string; steps: readonly { title: string; body: string }[] };
   reviews: { title: string; summary: (value: string, count: number) => string };
   serviceArea: { title: string; lede: string };
+  faqEyebrow: string;
   faqTitle: string;
   faqs: readonly { q: string; a: string }[];
   closing: { title: string; lede: string; photoAlt: string };

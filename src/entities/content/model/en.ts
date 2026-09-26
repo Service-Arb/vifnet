@@ -54,7 +54,8 @@ export const EN = {
   statusStrip: [],
   langName: "English",
   facts: () => ["Vifnet", "Legal notice in preparation"],
-  header: { cta: "Get a quote", home: "Vifnet — home" },
+  header: { cta: "Get a quote", ctaCompact: "Get a quote", home: "Vifnet — home" },
+  nav: { services: "Services", work: "Before / after", steps: "How it works", faq: "FAQ", menu: "Menu" },
   hero: {
     title: "Cleaning done thoroughly, at your place.",
     lede: "Deep cleans, upholstery or outdoor areas, in your house or flat. Describe the job in a minute: we call you back.",
@@ -63,6 +64,7 @@ export const EN = {
     photoAlt: "The Vifnet team in aprons, in a living room",
   },
   beforeAfter: {
+    eyebrow: "Our work",
     title: "Before, after.",
     lede: "Drag the handle to compare.",
     before: "Before",
@@ -80,6 +82,7 @@ export const EN = {
     },
   },
   services: {
+    eyebrow: "What we do",
     title: "What we clean",
     lede: "Pick a type: the form opens already filled in.",
     onQuote: "On quote",
@@ -104,6 +107,7 @@ export const EN = {
     },
   },
   howItWorks: {
+    eyebrow: "In three steps",
     title: "How it works",
     steps: [
       { title: "You describe the job", body: "Type of cleaning, surface, town and a number: the form takes a minute." },
@@ -116,6 +120,7 @@ export const EN = {
     title: "We come to you",
     lede: "Nowhere to visit: the team travels to the towns listed here. Yours is not there? Ask all the same.",
   },
+  faqEyebrow: "Good to know",
   faqTitle: "Questions",
   faqs: [
     {
