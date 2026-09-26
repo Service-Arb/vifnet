@@ -20,7 +20,7 @@ export interface ComparisonProps {
   head: ReactNode;
 }
 
-const VIEWER_SIZES = "(width < 48rem) calc(100vw - 2.5rem), 560px";
+const VIEWER_SIZES = "(width < 48rem) calc(100vw - 2rem), 560px";
 const TAG = `absolute bottom-3 rounded-full bg-background px-2.5 py-[5px] ${TYPE.fine} font-semibold text-ink md:bottom-4`;
 
 const noop = () => () => {};
@@ -44,8 +44,8 @@ export function Comparison({ pairs, words, head }: ComparisonProps) {
   if (!pair) return null;
   return (
     <div className="flex flex-col gap-7 md:grid md:grid-cols-[minmax(0,1fr)_560px] md:grid-rows-[1fr_auto_auto_auto_1fr] md:gap-x-20 md:gap-y-6">
-      <div className="flex flex-col gap-7 md:col-start-1 md:row-start-2 md:gap-6">{head}</div>
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-muted md:col-start-2 md:row-span-5 md:row-start-1">
+      <div className="flex flex-col md:col-start-1 md:row-start-2">{head}</div>
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-muted md:col-start-2 md:row-span-5 md:row-start-1">
         <Picture set={pair.after} alt={`${pair.caption} — ${words.after}`} sizes={VIEWER_SIZES} className="absolute inset-0 size-full object-cover" />
         <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}>
           <Picture set={pair.before} alt="" sizes={VIEWER_SIZES} className="absolute inset-0 size-full object-cover" />
@@ -89,13 +89,13 @@ export function Comparison({ pairs, words, head }: ComparisonProps) {
               setIndex(i);
               setPosition(50);
             }}
-            className={`relative size-14 shrink-0 overflow-hidden rounded-lg md:size-[72px] ${i === index ? "ring-[2.5px] ring-primary" : "ring-1 ring-border"}`}
+            className={`relative size-14 shrink-0 overflow-hidden rounded-lg md:size-[72px] ${i === index ? "ring-[2.5px] ring-primary-ink" : "ring-1 ring-border"}`}
           >
             <Picture set={p.thumb} alt="" sizes="72px" className="size-full object-cover" />
           </button>
         ))}
       </div>
-      <p aria-live="polite" className="text-sm font-medium text-ink-mid md:col-start-1 md:row-start-4 md:text-[15px]">
+      <p aria-live="polite" className="text-sm font-medium text-ink-mid md:col-start-1 md:row-start-4">
         {pair.caption}
       </p>
     </div>
