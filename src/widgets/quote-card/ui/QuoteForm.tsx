@@ -19,6 +19,9 @@ export interface QuoteFormProps {
   formId: string;
 }
 
+const FIELD = "flex flex-col gap-2";
+const LABEL = `${TYPE.label} text-ink`;
+
 /**
  * The four fields, on the kit's headless shell: a plain POST to `/quote`
  * answered with a 303, so it works before any JavaScript arrives. Field names
@@ -26,21 +29,17 @@ export interface QuoteFormProps {
  * size `lg` (48 px, 16 px text — no zoom on iOS). The subject is the kit's
  * `FormSelect`: a native select until hydration, the kit's list after — never
  * the platform's menu once a script runs.
+ *
+ * Every field keeps a visible label: the frame draws placeholders only, which
+ * vanish as the visitor types.
  */
 export function QuoteForm({ copy, placeSlug, renderedAt, formId }: QuoteFormProps) {
   const { t, locale } = copy;
   const l = t.quoteLabels;
   return (
-    <QuoteFormShell
-      id={formId}
-      placeSlug={placeSlug}
-      locale={locale}
-      renderedAt={renderedAt}
-      honeypotLabel={t.quoteForm.honeypotLabel}
-      className="gap-[18px] rounded-lg border border-border bg-card p-5 md:p-8"
-    >
-      <Field className="flex flex-col gap-2">
-        <FieldLabel>{l.subject}</FieldLabel>
+    <QuoteFormShell id={formId} placeSlug={placeSlug} locale={locale} renderedAt={renderedAt} honeypotLabel={t.quoteForm.honeypotLabel} className="gap-3">
+      <Field className={FIELD}>
+        <FieldLabel className={LABEL}>{l.subject}</FieldLabel>
         <SubjectSelect
           form={formId}
           name={LEAD.wire.subject}
@@ -51,24 +50,24 @@ export function QuoteForm({ copy, placeSlug, renderedAt, formId }: QuoteFormProp
         />
       </Field>
       <div className="flex gap-3">
-        <Field className="flex w-[140px] shrink-0 flex-col gap-2">
-          <FieldLabel>{l.surface}</FieldLabel>
+        <Field className={`${FIELD} w-26 shrink-0`}>
+          <FieldLabel className={LABEL}>{l.surface}</FieldLabel>
           <Input name={SURFACE_M2.name} size="lg" inputMode="numeric" pattern="[0-9]*" placeholder={l.surfaceHint} />
         </Field>
-        <Field className="flex min-w-0 flex-1 flex-col gap-2">
-          <FieldLabel>{l.locality}</FieldLabel>
+        <Field className={`${FIELD} min-w-0 flex-1`}>
+          <FieldLabel className={LABEL}>{l.locality}</FieldLabel>
           <Input name={LEAD.wire.locality} size="lg" autoComplete="address-level2" placeholder={l.localityHint} required />
         </Field>
       </div>
-      <Field className="flex flex-col gap-2">
-        <FieldLabel>{l.mobile}</FieldLabel>
+      <Field className={FIELD}>
+        <FieldLabel className={LABEL}>{l.mobile}</FieldLabel>
         <Input name={LEAD.wire.mobile} size="lg" {...PHONE_INPUT_PROPS} placeholder={l.mobileHint} required />
-        <p className={`${TYPE.fine} leading-[1.4] text-ink-soft`}>{l.callback}</p>
+        <p className={`${TYPE.fine} text-ink-soft`}>{l.callback}</p>
       </Field>
-      <Button type="submit" size="xl" className="w-full font-semibold">
+      <Button type="submit" size="xl" className="mt-2 w-full font-bold">
         {t.quoteForm.submit}
       </Button>
-      <p className={`${TYPE.fine} leading-[1.45] text-ink-soft`}>{t.quoteForm.privacy}</p>
+      <p className={`${TYPE.fine} text-center text-ink-soft`}>{t.quoteForm.privacy}</p>
     </QuoteFormShell>
   );
 }

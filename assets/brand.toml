@@ -1,29 +1,37 @@
 # Vifnet's single source for colour, in the `@evinvest/uikit` token vocabulary.
-# Taken from the printed identity (business cards, aprons, polos in
-# assets/profile_images) and drawn in Figma `11BVyibSdB8fBYrfBiLX3C`, whose
-# `ev/theme` modes "vifnet · light" / "vifnet · dark" carry the same values
-# (mirrored in the design source of truth `e0V2P1cQpEFRuXTeNtEMh6`).
-# `npm run palette` emits `app/brand.css` from it and fails on a hole in either
-# scope; a test holds the committed copy to this file.
+# Forest and leaf come from the printed identity (business cards, aprons, polos
+# in assets/profile_images); the page is drawn in Figma `1wXlPmnmOdKYPDWz6N5EB8`
+# ("Cleaning site"), whose variables map onto these tokens. The previous source
+# was Figma `11BVyibSdB8fBYrfBiLX3C`. `npm run palette` emits `app/brand.css`
+# from it and fails on a hole in either scope; a test holds the committed copy
+# to this file.
 #
-# Forest green is the brand, leaf green the action, gold the star. Gold lives
-# in `accent-warn` because the kit has no rating token: it is reserved for the
-# mark's star and review stars, and it is a fill (label `on-accent-warn`), never
-# text on a light surface (1.9:1 on white).
+# Forest is the brand and the ink, gold the action, leaf the link and the ring.
+# Gold is `primary`: every CTA is a gold fill, and the label on it is dark
+# (forest, `on-primary`, 7.84:1) — never white. On a light surface gold is
+# never text or an indicator (2.08:1 on white), so there `primary-ink` and
+# `ring` are leaf; on a dark surface gold is both. The stars stay in
+# `accent-warn`, the same gold as a fill. The mark's swoosh reads `positive`
+# (leaf / leaf-light), not the gold action.
 #
 # Two scopes, because a `<Section polarity=…>` re-themes its subtree: both carry
 # every name. A surface takes its ink from its scope; a filled role carries its
 # own `on-*`. Accents are ordered quiet to loud (ev_lib docs/spec/accents.md);
 # trace/debug/info share one quiet value until a design separates them.
-# Neutrals are tinted green, never pure grey or black.
+# Neutrals are tinted green (the Figma file's are cold slate), never pure grey
+# or black.
 #
 # Held to the kit's floors (lib ts/uikit/test/tokens.test.ts) and WCAG AA:
-#   light  ink 16.2:1 on white · ink-soft 5.45:1 on white, 5.09:1 on card
-#          on-primary 5.10:1 · primary-ink 6.49:1 on white, 6.06:1 on card
-#          muted vs card 1.38:1 (slider track) · primary-ink on muted 4.39:1
-#   dark   ink 16.4:1 on background · ink-soft 9.16:1 on background, 7.28:1 on card
-#          primary 7.79:1 on background, on-primary 7.79:1 · primary-ink 7.65:1 on card
-#   both   every on-* ≥ 4.77:1 on its fill; the ring ≥ 4.44:1 on every surface
+#   light  ink 16.3:1 on white, 15.6:1 on card · ink-mid 9.05:1 / 8.65:1
+#          ink-soft 5.45:1 on white, 5.21:1 on card, 5.0:1 on hover
+#          primary-ink and ring (leaf) 6.39:1 on white, 6.11:1 on card
+#          on-primary 7.84:1 on gold · on-secondary 15.6:1 · on-positive 6.39:1
+#          input 3.06:1 on white (WCAG 1.4.11) · muted vs card 1.42:1
+#   dark   ink 15.6:1 on background, 12.0:1 on card · ink-mid 9.87:1 / 7.56:1
+#          ink-soft 6.63:1 on background, 5.08:1 on card, 7.3:1 on popover
+#          primary-ink and ring (gold) 7.84:1 on background, 6.01:1 on card
+#          on-primary 7.84:1 · on-secondary 11.58:1 · positive 6.6:1 on background
+#          input 4.05:1 on background
 #
 # Values only, no layout: geometry lives in `app/globals.css`.
 
@@ -39,23 +47,23 @@ wordmark = ["Vifnet", ""]
 
 [colors.light]
 background = "#ffffff"
-card = "#f5f8f3"
+card = "#fafaf7"
 muted = "#cbd8c7"
 popover = "#ffffff"
-hover = "#ebf1e8"
-ink = "#13241a"
+hover = "#f0f7f0"
+ink = "#0f2419"
 ink-mid = "#3b4d40"
 ink-soft = "#5c6e60"
-border = "#dbe4d8"
-input = "#dbe4d8"
-ring = "#2f7d3a"
-brand = "#1f4d2e"
-primary = "#2f7d3a"
-on-primary = "#ffffff"
-primary-ink = "#276b31"
-secondary = "#ebf1e8"
-on-secondary = "#13241a"
-positive = "#1f7a45"
+border = "#e3e9e1"
+input = "#879886"
+ring = "#2d6a4f"
+brand = "#0f2419"
+primary = "#e8a838"
+on-primary = "#0f2419"
+primary-ink = "#2d6a4f"
+secondary = "#0f2419"
+on-secondary = "#fafaf7"
+positive = "#2d6a4f"
 on-positive = "#ffffff"
 accent-trace = "#5c6e60"
 on-accent-trace = "#ffffff"
@@ -63,8 +71,8 @@ accent-debug = "#5c6e60"
 on-accent-debug = "#ffffff"
 accent-info = "#5c6e60"
 on-accent-info = "#ffffff"
-accent-warn = "#f2b632"
-on-accent-warn = "#13241a"
+accent-warn = "#e8a838"
+on-accent-warn = "#0f2419"
 accent-error = "#c8352a"
 on-accent-error = "#ffffff"
 chart-1 = "#276b31"
@@ -74,33 +82,33 @@ chart-4 = "#c8352a"
 chart-5 = "#1f4d2e"
 
 [colors.dark]
-background = "#0d1a12"
-card = "#16301f"
+background = "#0f2419"
+card = "#1a3a28"
 muted = "#2b4b35"
-popover = "#1d3a27"
-hover = "#1d3a27"
-ink = "#f2f6f1"
-ink-mid = "#d3e0d5"
-ink-soft = "#a9bfae"
-border = "#2b4b35"
-input = "#2b4b35"
-ring = "#5fbf6a"
-brand = "#1f4d2e"
-primary = "#5fbf6a"
-on-primary = "#0d1a12"
-primary-ink = "#7fd08a"
-secondary = "#1d3a27"
-on-secondary = "#f2f6f1"
-positive = "#4cb87a"
-on-positive = "#0d1a12"
+popover = "#0a1a10"
+hover = "#22362b"
+ink = "#fafaf7"
+ink-mid = "#c4cbc6"
+ink-soft = "#9fa7a3"
+border = "#273a30"
+input = "#6a8573"
+ring = "#e8a838"
+brand = "#0f2419"
+primary = "#e8a838"
+on-primary = "#0f2419"
+primary-ink = "#e8a838"
+secondary = "#273a30"
+on-secondary = "#fafaf7"
+positive = "#52b788"
+on-positive = "#0f2419"
 accent-trace = "#a9bfae"
 on-accent-trace = "#0d1a12"
 accent-debug = "#a9bfae"
 on-accent-debug = "#0d1a12"
 accent-info = "#a9bfae"
 on-accent-info = "#0d1a12"
-accent-warn = "#f2b632"
-on-accent-warn = "#13241a"
+accent-warn = "#e8a838"
+on-accent-warn = "#0f2419"
 accent-error = "#e0564b"
 on-accent-error = "#0d1a12"
 chart-1 = "#7fd08a"
@@ -110,6 +118,7 @@ chart-4 = "#e0564b"
 chart-5 = "#a9bfae"
 
 [fonts]
-# The kit's defaults until the design picks faces; self-hosting comes with them.
-display = "Inter"
-text = "Inter"
+# Self-hosted (`src/shared/ui/fonts.ts`); `app/globals.css` points the roles
+# at the loaded faces. Fraunces for headings, Instrument Sans for text.
+display = "Fraunces"
+text = "Instrument Sans"

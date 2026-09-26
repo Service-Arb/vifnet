@@ -42,16 +42,22 @@ describe("the home page", () => {
     expect(html).not.toMatch(/href="tel:|wa\.me|whatsapp/i);
     expect(html).toMatch(/<form id="quote"[^>]*action="\/quote"[^>]*method="post"/);
     for (const name of [LEAD.wire.subject, LEAD.wire.locality, LEAD.wire.mobile, "surface_m2"]) expect(html).toContain(`name="${name}"`);
-    // Every CTA lands on the closing band, which holds the form.
-    expect(html).toContain(`id="${SECTION_IDS.quote}"`);
+    // One form, on the hero's card; every CTA lands on that card.
+    expect(html.match(/<form\b/g)).toHaveLength(1);
+    expect(html).toMatch(new RegExp(`id="${SECTION_IDS.quote}"[^]*<form id="quote"`));
     expect(html).toContain(`href="/${locale}#${SECTION_IDS.quote}"`);
   });
 
-  it("leaves out the bands the owner has no facts for", () => {
+  it("leaves out the bands the owner has no facts for, and every link to them", () => {
     const html = home("fr");
     expect(PRICES).toBeNull();
-    for (const id of [SECTION_IDS.prices, SECTION_IDS.reviews, SECTION_IDS.area]) expect(html).not.toContain(`id="${id}"`);
-    for (const id of [SECTION_IDS.work, SECTION_IDS.services, SECTION_IDS.steps, SECTION_IDS.faq]) expect(html).toContain(`id="${id}"`);
+    for (const id of [SECTION_IDS.prices, SECTION_IDS.reviews, SECTION_IDS.area]) {
+      expect(html).not.toContain(`id="${id}"`);
+      expect(html).not.toContain(`#${id}"`);
+    }
+    for (const id of [SECTION_IDS.work, SECTION_IDS.services, SECTION_IDS.steps, SECTION_IDS.faq, SECTION_IDS.closing]) expect(html).toContain(`id="${id}"`);
+    // No rating without a live one: not in the hero either.
+    expect(html).not.toContain("Note Google");
   });
 
   it("serves the photos as AVIF and WebP", () => {

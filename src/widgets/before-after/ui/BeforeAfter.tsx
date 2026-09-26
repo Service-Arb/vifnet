@@ -1,4 +1,4 @@
-import { Section } from "@evinvest/kitstart/react";
+import { Eyebrow, Section } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { PAIRS, PHOTO_SETS } from "@/shared/portfolio";
 import { TYPE } from "@/shared/ui";
@@ -19,14 +19,15 @@ export function BeforeAfter({ copy, id }: { copy: Copy; id: string }) {
     thumb: PHOTO_SETS[`${key}-thumb`],
   }));
   return (
-    <Section surface="card" id={id}>
+    <Section id={id}>
       <Comparison
         pairs={pairs}
         words={{ before: t.before, after: t.after, slider: t.slider, picker: t.picker, position: t.position }}
         head={
           <>
-            <h2 className={`${TYPE.h2} md:max-w-[500px]`}>{t.title}</h2>
-            <p className={`${TYPE.lede} md:max-w-[460px]`}>{t.lede}</p>
+            <Eyebrow className={TYPE.eyebrow}>{t.eyebrow}</Eyebrow>
+            <h2 className={`${TYPE.h2} mt-3 md:max-w-125`}>{t.title}</h2>
+            <p className={`${TYPE.lede} mt-4 text-ink-soft md:max-w-115`}>{t.lede}</p>
           </>
         }
       />

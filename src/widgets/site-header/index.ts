@@ -1,1 +1,1 @@
-export { SiteHeader, type SiteHeaderProps } from "./ui/SiteHeader";
+export { type HeaderLink, SiteHeader, type SiteHeaderProps } from "./ui/SiteHeader";

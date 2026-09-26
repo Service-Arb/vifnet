@@ -42,8 +42,11 @@ service area) render nothing; the page closes up around them.
 
 Place pages are ISR (`revalidate = 600`): no page reads the request, the link
 mode rides in the `[location]` param. The quote form is a plain POST answered
-with a 303, so it submits before any script loads; the service links, the
-form's subject and the before/after slider are the only client islands, and
-the page reads the same without them. The subject is kitstart's `FormSelect`:
+with a 303, so it submits before any script loads; it sits on the hero's
+card, the one place every CTA points at (`#devis`). The service links (the
+hero's chips and the service cards), the form's subject, the before/after
+slider and the phone menu's closer are the only client islands, and the page
+reads the same without them: the phone menu is a `<details>`, the script only
+closes it after a link or on Esc. The subject is kitstart's `FormSelect`:
 a native `<select>` without a script, the kit's list once the page hydrates —
 never a bare `NativeSelect`, whose popup is the platform's menu.

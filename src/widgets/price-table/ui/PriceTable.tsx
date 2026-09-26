@@ -18,7 +18,7 @@ export function PriceTable({ copy, id, prices }: { copy: Copy; id: string; price
       <div className="flex flex-col gap-5 md:flex-row md:gap-20">
         <div className="flex flex-col gap-3 md:w-[352px] md:shrink-0 md:gap-4">
           <h2 className={TYPE.h2}>{t.title}</h2>
-          <p className={TYPE.lede}>{t.lede}</p>
+          <p className={`${TYPE.lede} text-ink-soft`}>{t.lede}</p>
         </div>
         <div className="min-w-0 flex-1">
           <Table>

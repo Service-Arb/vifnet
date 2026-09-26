@@ -54,15 +54,15 @@ export const EN = {
   statusStrip: [],
   langName: "English",
   facts: () => ["Vifnet", "Legal notice in preparation"],
-  header: { cta: "Get a quote", home: "Vifnet — home" },
+  header: { cta: "Get a quote", ctaCompact: "Get a quote", home: "Vifnet — home" },
+  nav: { services: "Services", work: "Before / after", steps: "How it works", faq: "FAQ", menu: "Menu" },
   hero: {
-    title: "Cleaning done thoroughly, at your place.",
+    title: ["Cleaning done ", "thoroughly", ", at your place."],
     lede: "Deep cleans, upholstery or outdoor areas, in your house or flat. Describe the job in a minute: we call you back.",
-    cta: "Get a quote",
     toWork: "See before / after ↓",
-    photoAlt: "The Vifnet team in aprons, in a living room",
   },
   beforeAfter: {
+    eyebrow: "Our work",
     title: "Before, after.",
     lede: "Drag the handle to compare.",
     before: "Before",
@@ -80,6 +80,7 @@ export const EN = {
     },
   },
   services: {
+    eyebrow: "What we do",
     title: "What we clean",
     lede: "Pick a type: the form opens already filled in.",
     onQuote: "On quote",
@@ -104,6 +105,7 @@ export const EN = {
     },
   },
   howItWorks: {
+    eyebrow: "In three steps",
     title: "How it works",
     steps: [
       { title: "You describe the job", body: "Type of cleaning, surface, town and a number: the form takes a minute." },
@@ -116,6 +118,7 @@ export const EN = {
     title: "We come to you",
     lede: "Nowhere to visit: the team travels to the towns listed here. Yours is not there? Ask all the same.",
   },
+  faqEyebrow: "Good to know",
   faqTitle: "Questions",
   faqs: [
     {
@@ -130,7 +133,6 @@ export const EN = {
   closing: {
     title: "Get your quote.",
     lede: "Four fields, one minute. We call you back to agree the price and the time.",
-    photoAlt: "A team member cleaning kitchen cupboards",
   },
   subjects: {
     deep: "Deep clean",
@@ -150,7 +152,6 @@ export const EN = {
     callback: "We call you back to agree the price and the time.",
   },
   footer: {
-    tagline: "Home cleaning, house or flat.",
     legal: "Legal notice (in preparation)",
     copyright: year => `© ${year} Vifnet`,
   },

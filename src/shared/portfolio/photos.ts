@@ -4,26 +4,22 @@ import hero_560_avif from "../../../assets/photos/hero-560.avif";
 import hero_1056_avif from "../../../assets/photos/hero-1056.avif";
 import hero_560_webp from "../../../assets/photos/hero-560.webp";
 import hero_1056_webp from "../../../assets/photos/hero-1056.webp";
-import closing_560_avif from "../../../assets/photos/closing-560.avif";
-import closing_1040_avif from "../../../assets/photos/closing-1040.avif";
-import closing_560_webp from "../../../assets/photos/closing-560.webp";
-import closing_1040_webp from "../../../assets/photos/closing-1040.webp";
-import svc_deep_192_avif from "../../../assets/photos/svc-deep-192.avif";
-import svc_deep_336_avif from "../../../assets/photos/svc-deep-336.avif";
-import svc_deep_192_webp from "../../../assets/photos/svc-deep-192.webp";
-import svc_deep_336_webp from "../../../assets/photos/svc-deep-336.webp";
-import svc_upholstery_192_avif from "../../../assets/photos/svc-upholstery-192.avif";
-import svc_upholstery_336_avif from "../../../assets/photos/svc-upholstery-336.avif";
-import svc_upholstery_192_webp from "../../../assets/photos/svc-upholstery-192.webp";
-import svc_upholstery_336_webp from "../../../assets/photos/svc-upholstery-336.webp";
-import svc_exterior_192_avif from "../../../assets/photos/svc-exterior-192.avif";
-import svc_exterior_336_avif from "../../../assets/photos/svc-exterior-336.avif";
-import svc_exterior_192_webp from "../../../assets/photos/svc-exterior-192.webp";
-import svc_exterior_336_webp from "../../../assets/photos/svc-exterior-336.webp";
-import svc_other_192_avif from "../../../assets/photos/svc-other-192.avif";
-import svc_other_336_avif from "../../../assets/photos/svc-other-336.avif";
-import svc_other_192_webp from "../../../assets/photos/svc-other-192.webp";
-import svc_other_336_webp from "../../../assets/photos/svc-other-336.webp";
+import svc_deep_400_avif from "../../../assets/photos/svc-deep-400.avif";
+import svc_deep_720_avif from "../../../assets/photos/svc-deep-720.avif";
+import svc_deep_400_webp from "../../../assets/photos/svc-deep-400.webp";
+import svc_deep_720_webp from "../../../assets/photos/svc-deep-720.webp";
+import svc_upholstery_400_avif from "../../../assets/photos/svc-upholstery-400.avif";
+import svc_upholstery_720_avif from "../../../assets/photos/svc-upholstery-720.avif";
+import svc_upholstery_400_webp from "../../../assets/photos/svc-upholstery-400.webp";
+import svc_upholstery_720_webp from "../../../assets/photos/svc-upholstery-720.webp";
+import svc_exterior_400_avif from "../../../assets/photos/svc-exterior-400.avif";
+import svc_exterior_499_avif from "../../../assets/photos/svc-exterior-499.avif";
+import svc_exterior_400_webp from "../../../assets/photos/svc-exterior-400.webp";
+import svc_exterior_499_webp from "../../../assets/photos/svc-exterior-499.webp";
+import svc_other_400_avif from "../../../assets/photos/svc-other-400.avif";
+import svc_other_720_avif from "../../../assets/photos/svc-other-720.avif";
+import svc_other_400_webp from "../../../assets/photos/svc-other-400.webp";
+import svc_other_720_webp from "../../../assets/photos/svc-other-720.webp";
 import sofa_before_480_avif from "../../../assets/photos/sofa-before-480.avif";
 import sofa_before_717_avif from "../../../assets/photos/sofa-before-717.avif";
 import sofa_before_480_webp from "../../../assets/photos/sofa-before-480.webp";
@@ -88,30 +84,25 @@ export const PHOTO_SETS = {
     webp: [`${hero_560_webp.src} 560w`, `${hero_1056_webp.src} 1056w`].join(", "),
     src: hero_1056_webp.src,
   },
-  "closing": {
-    avif: [`${closing_560_avif.src} 560w`, `${closing_1040_avif.src} 1040w`].join(", "),
-    webp: [`${closing_560_webp.src} 560w`, `${closing_1040_webp.src} 1040w`].join(", "),
-    src: closing_1040_webp.src,
-  },
   "svc-deep": {
-    avif: [`${svc_deep_192_avif.src} 192w`, `${svc_deep_336_avif.src} 336w`].join(", "),
-    webp: [`${svc_deep_192_webp.src} 192w`, `${svc_deep_336_webp.src} 336w`].join(", "),
-    src: svc_deep_336_webp.src,
+    avif: [`${svc_deep_400_avif.src} 400w`, `${svc_deep_720_avif.src} 720w`].join(", "),
+    webp: [`${svc_deep_400_webp.src} 400w`, `${svc_deep_720_webp.src} 720w`].join(", "),
+    src: svc_deep_720_webp.src,
   },
   "svc-upholstery": {
-    avif: [`${svc_upholstery_192_avif.src} 192w`, `${svc_upholstery_336_avif.src} 336w`].join(", "),
-    webp: [`${svc_upholstery_192_webp.src} 192w`, `${svc_upholstery_336_webp.src} 336w`].join(", "),
-    src: svc_upholstery_336_webp.src,
+    avif: [`${svc_upholstery_400_avif.src} 400w`, `${svc_upholstery_720_avif.src} 720w`].join(", "),
+    webp: [`${svc_upholstery_400_webp.src} 400w`, `${svc_upholstery_720_webp.src} 720w`].join(", "),
+    src: svc_upholstery_720_webp.src,
   },
   "svc-exterior": {
-    avif: [`${svc_exterior_192_avif.src} 192w`, `${svc_exterior_336_avif.src} 336w`].join(", "),
-    webp: [`${svc_exterior_192_webp.src} 192w`, `${svc_exterior_336_webp.src} 336w`].join(", "),
-    src: svc_exterior_336_webp.src,
+    avif: [`${svc_exterior_400_avif.src} 400w`, `${svc_exterior_499_avif.src} 499w`].join(", "),
+    webp: [`${svc_exterior_400_webp.src} 400w`, `${svc_exterior_499_webp.src} 499w`].join(", "),
+    src: svc_exterior_499_webp.src,
   },
   "svc-other": {
-    avif: [`${svc_other_192_avif.src} 192w`, `${svc_other_336_avif.src} 336w`].join(", "),
-    webp: [`${svc_other_192_webp.src} 192w`, `${svc_other_336_webp.src} 336w`].join(", "),
-    src: svc_other_336_webp.src,
+    avif: [`${svc_other_400_avif.src} 400w`, `${svc_other_720_avif.src} 720w`].join(", "),
+    webp: [`${svc_other_400_webp.src} 400w`, `${svc_other_720_webp.src} 720w`].join(", "),
+    src: svc_other_720_webp.src,
   },
   "sofa-before": {
     avif: [`${sofa_before_480_avif.src} 480w`, `${sofa_before_717_avif.src} 717w`].join(", "),
