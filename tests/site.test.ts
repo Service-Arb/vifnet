@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { copyFor } from "@/entities/content";
 import type { Locale } from "@/shared/config/i18n";
 import { LEAD, SUBJECTS } from "@/shared/config/lead";
-import { PRICES } from "@/shared/config/prices";
+import { SAMPLE_PHONE } from "@/shared/config/sample";
 import { site } from "@/shared/config/site";
 import { PlaceHome, SECTION_IDS } from "@/views/home";
 
@@ -18,6 +18,10 @@ const home = (locale: Locale) => {
   const copy = copyFor(locale, { place: place.name[locale], phone: null });
   return renderToStaticMarkup(createElement(PlaceHome, { view, copy, renderedAt: Date.UTC(2026, 8, 24) }));
 };
+
+/** Every JSON-LD block of the page, parsed. */
+const jsonLd = (html: string): unknown[] =>
+  [...html.matchAll(/<script type="application\/ld\+json"[^>]*>(.*?)<\/script>/gs)].map(m => JSON.parse(m[1] ?? "null") as unknown);
 
 describe("Vifnet before launch", () => {
   it("has no domain, no phone and no mailbox", () => {
@@ -31,33 +35,45 @@ describe("Vifnet before launch", () => {
     expect(graph).not.toMatch(/PostalAddress|streetAddress|postalCode|GeoCoordinates|hasMap|latitude/);
   });
 
-  it("offers only the confirmed cleaning types", () => {
-    expect(SUBJECTS).toEqual(["deep", "upholstery", "exterior", "other"]);
+  it("offers the frame's four services", () => {
+    expect(SUBJECTS).toEqual(["standard", "deep", "move", "post-construction"]);
   });
 });
 
 describe("the home page", () => {
-  it.each(["fr", "en"] as const)("offers the form as the only channel (%s)", locale => {
+  it.each(["fr", "en"] as const)("posts one form, on the hero's card, with every field (%s)", locale => {
     const html = home(locale);
-    expect(html).not.toMatch(/href="tel:|wa\.me|whatsapp/i);
     expect(html).toMatch(/<form id="quote"[^>]*action="\/quote"[^>]*method="post"/);
-    for (const name of [LEAD.wire.subject, LEAD.wire.locality, LEAD.wire.mobile, "surface_m2"]) expect(html).toContain(`name="${name}"`);
-    // One form, on the hero's card; every CTA lands on that card.
+    for (const name of [LEAD.wire.subject, LEAD.wire.locality, LEAD.wire.mobile, "name", "bedrooms"]) expect(html).toContain(`name="${name}"`);
     expect(html.match(/<form\b/g)).toHaveLength(1);
     expect(html).toMatch(new RegExp(`id="${SECTION_IDS.quote}"[^]*<form id="quote"`));
     expect(html).toContain(`href="/${locale}#${SECTION_IDS.quote}"`);
   });
 
-  it("leaves out the bands the owner has no facts for, and every link to them", () => {
+  it.each(["fr", "en"] as const)("renders the frame's bands, in its order, and no other (%s)", locale => {
+    const html = home(locale);
+    const bands = ["quote-card", "stats", "services", "reviews", "guarantee", "faq", "cta", "sticky"];
+    const at = bands.map(b => html.indexOf(`data-band="${b}"`));
+    expect(at.every(i => i >= 0)).toBe(true);
+    expect(at).toEqual([...at].sort((a, b) => a - b));
+    for (const gone of ["avant-apres", "etapes", "zone", "tarifs"]) expect(html).not.toContain(`id="${gone}"`);
+  });
+
+  it("calls the frame's sample number, and offers no WhatsApp", () => {
     const html = home("fr");
-    expect(PRICES).toBeNull();
-    for (const id of [SECTION_IDS.prices, SECTION_IDS.reviews, SECTION_IDS.area]) {
-      expect(html).not.toContain(`id="${id}"`);
-      expect(html).not.toContain(`#${id}"`);
-    }
-    for (const id of [SECTION_IDS.work, SECTION_IDS.services, SECTION_IDS.steps, SECTION_IDS.faq, SECTION_IDS.closing]) expect(html).toContain(`id="${id}"`);
-    // No rating without a live one: not in the hero either.
-    expect(html).not.toContain("Note Google");
+    expect(html).toContain(`href="${SAMPLE_PHONE.href}"`);
+    expect(html).not.toMatch(/wa\.me|whatsapp/i);
+  });
+
+  it.each(["fr", "en"] as const)("keeps the frame's sample facts out of the structured data (%s)", locale => {
+    const ld = JSON.stringify(jsonLd(home(locale)));
+    expect(ld).not.toBe("[]");
+    expect(ld).not.toMatch(/aggregateRating|"review"|telephone|555-0192|Boise/);
+  });
+
+  it("links to the other language from the footer", () => {
+    expect(home("fr")).toMatch(/<a href="\/en\?lang=en"[^>]*>English<\/a>/);
+    expect(home("en")).toMatch(/<a href="\/fr\?lang=fr"[^>]*>Français<\/a>/);
   });
 
   it("serves the photos as AVIF and WebP", () => {
@@ -68,15 +84,16 @@ describe("the home page", () => {
 });
 
 describe("the lead", () => {
-  const lead = (surface?: string) => ({ ...testLead(), subject: "deep", extras: surface === undefined ? {} : { surface_m2: surface } });
+  const lead = (extras: Record<string, string>) => ({ ...testLead(), subject: "standard", extras });
 
-  it("takes an absent or whole-number surface", () => {
-    expect(LEAD.validate?.(lead())).toBeNull();
-    expect(LEAD.validate?.(lead("85"))).toBeNull();
+  it("takes a name, and bedrooms from the list or none", () => {
+    expect(LEAD.validate?.(lead({ name: "Amanda Reyes", bedrooms: "3" }))).toBeNull();
+    expect(LEAD.validate?.(lead({ name: "Amanda Reyes" }))).toBeNull();
   });
 
-  it("refuses a surface that is not whole square metres in range, and a short number", () => {
-    for (const bad of ["85.5", "0", "1000000", "abc"]) expect(LEAD.validate?.(lead(bad)), bad).not.toBeNull();
-    expect(LEAD.validate?.({ ...lead(), mobile: "0612" })).not.toBeNull();
+  it("refuses no name, bedrooms off the list, and a short number", () => {
+    expect(LEAD.validate?.(lead({ name: " " }))).not.toBeNull();
+    expect(LEAD.validate?.(lead({ name: "Amanda", bedrooms: "12" }))).not.toBeNull();
+    expect(LEAD.validate?.({ ...lead({ name: "Amanda" }), mobile: "0612" })).not.toBeNull();
   });
 });

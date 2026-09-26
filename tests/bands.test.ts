@@ -2,52 +2,58 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { copyFor } from "@/entities/content";
-import { site } from "@/shared/config/site";
-import { PriceTable } from "@/widgets/price-table";
+import type { Locale } from "@/shared/config/i18n";
+import { Guarantee } from "@/widgets/guarantee";
 import { Reviews } from "@/widgets/reviews";
-import { ServiceArea } from "@/widgets/service-area";
+import { Services } from "@/widgets/services";
+import { Stats } from "@/widgets/stats";
 
-// The bands that wait for the owner's facts render nothing today, so the home
-// page never shows them; this is where they are held to what they will show.
-const copy = copyFor("fr", { place: "Vifnet", phone: null });
-const place = site.places[0];
-if (!place) throw new Error("the site has no place");
+// The bands of the Figma frame always render, as static content: the frame's
+// sample figures, reviews and prices (OWNER_TODO "design sample content").
+const copy = (locale: Locale) => copyFor(locale, { place: "Vifnet", phone: null });
 const html = (el: ReturnType<typeof createElement>) => renderToStaticMarkup(el);
+const quote = { href: "/fr#devis", form: "quote" };
 
-describe("the price table", () => {
-  it("is absent without a price list", () => {
-    expect(html(createElement(PriceTable, { copy, id: "tarifs", prices: null }))).toBe("");
+describe("the stats band", () => {
+  it.each([
+    ["en", ["500+", "4.9★", "100%", "&lt; 2 hr"]],
+    ["fr", ["500+", "4,9★", "100 %", "&lt; 2 h"]],
+  ] as const)("prints the frame's four figures (%s)", (locale, figures) => {
+    const out = html(createElement(Stats, { copy: copy(locale) }));
+    for (const figure of figures) expect(out).toContain(figure);
+    expect(out).toContain('data-band="stats"');
   });
+});
 
-  it("prints each job with its price TTC in euros", () => {
-    const out = html(createElement(PriceTable, { copy, id: "tarifs", prices: [{ subject: "deep", eur: 1234 }] }));
-    expect(out).toContain("Grand ménage");
-    expect(out).toMatch(/1\s?234\s€/u);
-    expect(out).toContain("tabular-nums");
+describe("the services band", () => {
+  it("prints the four cards with their prices, the featured one badged", () => {
+    const out = html(createElement(Services, { copy: copy("en"), id: "prestations", quote }));
+    for (const name of ["Standard Clean", "Deep Clean", "Move-In / Move-Out", "Post-Construction"]) expect(out).toContain(name);
+    for (const price of ["From $89", "From $179", "From $149", "Custom quote"]) expect(out).toContain(price);
+    expect(out.match(/Most popular/g)).toHaveLength(1);
+    // Every card leads to the form.
+    expect(out.match(/href="\/fr#devis"/g)?.length).toBeGreaterThanOrEqual(4);
   });
 });
 
 describe("the reviews band", () => {
-  it("is absent without a rating", () => {
-    expect(html(createElement(Reviews, { copy, id: "avis", rating: null }))).toBe("");
+  it.each(["fr", "en"] as const)("prints all six reviews, three with photos (%s)", locale => {
+    const out = html(createElement(Reviews, { copy: copy(locale), id: "avis", quoteHref: quote.href }));
+    expect(out.match(/<article/g)).toHaveLength(6);
+    expect(out).toContain(locale === "fr" ? "4,9 de moyenne" : "4.9 average");
+    // Result photo and job photo on each of the three: two `<picture>`s a card.
+    expect(out.match(/<picture/g)).toHaveLength(6);
   });
 
-  it("states the Google rating it was given", () => {
-    const out = html(createElement(Reviews, { copy, id: "avis", rating: { value: 4.8, count: 37, fetchedAt: "2026-09-24T00:00:00Z" } }));
-    expect(out).toContain("Note Google 4,8 / 5 — 37 avis");
+  it("keeps the frame's column order: Amanda, Jordan · Marcus & Deb, Keisha · Priya, Carl", () => {
+    const out = html(createElement(Reviews, { copy: copy("en"), id: "avis", quoteHref: quote.href }));
+    const order = ["Amanda R.", "Jordan T.", "Marcus &amp; Deb F.", "Keisha M.", "Priya S.", "Carl B."].map(n => out.indexOf(n));
+    expect(order).toEqual([...order].sort((a, b) => a - b));
   });
 });
 
-describe("the service area band", () => {
-  it("is absent until the communes are named", () => {
-    expect(html(createElement(ServiceArea, { copy, id: "zone", place }))).toBe("");
-  });
-
-  it("lists the communes as chips, with no address or map", () => {
-    const named = { ...place, serviceArea: [{ kind: "localities" as const, names: ["Paris 15e", "Issy-les-Moulineaux"] }] };
-    const out = html(createElement(ServiceArea, { copy, id: "zone", place: named }));
-    expect(out).toContain("Paris 15e");
-    expect(out).toContain("Issy-les-Moulineaux");
-    expect(out).not.toMatch(/maps\.google|iframe|<address/);
+describe("the guarantee band", () => {
+  it("states the frame's promise", () => {
+    expect(html(createElement(Guarantee, { copy: copy("en") }))).toContain("100% Satisfaction Guarantee");
   });
 });

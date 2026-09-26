@@ -20,7 +20,8 @@ export default defineConfig([
     files: [
       "src/views/not-found/ui/NotFound.tsx",
       "src/views/server-error/**",
-      "src/widgets/before-after/ui/Comparison.tsx",
+      "src/widgets/quote-card/ui/QuoteForm.tsx",
+      "src/widgets/sticky-bar/ui/Reveal.tsx",
       "src/features/pick-subject/ui/SubjectLink.tsx",
       "src/features/pick-subject/ui/SubjectSelect.tsx",
       "src/widgets/site-header/ui/CloseMenu.tsx",

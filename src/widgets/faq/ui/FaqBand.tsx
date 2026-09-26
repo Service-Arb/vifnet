@@ -1,33 +1,41 @@
-import { Eyebrow, Faq, Section } from "@evinvest/kitstart/react";
+import { Faq, Section } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
+import { SAMPLE_PHONE } from "@/shared/config/sample";
 import { TYPE } from "@/shared/ui";
 
 /**
  * The kit's `<details>` list, restyled through its part classes into the
- * frame's separate cards: 14 px questions, a chevron that turns over when an
- * item opens, the answer under a hairline. The kit draws its icon as a "+";
- * `vifnet-chevron` (app/globals.css) masks it into the chevron.
+ * frame's FAQ items (7:157): white cards 8 apart, a 14 px question, a
+ * chevron that turns over when the item opens (the kit's "+" glyph is hidden
+ * and the chevron masked in its place), a sage row on hover, the answer under
+ * a slate-50 hairline.
  */
-const CARDS = {
+const ITEMS = {
   list: "flex flex-col gap-2 overflow-visible rounded-none border-0 bg-transparent",
-  item: "overflow-hidden rounded-xl border border-border bg-background last:border-b",
-  summary: "items-center px-6 py-4 hover:bg-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring md:px-6 md:py-4",
-  question: "font-sans text-sm leading-5 font-semibold text-ink",
-  icon: "vifnet-chevron text-ink-soft motion-safe:transition-transform group-open:rotate-180",
-  answer: `border-t border-border px-6 pt-3 pb-4 md:px-6 md:pb-4 ${TYPE.body} text-ink-soft`,
+  item: "overflow-hidden rounded-2xl border border-border bg-background last:border-b",
+  summary: "items-center justify-between gap-4 px-6 py-4 hover:bg-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring md:px-6 md:py-4",
+  question: "font-sans text-sm leading-5 font-semibold text-brand",
+  icon: "vf-icon vf-icon-chevron-down size-4 shrink-0 text-[0px] leading-none text-brand motion-safe:transition-transform group-open:rotate-180",
+  answer: "border-t border-slate-50 px-6 pt-3 pb-4 text-sm leading-[22.75px] text-ink-soft md:px-6 md:pb-4",
 } as const;
 
+/** The frame's FAQ band (13:464 / 15:865) on cream. */
 export function FaqBand({ copy, id }: { copy: Copy; id: string }) {
   const { t } = copy;
-  if (t.faqs.length === 0) return null;
   return (
-    <Section surface="card" id={id}>
-      <div className="mx-auto max-w-3xl">
+    <Section surface="card" id={id} data-band="faq" className="py-20">
+      <div className="mx-auto max-w-[736px]">
         <div className="flex flex-col items-center text-center">
-          <Eyebrow className={TYPE.eyebrow}>{t.faqEyebrow}</Eyebrow>
-          <h2 className={`${TYPE.h2Band} mt-3`}>{t.faqTitle}</h2>
+          <p className={`${TYPE.eyebrow} text-positive`}>{t.faqEyebrow}</p>
+          <h2 className={`${TYPE.h2Faq} mt-3 text-brand`}>{t.faqTitle}</h2>
         </div>
-        <Faq items={t.faqs} id={`${id}-list`} className="mt-10" classNames={CARDS} />
+        <Faq items={t.faqs} id={`${id}-list`} className="mt-10" classNames={ITEMS} />
+        <p className="mt-6 text-center text-sm leading-5 text-slate-400">
+          {t.faqMore}
+          <a href={SAMPLE_PHONE.href} className="font-semibold text-positive underline hover:no-underline">
+            {SAMPLE_PHONE.display}
+          </a>
+        </p>
       </div>
     </Section>
   );

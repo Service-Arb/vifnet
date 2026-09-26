@@ -10,7 +10,9 @@ const status = (
   primary: StatusCopy<Facts>["primary"],
 ): StatusCopy<Facts> => ({ code, title, eyebrow, headline, body: () => body, primary, secondary: "home" });
 
-// The French page's twin, under the same rule: no term the owner has not confirmed.
+// The Figma frame's words, verbatim (Desktop 1440 9:107), quote marks and all.
+// Its figures, reviews and prices are the file's sample content (OWNER_TODO
+// "design sample content").
 export const EN = {
   pages: {
     home: {
@@ -20,9 +22,9 @@ export const EN = {
     },
   },
   quoteForm: {
-    title: "Get your quote.",
-    lede: "Four fields, one minute.",
-    submit: "Get my quote",
+    title: "Get your free quote",
+    lede: "We call back in under 15 minutes.",
+    submit: "Get My Free Quote →",
     privacy: "Your number is used for this request only.",
     reassurance: () => "We call you back on the number you give.",
     honeypotLabel: "Website",
@@ -48,114 +50,162 @@ export const EN = {
   whatsappLabel: "WhatsApp",
   whatsappShort: "WhatsApp",
   whatsappMessage: () => "Hello, I am writing from the Vifnet site.",
-  ctaShort: "Get a quote",
+  ctaShort: "Book Now",
   backHome: "Back to the home page",
   tryAgain: "Try again",
   statusStrip: [],
   langName: "English",
   facts: () => ["Vifnet", "Legal notice in preparation"],
-  header: { cta: "Get a quote", ctaCompact: "Get a quote", home: "Vifnet — home" },
-  nav: { services: "Services", work: "Before / after", steps: "How it works", faq: "FAQ", menu: "Menu" },
+  nav: { services: "Services", reviews: "Reviews", pricing: "Pricing", faq: "FAQ", menu: "Menu", book: "Book Now", home: "Vifnet — home" },
+  rating: { value: "4.9", count: "(340)" },
   hero: {
-    title: ["Cleaning done ", "thoroughly", ", at your place."],
-    lede: "Deep cleans, upholstery or outdoor areas, in your house or flat. Describe the job in a minute: we call you back.",
-    toWork: "See before / after ↓",
+    title: { first: "A home that", second: "feels ", accent: "genuinely", third: "clean." },
+    lede: "Vifnet sends a professional, insured team to your door. You come back to a place that feels cared for — no corners cut.",
+    reviews: "340 five-star Google reviews",
+    chips: ["Fully insured & bonded", "Background-checked", "100% satisfaction guarantee", "Same-day available"],
   },
-  beforeAfter: {
-    eyebrow: "Our work",
-    title: "Before, after.",
-    lede: "Drag the handle to compare.",
-    before: "Before",
-    after: "After",
-    slider: "Compare before and after",
-    position: "Before {n} %",
-    picker: "Choose a job",
-    pairs: {
-      sofa: "Corner sofa — upholstery cleaning",
-      bathtub: "Bathtub — deep clean",
-      carpet: "Fitted carpet — upholstery cleaning",
-      driveway: "Paved driveway — outdoor areas",
-      mattress: "Mattress — upholstery cleaning",
-      recliner: "Armchair — upholstery cleaning",
-    },
+  quote: {
+    placeholders: { name: "Your full name", mobile: "Phone number", locality: "ZIP code" },
+    labels: { name: "Name", mobile: "Phone", locality: "ZIP code", bedrooms: "Bedrooms", subject: "Service" },
+    next: "Continue →",
+    almost: "Almost there:",
+    trust: ["✓ No commitment", "✓ Call back in 15 min", "✓ Same-day available"],
+    bedrooms: { studio: "Studio", "1": "1 bedroom", "2": "2 bedrooms", "3": "3 bedrooms", "4": "4 bedrooms", "5+": "5+ bedrooms" },
+    doneTitle: "You're all set, {first}!",
+    doneBody: ["We'll call ", " within 15 minutes with a firm quote."],
   },
+  stats: [
+    { value: "500+", label: "Homes cleaned" },
+    { value: "4.9★", label: "340 Google reviews" },
+    { value: "100%", label: "Deposit-back success rate" },
+    { value: "< 2 hr", label: "Average response time" },
+  ],
   services: {
     eyebrow: "What we do",
-    title: "What we clean",
-    lede: "Pick a type: the form opens already filled in.",
-    onQuote: "On quote",
-    ask: "Ask for this quote →",
+    title: "Pick your clean.",
+    lede: "Every service backed by our written satisfaction guarantee. Not happy? We come back free.",
+    badge: "Most popular",
+    note: "Photos above are from actual client homes — not stock photography. ",
+    noteLink: "Book any service →",
     items: {
-      deep: { name: "Deep clean", body: "Kitchen, bathroom, floors and corners, thoroughly.", photoAlt: "The kitchen of a Paris flat" },
-      upholstery: { name: "Upholstery", body: "Sofas, armchairs, mattresses and rugs.", photoAlt: "An upholstery cleaning machine in front of a sofa" },
-      exterior: { name: "Outdoor areas", body: "Terraces, paths and paving.", photoAlt: "Cleaning a gravel terrace" },
-      other: { name: "Something else", body: "A job that is not on this list? Describe it.", photoAlt: "Cleaning a mirror in a gilded salon" },
+      standard: {
+        name: "Standard Clean",
+        tagline: "Regular upkeep done right.",
+        points: ["Kitchen surfaces & appliance exteriors", "Bathrooms scrubbed", "All floors vacuumed & mopped", "Dusting throughout", "Trash emptied · Beds made"],
+        price: "From $89",
+      },
+      deep: {
+        name: "Deep Clean",
+        tagline: "Top-to-bottom. Nothing missed.",
+        points: ["Everything in Standard", "Inside oven & refrigerator", "Baseboards, trim & window sills", "Inside cabinets & drawers", "Detailed grout & tile scrub"],
+        price: "From $179",
+      },
+      move: {
+        name: "Move-In / Move-Out",
+        tagline: "Get your deposit back — guaranteed.",
+        points: ["Deep-clean level throughout", "Inside all appliances", "Every closet, shelf & corner", "Garage sweep", "Written deposit guarantee"],
+        price: "From $149",
+      },
+      "post-construction": {
+        name: "Post-Construction",
+        tagline: "We bring the heavy-duty gear.",
+        points: ["Construction dust removal", "Paint overspray & adhesive", "All surfaces wiped & polished", "HEPA filtration vacuuming", "Debris haul on request"],
+        price: "Custom quote",
+      },
     },
   },
-  priceTable: {
-    title: "Prices",
-    lede: "Prices include VAT.",
-    service: "Service",
-    price: "Price incl. VAT",
-    detail: {
-      deep: "per visit, by surface",
-      upholstery: "sofa, mattress or rug, per piece",
-      exterior: "per m²",
-      other: "on quote",
+  reviews: {
+    eyebrow: "What clients say",
+    title: "Don't take our word for it.",
+    google: "Read all 340 Google reviews ↗",
+    average: "4.9 average",
+    total: "· 340 verified reviews",
+    cta: "Join them — Book today →",
+    items: {
+      amanda: {
+        name: "Amanda R.",
+        city: "Meridian, ID",
+        verified: "Verified · Aug 2025",
+        quote:
+          "\"I've tried maybe six cleaning services over the years. Vifnet is the first one where I came home and genuinely couldn't tell anyone had been there — in the best way. Every single corner. My oven looks brand new. Recurring bi-weekly now.\"",
+        photos: { result: "Amanda's kitchen — the oven she said 'looks brand new'", job: "The team on arrival day" },
+      },
+      jordan: {
+        name: "Jordan T.",
+        city: "Boise, ID",
+        verified: "Verified · Jul 2025",
+        quote:
+          "\"Called at 9am on a Friday, they were at my house by 1pm. Moved out of my rental the next morning and got my full deposit back. Punctual, thorough, and they actually care.\"",
+      },
+      marcus: {
+        name: "Marcus & Deb F.",
+        city: "Eagle, ID",
+        verified: "Verified · May 2025",
+        quote:
+          "\"Post-renovation clean after our kitchen remodel. Construction dust gets everywhere. Two hours later, the whole house smelled fresh and every surface was spotless. The staircase detail was incredible.\"",
+        photos: {
+          result: "Staircase after the post-construction clean — Marcus & Deb's home",
+          job: "Mid-job on the staircase — still a construction site at this point",
+        },
+      },
+      keisha: {
+        name: "Keisha M.",
+        city: "Nampa, ID",
+        verified: "Verified · Jun 2025",
+        quote:
+          "\"Polite, fast, thorough. They cleaned my oven better than the day I bought the house. Booked weekly service on the spot. My husband literally asked if we'd gotten new appliances.\"",
+      },
+      priya: {
+        name: "Priya S.",
+        city: "Boise, ID",
+        verified: "Verified · Apr 2025",
+        quote:
+          "\"The bathrooms sparkle, the kids' rooms are actually organized, and they don't skip a thing. The windows — every frame, every sill, the glass itself. I could not believe it. Thoughtful team.\"",
+        photos: { result: "Priya's windows after the clean — she said she 'could not believe it'", job: "The window work Priya described" },
+      },
+      carl: {
+        name: "Carl B.",
+        city: "Caldwell, ID",
+        verified: "Verified · Mar 2025",
+        quote:
+          "\"I run a short-term rental and turnovers need to be fast and perfect. Vifnet is now my only call. Arrive within the window, never go over time, guests leave 5-star cleanliness reviews every time.\"",
+      },
     },
   },
-  howItWorks: {
-    eyebrow: "In three steps",
-    title: "How it works",
-    steps: [
-      { title: "You describe the job", body: "Type of cleaning, surface, town and a number: the form takes a minute." },
-      { title: "We call you back", body: "We ask what matters and agree the price and the time with you." },
-      { title: "The team comes", body: "The team comes to your place at the agreed time." },
-    ],
+  guarantee: {
+    title: "100% Satisfaction Guarantee",
+    body: "Not happy with any area? Tell us within 24 hours. We come back and re-clean it at no charge — no questions asked, no fine print.",
   },
-  reviews: { title: "Reviews", summary: (value, count) => `Google rating ${value} / 5 — ${count} reviews` },
-  serviceArea: {
-    title: "We come to you",
-    lede: "Nowhere to visit: the team travels to the towns listed here. Yours is not there? Ask all the same.",
-  },
-  faqEyebrow: "Good to know",
-  faqTitle: "Questions",
+  faqEyebrow: "Common questions",
+  faqTitle: "You're probably wondering…",
+  // Only the first answer is in the frame; the others say what the page itself claims.
   faqs: [
     {
-      q: "How is the price set?",
-      a: "By the type of cleaning, the surface and the state of the place. Describe the job in the form: we call you back with a price.",
+      q: "Do I need to be home?",
+      a: "Not at all. Many clients give us a key or door code. Every team member is background-checked and we're fully insured.",
     },
     {
-      q: "What kinds of cleaning do you do?",
-      a: "Deep cleans, upholstery (sofas, armchairs, mattresses, rugs) and outdoor areas (terraces, paths, paving). For anything else, describe the job.",
+      q: "What if I'm not happy?",
+      a: "Tell us within 24 hours and we come back to re-clean the area at no charge — that's our 100% satisfaction guarantee.",
     },
+    {
+      q: "Do you bring your own supplies?",
+      a: "Yes. The team arrives with everything it needs — products and equipment. If you'd like us to use something specific, just let us know.",
+    },
+    { q: "How do I pay?", a: "You pay once the clean is done. We confirm the payment options when we call you back with your quote." },
+    {
+      q: "Can I set up a recurring schedule?",
+      a: "Yes — weekly, every two weeks or monthly. Tell us what suits you when we call back and we'll keep the same slot.",
+    },
+    { q: "Are you insured and bonded?", a: "Yes. Vifnet is fully insured and bonded, and every team member is background-checked." },
   ],
+  faqMore: "Still have a question? ",
   closing: {
-    title: "Get your quote.",
-    lede: "Four fields, one minute. We call you back to agree the price and the time.",
+    title: "Return to a clean home tonight.",
+    lede: "60 seconds to request. We call back in under 15 minutes with a flat quote.",
+    cta: "Get Free Quote →",
   },
-  subjects: {
-    deep: "Deep clean",
-    upholstery: "Upholstery",
-    exterior: "Outdoor areas",
-    other: "Something else",
-  },
-  quoteLabels: {
-    subject: "Type of cleaning",
-    choose: "Choose…",
-    surface: "Surface (m²)",
-    surfaceHint: "e.g. 65",
-    locality: "Town",
-    localityHint: "Town or postcode",
-    mobile: "Phone",
-    mobileHint: "06 12 34 56 78",
-    callback: "We call you back to agree the price and the time.",
-  },
-  footer: {
-    legal: "Legal notice (in preparation)",
-    copyright: year => `© ${year} Vifnet`,
-  },
+  footer: { copyright: year => `© ${year} Vifnet House Cleaning · Boise, Idaho`, privacy: "Privacy", terms: "Terms" },
+  sticky: { title: "Ready for a spotless home?", lede: "Same-day booking available", call: "Call", book: "Book Now" },
   brandPage: { title: "Vifnet", description: "Home cleaning.", open: "Open" },
-  contactLabel: "Contact us",
-  langLabel: "Language",
 } satisfies Text;

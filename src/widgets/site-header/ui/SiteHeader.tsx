@@ -1,9 +1,8 @@
-import { Button, LangSwitch } from "@evinvest/kitstart/react";
-import { telHref } from "@evinvest/marketing";
+import { Button } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
-import type { Locale } from "@/shared/config/i18n";
-import { Lockup } from "@/shared/ui";
-import { type HeaderLink, MobileMenu } from "./MobileMenu";
+import { SAMPLE_PHONE } from "@/shared/config/sample";
+import { Icon, Logo, Stars } from "@/shared/ui";
+import { type HeaderLink, MENU_ID, MobileMenu } from "./MobileMenu";
 
 export type { HeaderLink } from "./MobileMenu";
 
@@ -12,53 +11,59 @@ export interface SiteHeaderProps {
   home: string;
   /** Where the quote form is on this page. */
   quoteHref: string;
-  /** The bands this page has, in page order: the page decides, a band without facts has no link. */
+  /** The bands the header links to, in the frame's order. */
   links: readonly HeaderLink[];
-  /** The brand's phone, or `null` — then there is no call link, never a dead one. */
-  phone: string | null;
-  langHrefs: Readonly<Record<Locale, string>>;
-  locales: readonly Locale[];
-  labels: Readonly<Record<Locale, string>>;
 }
 
-const NAV_LINK = "rounded-sm text-sm font-medium text-ink-mid hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring";
+const QUIET = "text-sm leading-5 font-medium text-white/70";
 
 /**
- * Sticky and dark over every band, so the quote is one tap away from anywhere
- * on the page. From a tablet up: the lock-up, the band links, the language
- * switch and the gold CTA. On a phone: the lock-up, a short CTA and a
- * `<details>` menu that opens without JavaScript.
+ * The frame's NavBar (8:143): sticky, forest at 95 % over a blur. From a
+ * tablet up: the logo, the band links, the rating (from `sm`), the phone
+ * (from `lg`) and the gold "Book Now". On a phone: the logo, "Book Now" and
+ * the burger, whose menu opens under the bar.
  */
-export function SiteHeader({ copy, home, quoteHref, links, phone, langHrefs, locales, labels }: SiteHeaderProps) {
-  const { t, locale } = copy;
-  const lang = { current: locale, locales, hrefs: langHrefs, labels, label: t.langLabel };
+export function SiteHeader({ copy, home, quoteHref, links }: SiteHeaderProps) {
+  const { t } = copy;
   return (
-    <header className="dark sticky top-0 z-40 border-b border-border bg-background/95 text-ink backdrop-blur-sm">
-      <div className="flex h-16 items-center gap-2 px-[var(--page-px)] md:gap-6">
-        <a href={home} aria-label={t.header.home} className="mr-auto shrink-0 rounded-sm md:mr-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
-          <Lockup className="h-8 w-auto min-[360px]:h-9 md:h-10" />
+    <header className="group dark sticky top-0 z-40 border-b border-white/5 bg-background/95 text-ink backdrop-blur-sm">
+      <input type="checkbox" id={MENU_ID} aria-label={t.nav.menu} aria-controls={`${MENU_ID}-panel`} className="sr-only md:hidden" />
+      <div className="flex h-16 items-center justify-between px-[var(--page-px)]">
+        <a href={home} aria-label={t.nav.home} className="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
+          <Logo />
         </a>
-        <nav aria-label={t.nav.menu} className="hidden flex-1 items-center justify-center gap-7 md:flex">
+        <nav aria-label={t.nav.menu} className="hidden items-center gap-7 md:flex">
           {links.map(link => (
-            <a key={link.href} href={link.href} className={NAV_LINK}>
+            <a key={link.label} href={link.href} className={`${QUIET} hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring`}>
               {link.label}
             </a>
           ))}
         </nav>
-        {phone && (
-          <a href={telHref(phone)} className={`hidden md:inline ${NAV_LINK}`}>
-            {phone}
+        <div className="flex items-center gap-3">
+          <p className="hidden items-center gap-1.5 sm:flex">
+            <Stars />
+            <span className={`flex gap-1 ${QUIET}`}>
+              <span>{t.rating.value}</span>
+              <span className="text-white/40">{t.rating.count}</span>
+            </span>
+          </p>
+          <a href={SAMPLE_PHONE.href} className={`hidden items-center gap-1.5 border-l border-white/10 pl-3 lg:flex ${QUIET} hover:text-white`}>
+            <Icon name="phone" className="size-[13px]" />
+            {SAMPLE_PHONE.display}
           </a>
-        )}
-        <LangSwitch {...lang} className="hidden text-sm text-ink md:flex" />
-        <Button href={quoteHref} size="lg" data-intent="form_open" className="shrink-0 rounded-sm px-4 text-sm font-bold">
-          <span className="md:hidden">{t.header.ctaCompact}</span>
-          <span className="hidden md:inline">{t.header.cta}</span>
-        </Button>
-        <MobileMenu label={t.nav.menu} links={links} phone={phone}>
-          <LangSwitch {...lang} className="py-3 text-sm text-ink" />
-        </MobileMenu>
+          <Button href={quoteHref} data-intent="form_open" className="h-auto rounded-lg px-4 py-2 text-sm leading-5 font-bold hover:bg-amber-400">
+            {t.nav.book}
+          </Button>
+          <label
+            htmlFor={MENU_ID}
+            data-band="menu-toggle"
+            className="cursor-pointer rounded-sm p-1 text-white group-has-[#nav-menu:focus-visible]:outline-2 group-has-[#nav-menu:focus-visible]:outline-ring md:hidden"
+          >
+            <Icon name="menu" className="size-[22px]" />
+          </label>
+        </div>
       </div>
+      <MobileMenu label={t.nav.menu} links={links} />
     </header>
   );
 }

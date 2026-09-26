@@ -3,24 +3,27 @@ import { MIN_FILL_MS } from "@evinvest/kitstart";
 import { expect, test } from "@playwright/test";
 import { LEADS_DB } from "./env";
 
-// The funnel's floor: the form must submit before any JavaScript has loaded,
-// and it is the only channel this site has (no phone, no WhatsApp yet). A
-// regression here is invisible to every other test and costs every lead.
+// The funnel's floor: the form must submit before any JavaScript has loaded.
+// Without a script the card's two steps are one form. A regression here is
+// invisible to every other test and costs every lead.
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
-  test("the quote form posts, gets a 303 and the lead is stored", async ({ page }, testInfo) => {
+  test("the quote form posts every field, gets a 303 and the lead is stored", async ({ page }, testInfo) => {
     // A number no other test (or project) submits, so the row found is this one.
     const mobile = `06${String(Date.now() % 1e8).padStart(8, "0")}`;
     const locality = `75015-${testInfo.project.name}`;
 
     await page.goto("/fr#devis");
     const form = page.locator("form#quote");
-    // Without a script the subject is the platform's own select, which posts as is.
-    await form.locator("select[name=subject]").selectOption("upholstery");
-    await form.locator("input[name=surface_m2]").fill("65");
-    await form.locator("input[name=locality]").fill(locality);
+    // No "Continue" without a script: both steps show, and submit is the only button.
+    await expect(form.getByRole("button", { name: "Continuer →" })).toBeHidden();
+    await form.locator("input[name=name]").fill("Amanda Reyes");
     await form.locator("input[name=mobile]").fill(mobile);
+    await form.locator("input[name=locality]").fill(locality);
+    // Without a script the selects are the platform's own, which post as they are.
+    await form.locator("select[name=bedrooms]").selectOption("2");
+    await form.locator("select[name=subject]").selectOption("deep");
     // The time trap flags anything faster than a person; this is a person.
     await page.waitForTimeout(MIN_FILL_MS + 500);
 
@@ -34,15 +37,35 @@ test.describe("without JavaScript", () => {
     const db = new DatabaseSync(LEADS_DB, { readOnly: true });
     try {
       const row = db.prepare("SELECT job, zip, location_id, spam_verdict, extras FROM leads WHERE mobile = ?").get(mobile);
-      expect(row).toEqual({ job: "upholstery", zip: locality, location_id: "vifnet", spam_verdict: null, extras: JSON.stringify({ surface_m2: "65" }) });
+      expect(row).toEqual({
+        job: "deep",
+        zip: locality,
+        location_id: "vifnet",
+        spam_verdict: null,
+        extras: JSON.stringify({ name: "Amanda Reyes", bedrooms: "2" }),
+      });
     } finally {
       db.close();
     }
   });
 
-  test("the page offers no phone or WhatsApp link while the card has none", async ({ page }) => {
+  test("the phone links call the frame's sample number, and there is no WhatsApp", async ({ page }) => {
     await page.goto("/fr");
-    await expect(page.locator('a[href^="tel:"], a[href*="wa.me"]')).toHaveCount(0);
+    await expect(page.locator('a[href*="wa.me"]')).toHaveCount(0);
+    const phones = page.locator('a[href^="tel:"]');
+    await expect(phones.first()).toBeAttached();
+    for (const href of await phones.evaluateAll(links => links.map(a => a.getAttribute("href")))) expect(href).toBe("tel:+12085550192");
+  });
+
+  test("the phone menu opens and closes without a script", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "the burger is the phone's");
+    await page.goto("/fr");
+    const menu = page.locator("#nav-menu-panel");
+    await expect(menu).toBeHidden();
+    await page.locator("[data-band=menu-toggle]").click();
+    await expect(menu.getByRole("link", { name: "Avis" })).toBeVisible();
+    await page.locator("[data-band=menu-toggle]").click();
+    await expect(menu).toBeHidden();
   });
 
   test("a dead path is a 404 rendered on the server, with its headline", async ({ page }) => {
@@ -56,11 +79,6 @@ test.describe("without JavaScript", () => {
     expect(response?.status()).toBe(404);
     await expect(page.locator("h1")).toBeVisible();
     expect((await request.get("/icon.svg")).status()).toBe(200);
-  });
-
-  test("the slider is off until the script runs", async ({ page }) => {
-    await page.goto("/fr#avant-apres");
-    await expect(page.getByRole("slider")).toBeDisabled();
   });
 });
 
@@ -83,33 +101,27 @@ test.describe("before launch", () => {
   });
 });
 
-test("a service link picks its service in the form", async ({ page }) => {
+test("a service card picks its service in the form", async ({ page }) => {
   await page.goto("/fr#prestations");
   // Hydrated: before that the click lands on a plain link and picks nothing.
   await expect(page.locator("form#quote select")).toHaveCount(0);
-  const link = page.locator("#prestations li", { hasText: "Textiles" }).getByRole("link");
-  await link.click();
+  await page.locator("#prestations li", { hasText: "Grand ménage" }).getByRole("link").first().click();
   await expect(page).toHaveURL(/#devis$/);
-  const trigger = page.getByRole("combobox", { name: "Type de ménage" });
-  await expect(trigger).toHaveText("Textiles");
-  await expect(page.locator("form#quote input[name=subject]")).toHaveValue("upholstery");
 
-  // The visitor changes it by hand; the same link again puts its service back.
-  await trigger.click();
-  await page.getByRole("listbox").getByRole("option", { name: "Extérieurs" }).click();
-  await expect(trigger).toHaveText("Extérieurs");
-  await link.click();
-  await expect(trigger).toHaveText("Textiles");
-  await expect(page.locator("form#quote input[name=subject]")).toHaveValue("upholstery");
+  const form = page.locator("form#quote");
+  await form.locator("input[name=name]").fill("Jordan Taylor");
+  await form.locator("input[name=mobile]").fill("06 12 34 56 78");
+  await form.locator("input[name=locality]").fill("75015");
+  await page.getByRole("button", { name: "Continuer →" }).click();
+  await expect(page.getByRole("combobox", { name: "Prestation" })).toHaveText("Grand ménage");
+  await expect(form.locator("input[name=subject]")).toHaveValue("deep");
 });
 
-test("the before/after slider moves with the keyboard", async ({ page }) => {
-  await page.goto("/fr#avant-apres");
-  const slider = page.getByRole("slider");
-  await expect(slider).toBeEnabled();
-  await slider.focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(slider).toHaveAttribute("aria-valuetext", "Avant 51 %");
-  await page.getByRole("button", { name: /Moquette/ }).click();
-  await expect(slider).toHaveAttribute("aria-valuetext", "Avant 50 %");
+test("the sticky bar slides in after the hero", async ({ page }) => {
+  await page.goto("/fr");
+  const bar = page.locator("[data-band=sticky]");
+  await expect(bar).toHaveAttribute("data-shown", "false");
+  await page.mouse.wheel(0, 1500);
+  await expect(bar).toHaveAttribute("data-shown", "true");
+  await expect(bar.getByRole("link", { name: "Réserver" })).toBeVisible();
 });

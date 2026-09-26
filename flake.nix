@@ -44,6 +44,7 @@
             "assets/card.toml"
             "assets/mark.svg"
             "assets/fonts"
+            "assets/icons"
             "assets/photos"
             "next.config.ts"
             "tsconfig.json"
@@ -55,7 +56,7 @@
           smoke = {
             page = "/fr";
             og = "/og?l=vifnet";
-            quote = { location = "vifnet"; subject = "deep"; locality = "75015"; mobile = "0612345678"; surface_m2 = "65"; };
+            quote = { location = "vifnet"; subject = "deep"; locality = "83702"; mobile = "2085550192"; name = "Smoke Test"; bedrooms = "3"; };
           };
         };
 

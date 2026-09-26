@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { copyFor, TEXT, type Facts } from "@/entities/content";
+import { copyFor, REVIEWS, TEXT, type Facts } from "@/entities/content";
 import { COPY_TODO } from "@/shared/config/copy-todo";
 import { i18n, type Locale } from "@/shared/config/i18n";
 import { SUBJECTS } from "@/shared/config/lead";
 import { OWNER_TODO, site } from "@/shared/config/site";
-import { PAIRS } from "@/shared/portfolio";
 
 // Completeness is the compiler's: `FR` and `EN` satisfy one `Text`. What the
 // type cannot see is an empty string, a sentence that states a term the owner
-// has not confirmed, or a fact written by hand.
+// has not confirmed, or a fact written by hand. The Figma frame's own words are
+// on the page verbatim; OWNER_TODO "design sample content" holds the launch.
 
 const facts = (): Facts => ({ place: site.brand.name, phone: site.brand.phone });
 
@@ -27,31 +27,19 @@ const copyOf = (locale: Locale) => leaves(TEXT[locale], facts());
 const PROPOSED: Record<Locale, Readonly<Record<string, string>>> = {
   fr: {
     "fixed price": "Prix confirmé avant l’intervention — il ne change pas sur place",
-    supplies: "Produits et matériel apportés par l’équipe",
-    "re-clean": "Signalez-le dans les 24 heures : l’équipe revient sans frais",
-    keys: "Vous pouvez confier les clés à l’équipe",
     offices: "Le ménage fait à fond, chez vous et dans vos locaux.",
-    methods: "four et réfrigérateur compris",
     consent: "rien n’est facturé sans votre accord",
     "no retouching": "Des interventions réelles, sans retouche.",
-    "taken on site": "Photos prises par l’équipe sur place.",
     "joint check": "Vous vérifiez le résultat avec l’équipe avant son départ.",
     "no sales calls": "Pas de démarchage.",
-    "service types": "Fin de chantier",
   },
   en: {
     "fixed price": "The price is confirmed in writing and does not change",
-    supplies: "Equipment and products brought by the team",
-    "re-clean": "Tell us within 24 hours: the team comes back free of charge",
-    keys: "You can leave the keys with the team",
     offices: "Cleaning for homes and premises",
-    methods: "oven and fridge included",
     consent: "nothing is charged without your consent",
     "no retouching": "Real jobs, no retouching.",
-    "taken on site": "Photos taken by the team on site.",
     "joint check": "You check the result with the team before it leaves.",
     "no sales calls": "No sales calls.",
-    "service types": "After building works",
   },
 };
 
@@ -90,8 +78,8 @@ describe("the copy", () => {
   });
 
   it.each(i18n.locales)("writes no phone number by hand (%s)", locale => {
-    // The mobile field's placeholder is an example, not the brand's number.
-    const numbers = copyOf(locale).filter(([path, s]) => path !== "quoteLabels.mobileHint" && /(\+33|\b0[1-9])[\d\s.]{8,}/.test(s));
+    // The frame's sample number lives in `shared/config/sample`, not in the copy.
+    const numbers = copyOf(locale).filter(([, s]) => /(\+33|\b0[1-9])[\d\s.]{8,}|\(\d{3}\)\s?\d{3}-\d{4}/.test(s));
     expect(numbers).toEqual([]);
   });
 
@@ -100,10 +88,16 @@ describe("the copy", () => {
     expect(said).toEqual([]);
   });
 
-  it.each(i18n.locales)("words every confirmed service and every before/after pair (%s)", locale => {
+  it.each(i18n.locales)("words every service card and every review of the frame (%s)", locale => {
     const { t } = copyFor(locale, facts());
-    for (const s of SUBJECTS) expect(t.services.items[s].name, s).toBe(t.subjects[s]);
-    for (const p of PAIRS) expect(t.beforeAfter.pairs[p], p).not.toBe("");
-    expect(t.beforeAfter.position).toContain("{n}");
+    for (const subject of SUBJECTS) expect(t.services.items[subject].points, subject).toHaveLength(5);
+    for (const key of REVIEWS) expect(t.reviews.items[key].quote, key).not.toBe("");
+    expect(t.stats).toHaveLength(4);
+    expect(t.quote.doneTitle).toContain("{first}");
+  });
+
+  it("sets French typography: no straight quote, a no-break space before ? ! : ;", () => {
+    const said = copyOf("fr").filter(([, s]) => /['"]|[^\u00a0][?!:;](\s|$)/.test(s));
+    expect(said).toEqual([]);
   });
 });

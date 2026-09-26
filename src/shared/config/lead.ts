@@ -1,32 +1,37 @@
 import type { LeadSchema } from "@evinvest/kitstart";
 
 /**
- * The kinds of job the quote form offers — the values it posts and the lead
- * store keeps. Only what the portfolio in `assets/profile_images/` shows;
- * routine cleaning, end of tenancy and after-works cleaning wait for the owner
- * (`OWNER_TODO`).
+ * The jobs the quote form offers — the four service cards of the Figma frame,
+ * and the values the form posts and the lead store keeps.
  */
-export const SUBJECTS = ["deep", "upholstery", "exterior", "other"] as const;
+export const SUBJECTS = ["standard", "deep", "move", "post-construction"] as const;
 export type Subject = (typeof SUBJECTS)[number];
 
-/** Whole square metres: a quote for a studio and one for a hotel floor differ by the surface. */
-export const SURFACE_M2 = { name: "surface_m2", min: 1, max: 100_000 } as const;
+/** The size of the home, as the frame's second step asks it. */
+export const BEDROOMS = ["studio", "1", "2", "3", "4", "5+"] as const;
+export type Bedrooms = (typeof BEDROOMS)[number];
+
+/** The frame's defaults for the second step: "3 bedrooms", "Standard Clean". */
+export const DEFAULTS = { bedrooms: "3", subject: "standard" } as const satisfies { bedrooms: Bedrooms; subject: Subject };
+
+/** The extra fields the form posts beyond the core three, each capped at `max` characters. */
+export const EXTRAS = { name: { name: "name", max: 100 }, bedrooms: { name: "bedrooms", max: 3 } } as const;
 
 /**
- * What the quote form asks, and the rules worth enforcing: a lead with no way
- * to reach the customer is not a lead, and a surface is a whole number when
- * given. The reason is for the log only.
+ * What the quote form asks — name, phone and ZIP, then bedrooms and service —
+ * and the rules worth enforcing: a lead with no way to reach the customer or
+ * no one to ask for is not a lead. ZIP is the locality. The reason is for the
+ * log only.
  */
 export const LEAD: LeadSchema<Subject> = {
   subjects: SUBJECTS,
   wire: { subject: "subject", locality: "locality", mobile: "mobile" },
-  extras: [{ name: SURFACE_M2.name, max: String(SURFACE_M2.max).length }],
+  extras: [EXTRAS.name, EXTRAS.bedrooms],
   validate: lead => {
     if (lead.mobile.replace(/\D/g, "").length < 10) return "a mobile number";
-    const raw = lead.extras[SURFACE_M2.name];
-    if (raw === undefined || raw === "") return null;
-    if (!/^\d+$/.test(raw)) return `${SURFACE_M2.name} must be a whole number`;
-    const m2 = Number(raw);
-    return m2 >= SURFACE_M2.min && m2 <= SURFACE_M2.max ? null : `${SURFACE_M2.name} out of range`;
+    if ((lead.extras[EXTRAS.name.name] ?? "").trim() === "") return "a name";
+    const bedrooms = lead.extras[EXTRAS.bedrooms.name];
+    if (bedrooms !== undefined && bedrooms !== "" && !(BEDROOMS as readonly string[]).includes(bedrooms)) return "bedrooms out of range";
+    return null;
   },
 };

@@ -1,5 +1,6 @@
-// Cuts the web variants of `assets/profile_images/*.png` — AVIF and WebP at
-// the widths the page lays them out at — into `assets/photos/`, and writes
+// Cuts the web variants of the Figma file's photos (`assets/design_images/`,
+// exported from 1wXlPmnmOdKYPDWz6N5EB8) — AVIF and WebP at the widths the page
+// lays them out at — into `assets/photos/`, and writes
 // `src/shared/portfolio/photos.ts`, the module that imports them (so Next
 // fingerprints each file) and spells their `srcset`s.
 //
@@ -35,74 +36,25 @@ interface Cut {
 }
 
 /**
- * A before/after composite, split into its halves. The halves are not at 50 %
- * and carry burned-in AVANT / APRÈS labels (top of the before, bottom of the
- * after): each rectangle is the half's 4:5 region without its label, the same
- * size for both so the slider compares like with like. Read off the sources.
+ * The plan: each photo at its laid-out width and twice it, never wider than
+ * the source (an upscale is bytes with no detail in them). The frames crop
+ * with `object-cover`, so the files keep the source's shape.
  */
-function pair(stem: string, source: string, before: Crop, after: Crop): Cut[] {
-  // A phone's file and the crop's full width; one file when the crop is no wider.
-  const widths = before.width > 480 ? [480, before.width] : [before.width];
-  return [
-    { stem: `${stem}-before`, source, widths, crop: before },
-    { stem: `${stem}-after`, source, widths, crop: after },
-    // The picker shows the composite itself, both halves, as a square.
-    { stem: `${stem}-thumb`, source, widths: [144], square: true },
-  ];
-}
-
-/** The plan. Widths never exceed the (cropped) source: an upscale is bytes with no detail in them. */
 export const CUTS: Cut[] = [
-  // The hero's backdrop, faded to 20 % behind the copy: the source's full width
-  // is the most there is.
-  { stem: "hero", source: "team_portrait_in_vifnet_uniforms.png", widths: [560, 1056] },
-  // Service cards: a 3:2 photo, 268 × 176 on desktop, full width (up to
-  // 358 × 176) on a phone.
-  // A finished room, not the oven: cleaning an oven is a method the owner has
-  // not confirmed (OWNER_TODO "copy: methods").
-  { stem: "svc-deep", source: "final_parisian_kitchen_with_black_countertop.png", widths: [400, 720], aspect: [3, 2] },
-  { stem: "svc-upholstery", source: "in_progress_gray_sofa_upholstery_cleaning.png", widths: [400, 720], aspect: [3, 2] },
-  // The source is 499 px wide: its full width is the larger file.
-  { stem: "svc-exterior", source: "before_after_pressure_washing_gravel_patio.png", widths: [400, 499], aspect: [3, 2] },
-  { stem: "svc-other", source: "staff_in_gilded_salon_mirror_cleaning.png", widths: [400, 720], aspect: [3, 2] },
-  // The before/after viewer: 560×700 on desktop, 350×438 on a phone.
-  ...pair(
-    "sofa",
-    "before_after_beige_sectional_sofa.png",
-    { left: 0, top: 181, width: 717, height: 896 },
-    { left: 731, top: 181, width: 717, height: 896 },
-  ),
-  ...pair(
-    "bathtub",
-    "before_after_stained_bathtub.png",
-    { left: 0, top: 386, width: 519, height: 649 },
-    { left: 603, top: 386, width: 519, height: 649 },
-  ),
-  // Stacked, not side by side: the before is the top half.
-  ...pair(
-    "carpet",
-    "before_after_stained_carpet_01.png",
-    { left: 627, top: 0, width: 491, height: 614 },
-    { left: 188, top: 640, width: 491, height: 614 },
-  ),
-  ...pair(
-    "driveway",
-    "before_after_herringbone_paver_driveway.png",
-    { left: 0, top: 219, width: 539, height: 674 },
-    { left: 558, top: 251, width: 539, height: 674 },
-  ),
-  ...pair(
-    "mattress",
-    "before_after_mattress_stain.png",
-    { left: 0, top: 219, width: 549, height: 686 },
-    { left: 571, top: 251, width: 549, height: 686 },
-  ),
-  ...pair(
-    "recliner",
-    "before_after_recliner_armchair_upholstery.png",
-    { left: 0, top: 219, width: 461, height: 576 },
-    { left: 480, top: 314, width: 461, height: 576 },
-  ),
+  // The hero's backdrop at 20 %: `object-cover` over a box taller than the hero
+  // (1440 × 1071, 390 × 1796) draws it wider than the source, so the source's
+  // full width is the only file.
+  { stem: "hero", source: "hero-bg.jpg", widths: [1800] },
+  // The hero's four faces, 36 px round.
+  ...[1, 2, 3, 4].map(n => ({ stem: `avatar-${n}`, source: `avatar-${n}.jpg`, widths: [36, 72], square: true })),
+  // Service cards: 268 × 176 on desktop, up to 358 × 176 on a phone.
+  ...["standard", "deep", "move", "post-construction"].map(s => ({ stem: `service-${s}`, source: `service-${s}.jpg`, widths: [358, 700] })),
+  // Review cards: the 16:9 result photo (360 wide) and the job photo, full
+  // width of the card's body (320) and top-aligned in a 128 px strip.
+  ...["amanda", "marcus", "priya"].flatMap(r => [
+    { stem: `review-${r}-result`, source: `review-${r}-result.jpg`, widths: [360, 720] },
+    { stem: `review-${r}-job`, source: `review-${r}-job.jpg`, widths: [320, 640] },
+  ]),
 ];
 
 export const FORMATS = [
@@ -111,7 +63,7 @@ export const FORMATS = [
   { ext: "webp", options: "[Q=74,effort=6,strip]" },
 ] as const;
 
-const SOURCES = "assets/profile_images";
+const SOURCES = "assets/design_images";
 const WEB = "assets/photos";
 const MODULE = "src/shared/portfolio/photos.ts";
 

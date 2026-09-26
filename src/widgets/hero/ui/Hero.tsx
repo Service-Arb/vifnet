@@ -1,67 +1,73 @@
-import type { Rating } from "@evinvest/kitstart";
 import { Section } from "@evinvest/kitstart/react";
 import type { ReactNode } from "react";
 import type { Copy } from "@/entities/content";
-import { SubjectLink } from "@/features/pick-subject";
-import type { Subject } from "@/shared/config/lead";
-import { Photo, TYPE } from "@/shared/ui";
-import { HeroRating } from "./HeroRating";
+import { Photo, Stars, TYPE } from "@/shared/ui";
 
-/** The confirmed jobs, as chips that open the form with the job picked — in place of the frame's trust claims. */
-const CHIPS: readonly Subject[] = ["deep", "upholstery", "exterior"];
-
-// A tap target of 44 px around a 28 px chip, by a centred pseudo-element; the
-// rows' gap on a phone keeps two targets from overlapping.
-const CHIP =
-  "relative rounded-full border border-ink/10 bg-ink/8 px-3 py-1.5 text-xs text-ink-mid hover:bg-ink/15 after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
-
-export interface HeroProps {
-  copy: Copy;
-  workHref: string;
-  /** Where the form is, and its id: the chips pick a job in it. */
-  quote: { href: string; form: string };
-  /** The live Google rating, or `null` — then no social proof at all. */
-  rating: Rating | null;
-  /** The quote card, beside the copy from a laptop up and under it below. */
-  form: ReactNode;
-}
+const AVATARS = ["avatar-1", "avatar-2", "avatar-3", "avatar-4"] as const;
 
 /**
- * The promise and the form, on the dark forest over a job photo faded behind
- * a gradient — the gradient keeps the text at its contrast over any photo.
- * Nothing here states a fact the owner has not given: no counts, no
- * guarantees; the rating only when the live profile has one.
+ * The frame's hero (9:144 / 14:520): the promise on forest over the team photo
+ * at 20 %, behind a gradient that keeps the text at its contrast. The photo's
+ * box runs past the hero's bottom, as in the frame, so `object-cover` crops it
+ * the same; the hero clips it. The quote card sits beside the copy from a
+ * laptop up and under it below.
  */
-export function Hero({ copy, workHref, quote, rating, form }: HeroProps) {
-  const { hero, subjects } = copy.t;
-  const [lead, accent, tail] = hero.title;
+export function Hero({ copy, form }: { copy: Copy; form: ReactNode }) {
+  const { hero, rating } = copy.t;
   return (
-    <Section polarity="dark" className="relative isolate overflow-hidden pt-12 pb-16 md:py-24">
-      <Photo stem="hero" alt="" sizes="100vw" priority className="absolute inset-0 -z-10 size-full object-cover opacity-20" />
-      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-background/85 lg:bg-transparent lg:bg-linear-to-r lg:from-background lg:via-background/85 lg:to-transparent" />
-      <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-12 xl:gap-20">
+    <Section polarity="dark" className="relative isolate overflow-hidden py-16 lg:py-24">
+      <Photo
+        stem="hero"
+        alt=""
+        sizes="1800px"
+        priority
+        className="absolute inset-x-0 top-0 -z-10 h-[calc(100%+784px)] w-full object-cover opacity-20 lg:h-[calc(100%+390px)]"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 -z-10 h-[calc(100%+784px)] bg-linear-to-r from-background via-background/85 to-background/30 lg:h-[calc(100%+390px)] lg:to-transparent"
+      />
+      <div className="flex flex-col gap-12 lg:flex-row lg:items-center lg:gap-20">
         <div className="flex min-w-0 flex-1 flex-col items-start">
-          <h1 className={`${TYPE.h1} text-ink`}>
-            {lead}
-            <span className="whitespace-nowrap text-positive">{accent}</span>
-            {tail}
+          <h1 className={`${TYPE.h1} text-white`}>
+            <span className="block">{hero.title.first}</span>
+            <span className="block">
+              {hero.title.second}
+              <span className="text-positive">{hero.title.accent}</span>
+            </span>
+            <span className="block">{hero.title.third}</span>
           </h1>
-          <p className={`${TYPE.lede} mt-5 max-w-md text-ink-mid`}>{hero.lede}</p>
-          {rating && <HeroRating rating={rating} copy={copy} />}
-          <ul className="mt-7 flex flex-wrap gap-x-2 gap-y-4 md:gap-y-2">
-            {CHIPS.map(subject => (
-              <li key={subject}>
-                <SubjectLink href={quote.href} form={quote.form} subject={subject} className={CHIP}>
-                  {subjects[subject]}
-                </SubjectLink>
+          <p className="mt-5 text-lg leading-[29.25px] text-white/70 lg:max-w-[448px]">{hero.lede}</p>
+          <div className="mt-7 flex items-center gap-3">
+            <div className="flex">
+              {/* Each `<img>` is the only child of its `<picture>`, so `last:` cannot tell the last face. */}
+              {AVATARS.map((stem, i) => (
+                <Photo
+                  key={stem}
+                  stem={stem}
+                  alt=""
+                  sizes="36px"
+                  className={`size-9 rounded-full border-2 border-background object-cover ${i < AVATARS.length - 1 ? "-mr-2" : ""}`}
+                />
+              ))}
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <p className="flex items-center gap-1.5">
+                <Stars />
+                <span className="text-sm leading-5 font-bold text-white">{rating.value}</span>
+              </p>
+              <p className="text-xs leading-4 text-white/50">{hero.reviews}</p>
+            </div>
+          </div>
+          <ul className="mt-7 flex flex-wrap gap-2">
+            {hero.chips.map(chip => (
+              <li key={chip} className="rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-xs leading-4 text-white/70">
+                {chip}
               </li>
             ))}
           </ul>
-          <a href={workHref} className="mt-6 rounded-sm text-sm font-medium text-primary-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
-            {hero.toWork}
-          </a>
         </div>
-        <div className="lg:w-110 lg:shrink-0 xl:w-130">{form}</div>
+        <div className="w-full lg:w-[520px] lg:shrink-0">{form}</div>
       </div>
     </Section>
   );

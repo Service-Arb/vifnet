@@ -20,7 +20,7 @@ leaves out fails the tests rather than rendering in a fallback face.
 To rebuild the web files (fonttools with brotli, `pip install fonttools brotli`):
 
 ```sh
-LATIN="U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2190-2193,U+2212,U+2215,U+2605,U+260E,U+2630,U+2713,U+FEFF,U+FFFD"
+LATIN="U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2190-2193,U+2197,U+2212,U+2215,U+2605,U+260E,U+2630,U+2713,U+FEFF,U+FFFD"
 fonttools varLib.instancer 'Fraunces[SOFT,WONK,opsz,wght].ttf' wght=700 SOFT=0 WONK=1 opsz=9:144 -o Fraunces-Bold.ttf
 fonttools varLib.instancer 'InstrumentSans[wdth,wght].ttf' wdth=100 wght=400:700 -o InstrumentSans-Variable.ttf
 for f in Fraunces-Bold InstrumentSans-Variable; do
@@ -28,5 +28,7 @@ for f in Fraunces-Bold InstrumentSans-Variable; do
 done
 ```
 
-The range is aquafix's `scripts/subset-fonts.sh` `LATIN` list, verbatim; all
-layout features are kept, so kerning and `tnum` survive.
+The range is aquafix's `scripts/subset-fonts.sh` `LATIN` list plus `U+2197`
+(↗, the reviews band's "Read all … ↗"); all layout features are kept, so
+kerning and `tnum` survive. Only Instrument Sans draws ↗ — Fraunces has no
+such glyph, and no heading uses it.

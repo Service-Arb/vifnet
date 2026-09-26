@@ -3,7 +3,7 @@ import { EN } from "./model/en";
 import { FR } from "./model/fr";
 import type { Copy, Facts, Text } from "./model/types";
 
-export type { Copy, Facts, Text } from "./model/types";
+export { REVIEWS, type Copy, type Facts, type Review, type ReviewKey, type ServiceItem, type Text } from "./model/types";
 
 export const TEXT: Readonly<Record<Locale, Text>> = { fr: FR, en: EN };
 
