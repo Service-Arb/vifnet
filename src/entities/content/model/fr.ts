@@ -10,20 +10,21 @@ const status = (
   primary: StatusCopy<Facts>["primary"],
 ): StatusCopy<Facts> => ({ code, title, eyebrow, headline, body: () => body, primary, secondary: "home" });
 
-// The copy of the Figma frames (11BVyibSdB8fBYrfBiLX3C), less every line that
-// promises a term the owner has not confirmed (OWNER_TODO, "copy:").
+// The Figma frame's words (Desktop 1440 9:107) in French, with French
+// typography: `’`, « », and a no-break space ( ) before ? ! : ; and %,
+// and inside the guillemets. The figures, reviews and prices are the file's
+// sample content (OWNER_TODO "design sample content").
 export const FR = {
   pages: {
     home: {
       title: () => "Vifnet — ménage à domicile",
-      description: () =>
-        "Grand ménage, textiles et extérieurs, chez vous. Décrivez le besoin en une minute : nous vous rappelons.",
+      description: () => "Grand ménage, textiles et extérieurs, chez vous. Décrivez le besoin en une minute : nous vous rappelons.",
     },
   },
   quoteForm: {
-    title: "Recevez votre devis.",
-    lede: "Quatre champs, une minute.",
-    submit: "Recevoir mon devis",
+    title: "Votre devis gratuit",
+    lede: "Nous vous rappelons en moins de 15 minutes.",
+    submit: "Recevoir mon devis gratuit →",
     privacy: "Votre numéro ne sert qu’à cette demande.",
     reassurance: () => "Nous vous rappelons au numéro indiqué.",
     honeypotLabel: "Site web",
@@ -49,114 +50,192 @@ export const FR = {
   whatsappLabel: "WhatsApp",
   whatsappShort: "WhatsApp",
   whatsappMessage: () => "Bonjour, je vous contacte depuis le site Vifnet.",
-  ctaShort: "Demander un devis",
+  ctaShort: "Réserver",
   backHome: "Retour à l’accueil",
   tryAgain: "Réessayer",
   statusStrip: [],
   langName: "Français",
   facts: () => ["Vifnet", "Mentions légales en cours de rédaction"],
-  header: { cta: "Demander un devis", ctaCompact: "Devis", home: "Vifnet — accueil" },
-  nav: { services: "Prestations", work: "Avant / après", steps: "Étapes", faq: "FAQ", menu: "Menu" },
+  nav: { services: "Services", reviews: "Avis", pricing: "Tarifs", faq: "FAQ", menu: "Menu", book: "Réserver", home: "Vifnet — accueil" },
+  rating: { value: "4,9", count: "(340)" },
   hero: {
-    title: ["Le ménage fait ", "à fond", ", chez vous."],
-    lede: "Grand ménage, textiles ou extérieurs, à la maison ou dans l’appartement. Décrivez le besoin en une minute : nous vous rappelons.",
-    toWork: "Voir avant / après ↓",
+    title: { first: "Une maison", second: "enfin ", accent: "vraiment", third: "propre." },
+    lede: "Vifnet envoie chez vous une équipe professionnelle et assurée. Vous retrouvez un intérieur soigné — sans rien bâcler.",
+    reviews: "340 avis Google cinq étoiles",
+    chips: ["Assurés et cautionnés", "Antécédents vérifiés", "Satisfaction garantie à 100 %", "Disponible le jour même"],
   },
-  beforeAfter: {
-    eyebrow: "Nos réalisations",
-    title: "Avant, après.",
-    lede: "Faites glisser la poignée pour comparer.",
-    before: "Avant",
-    after: "Après",
-    slider: "Comparer avant et après",
-    position: "Avant {n} %",
-    picker: "Choisir une intervention",
-    pairs: {
-      sofa: "Canapé d’angle — nettoyage des textiles",
-      bathtub: "Baignoire — grand ménage",
-      carpet: "Moquette — nettoyage des textiles",
-      driveway: "Allée pavée — extérieurs",
-      mattress: "Matelas — nettoyage des textiles",
-      recliner: "Fauteuil — nettoyage des textiles",
-    },
+  quote: {
+    placeholders: { name: "Votre nom complet", mobile: "Numéro de téléphone", locality: "Code postal" },
+    labels: { name: "Nom", mobile: "Téléphone", locality: "Code postal", bedrooms: "Chambres", subject: "Prestation" },
+    next: "Continuer →",
+    almost: "Encore un détail :",
+    trust: ["✓ Sans engagement", "✓ Rappel sous 15 min", "✓ Possible le jour même"],
+    bedrooms: { studio: "Studio", "1": "1 chambre", "2": "2 chambres", "3": "3 chambres", "4": "4 chambres", "5+": "5 chambres et plus" },
+    doneTitle: "C’est noté, {first} !",
+    doneBody: ["Nous appelons le ", " d’ici 15 minutes avec un devis ferme."],
   },
+  stats: [
+    { value: "500+", label: "Logements nettoyés" },
+    { value: "4,9★", label: "340 avis Google" },
+    { value: "100 %", label: "Cautions récupérées" },
+    { value: "< 2 h", label: "Délai de réponse moyen" },
+  ],
   services: {
     eyebrow: "Nos prestations",
-    title: "Ce que nous nettoyons",
-    lede: "Choisissez un type : le formulaire s’ouvre déjà rempli.",
-    onQuote: "Sur devis",
-    ask: "Demander ce devis →",
+    title: "Choisissez votre ménage.",
+    lede: "Chaque prestation est couverte par notre garantie satisfaction écrite. Pas satisfait ? Nous revenons gratuitement.",
+    badge: "Le plus demandé",
+    note: "Les photos ci-dessus viennent de vrais logements clients — pas d’une banque d’images. ",
+    noteLink: "Réserver une prestation →",
     items: {
-      deep: { name: "Grand ménage", body: "Cuisine, salle de bain, sols et recoins, à fond.", photoAlt: "Cuisine d’un appartement parisien" },
-      upholstery: { name: "Textiles", body: "Canapés, fauteuils, matelas et tapis.", photoAlt: "Machine de nettoyage des textiles devant un canapé" },
-      exterior: { name: "Extérieurs", body: "Terrasses, allées et pavés.", photoAlt: "Nettoyage d’une terrasse gravillonnée" },
-      other: { name: "Autre demande", body: "Un besoin qui n’est pas dans la liste ? Décrivez-le.", photoAlt: "Nettoyage d’un miroir dans un salon doré" },
+      standard: {
+        name: "Ménage standard",
+        tagline: "L’entretien courant, bien fait.",
+        points: [
+          "Plans de travail et façades d’électroménager",
+          "Salles de bain récurées",
+          "Sols aspirés et lavés",
+          "Dépoussiérage complet",
+          "Poubelles vidées · Lits faits",
+        ],
+        price: "À partir de 89 $",
+      },
+      deep: {
+        name: "Grand ménage",
+        tagline: "Du sol au plafond. Rien n’est oublié.",
+        points: [
+          "Tout le ménage standard",
+          "Intérieur du four et du réfrigérateur",
+          "Plinthes, moulures et rebords de fenêtre",
+          "Intérieur des placards et tiroirs",
+          "Joints et carrelage frottés en détail",
+        ],
+        price: "À partir de 179 $",
+      },
+      move: {
+        name: "Entrée / sortie",
+        tagline: "Récupérez votre caution — garanti.",
+        points: [
+          "Niveau grand ménage partout",
+          "Intérieur de tous les appareils",
+          "Chaque placard, étagère et recoin",
+          "Garage balayé",
+          "Garantie de caution écrite",
+        ],
+        price: "À partir de 149 $",
+      },
+      "post-construction": {
+        name: "Fin de chantier",
+        tagline: "Nous apportons le matériel lourd.",
+        points: [
+          "Poussière de chantier éliminée",
+          "Projections de peinture et colle",
+          "Surfaces essuyées et lustrées",
+          "Aspiration à filtre HEPA",
+          "Évacuation des gravats sur demande",
+        ],
+        price: "Sur devis",
+      },
     },
   },
-  priceTable: {
-    title: "Tarifs",
-    lede: "Prix TTC.",
-    service: "Prestation",
-    price: "Prix TTC",
-    detail: {
-      deep: "par intervention, selon la surface",
-      upholstery: "canapé, matelas ou tapis, à la pièce",
-      exterior: "par m²",
-      other: "sur devis",
+  reviews: {
+    eyebrow: "Ce que disent nos clients",
+    title: "Ne nous croyez pas sur parole.",
+    google: "Lire les 340 avis Google ↗",
+    average: "4,9 de moyenne",
+    total: "· 340 avis vérifiés",
+    cta: "Rejoignez-les — réservez aujourd’hui →",
+    items: {
+      amanda: {
+        name: "Amanda R.",
+        city: "Meridian, ID",
+        verified: "Vérifié · août 2025",
+        quote:
+          "« J’ai dû essayer six services de ménage au fil des ans. Vifnet est le premier où, en rentrant, je ne pouvais vraiment pas dire que quelqu’un était passé — dans le meilleur sens du terme. Chaque recoin. Mon four a l’air neuf. Désormais, c’est toutes les deux semaines. »",
+        photos: { result: "La cuisine d’Amanda — le four qui « a l’air neuf », selon elle", job: "L’équipe le jour de l’intervention" },
+      },
+      jordan: {
+        name: "Jordan T.",
+        city: "Boise, ID",
+        verified: "Vérifié · juil. 2025",
+        quote:
+          "« Appelé à 9 h un vendredi, ils étaient chez moi à 13 h. J’ai quitté ma location le lendemain matin et récupéré toute ma caution. Ponctuels, minutieux, et ils s’en soucient vraiment. »",
+      },
+      marcus: {
+        name: "Marcus et Deb F.",
+        city: "Eagle, ID",
+        verified: "Vérifié · mai 2025",
+        quote:
+          "« Ménage après la rénovation de notre cuisine. La poussière de chantier va partout. Deux heures plus tard, toute la maison sentait le propre et chaque surface était impeccable. Le travail sur l’escalier était incroyable. »",
+        photos: {
+          result: "L’escalier après le ménage de fin de chantier — chez Marcus et Deb",
+          job: "L’escalier en cours d’intervention — encore un chantier à ce stade",
+        },
+      },
+      keisha: {
+        name: "Keisha M.",
+        city: "Nampa, ID",
+        verified: "Vérifié · juin 2025",
+        quote:
+          "« Polis, rapides, minutieux. Ils ont nettoyé mon four mieux que le jour où j’ai acheté la maison. J’ai réservé un passage hebdomadaire sur-le-champ. Mon mari m’a littéralement demandé si nous avions acheté de nouveaux appareils. »",
+      },
+      priya: {
+        name: "Priya S.",
+        city: "Boise, ID",
+        verified: "Vérifié · avr. 2025",
+        quote:
+          "« Les salles de bain brillent, les chambres des enfants sont enfin rangées, et ils ne négligent rien. Les fenêtres — chaque cadre, chaque rebord, la vitre elle-même. Je n’en revenais pas. Une équipe attentionnée. »",
+        photos: { result: "Les fenêtres de Priya après le ménage — elle « n’en revenait pas »", job: "Les fenêtres dont parle Priya" },
+      },
+      carl: {
+        name: "Carl B.",
+        city: "Caldwell, ID",
+        verified: "Vérifié · mars 2025",
+        quote:
+          "« Je gère une location courte durée et les rotations doivent être rapides et parfaites. Vifnet est désormais mon seul appel. Ils arrivent dans le créneau, ne dépassent jamais le temps prévu, et les voyageurs mettent 5 étoiles à la propreté à chaque fois. »",
+      },
     },
   },
-  howItWorks: {
-    eyebrow: "En trois étapes",
-    title: "Comment ça se passe",
-    steps: [
-      { title: "Vous décrivez le besoin", body: "Type de ménage, surface, ville et un numéro : le formulaire prend une minute." },
-      { title: "Nous vous rappelons", body: "Nous posons les questions utiles et convenons avec vous du prix et du créneau." },
-      { title: "L’équipe intervient", body: "L’équipe vient chez vous au créneau convenu." },
-    ],
+  guarantee: {
+    title: "Satisfaction garantie à 100 %",
+    body: "Une zone ne vous convient pas ? Prévenez-nous dans les 24 heures. Nous revenons la nettoyer sans frais — sans discussion, sans petites lignes.",
   },
-  reviews: { title: "Avis clients", summary: (value, count) => `Note Google ${value} / 5 — ${count} avis` },
-  serviceArea: {
-    title: "Nous venons chez vous",
-    lede: "Pas d’agence à visiter : l’équipe se déplace dans les communes ci-contre. Votre ville n’y est pas ? Demandez quand même.",
-  },
-  faqEyebrow: "Bon à savoir",
-  faqTitle: "Questions fréquentes",
+  faqEyebrow: "Questions fréquentes",
+  faqTitle: "Vous vous demandez sans doute…",
+  // Only the first answer is in the frame; the others say what the page itself claims.
   faqs: [
     {
-      q: "Comment le prix est-il fixé ?",
-      a: "D’après le type de ménage, la surface et l’état des lieux. Décrivez le besoin dans le formulaire : nous vous rappelons avec un prix.",
+      q: "Dois-je être présent ?",
+      a: "Pas du tout. Beaucoup de clients nous confient une clé ou un code d’accès. Chaque membre de l’équipe a des antécédents vérifiés et nous sommes entièrement assurés.",
     },
     {
-      q: "Quels types de ménage faites-vous ?",
-      a: "Le grand ménage, les textiles (canapés, fauteuils, matelas, tapis) et les extérieurs (terrasses, allées, pavés). Pour autre chose, décrivez le besoin.",
+      q: "Et si je ne suis pas satisfait ?",
+      a: "Prévenez-nous dans les 24 heures : nous revenons nettoyer la zone sans frais — c’est notre garantie satisfaction à 100 %.",
+    },
+    {
+      q: "Apportez-vous vos produits ?",
+      a: "Oui. L’équipe arrive avec tout le nécessaire — produits et matériel. Si vous souhaitez que nous utilisions un produit en particulier, dites-le-nous.",
+    },
+    {
+      q: "Comment se passe le paiement ?",
+      a: "Vous payez une fois le ménage terminé. Nous confirmons les moyens de paiement en vous rappelant avec votre devis.",
+    },
+    {
+      q: "Puis-je programmer un passage régulier ?",
+      a: "Oui — chaque semaine, toutes les deux semaines ou chaque mois. Dites-nous ce qui vous convient lors de notre rappel : nous gardons le même créneau.",
+    },
+    {
+      q: "Êtes-vous assurés et cautionnés ?",
+      a: "Oui. Vifnet est entièrement assurée et cautionnée, et chaque membre de l’équipe a des antécédents vérifiés.",
     },
   ],
+  faqMore: "Une autre question ? ",
   closing: {
-    title: "Recevez votre devis.",
-    lede: "Quatre champs, une minute. Nous vous rappelons pour convenir du prix et du créneau.",
+    title: "Retrouvez une maison propre ce soir.",
+    lede: "60 secondes pour demander. Rappel en moins de 15 minutes avec un prix fixe.",
+    cta: "Devis gratuit →",
   },
-  subjects: {
-    deep: "Grand ménage",
-    upholstery: "Textiles",
-    exterior: "Extérieurs",
-    other: "Autre demande",
-  },
-  quoteLabels: {
-    subject: "Type de ménage",
-    choose: "Choisir…",
-    surface: "Surface (m²)",
-    surfaceHint: "ex. 65",
-    locality: "Ville",
-    localityHint: "Ville ou code postal",
-    mobile: "Téléphone",
-    mobileHint: "06 12 34 56 78",
-    callback: "Nous vous rappelons pour convenir du prix et du créneau.",
-  },
-  footer: {
-    legal: "Mentions légales (en cours de rédaction)",
-    copyright: year => `© ${year} Vifnet`,
-  },
+  footer: { copyright: year => `© ${year} Vifnet House Cleaning · Boise, Idaho`, privacy: "Confidentialité", terms: "Conditions" },
+  sticky: { title: "Prêt pour une maison impeccable ?", lede: "Réservation possible le jour même", call: "Appeler", book: "Réserver" },
   brandPage: { title: "Vifnet", description: "Ménage à domicile.", open: "Ouvrir" },
-  contactLabel: "Nous contacter",
-  langLabel: "Langue",
 } satisfies Text;
