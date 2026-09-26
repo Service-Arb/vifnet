@@ -61,7 +61,7 @@ export function Hero({ copy, workHref, quote, rating, form }: HeroProps) {
             {hero.toWork}
           </a>
         </div>
-        <div className="lg:w-[440px] lg:shrink-0 xl:w-[520px]">{form}</div>
+        <div className="lg:w-110 lg:shrink-0 xl:w-130">{form}</div>
       </div>
     </Section>
   );

@@ -12,7 +12,7 @@ export function HowItWorks({ copy, id }: { copy: Copy; id: string }) {
   return (
     <Section id={id} polarity="dark" surface="card">
       <Eyebrow className={TYPE.eyebrow}>{t.eyebrow}</Eyebrow>
-      <h2 className={`${TYPE.h2} mt-3 md:max-w-[720px]`}>{t.title}</h2>
+      <h2 className={`${TYPE.h2} mt-3 md:max-w-180`}>{t.title}</h2>
       <ol className="mt-10 grid gap-6 md:mt-12 md:grid-cols-3 md:gap-8">
         {t.steps.map((step, i) => (
           <li key={step.title} className="flex flex-col gap-2 border-t border-border pt-6">

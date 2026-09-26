@@ -26,8 +26,8 @@ export function BeforeAfter({ copy, id }: { copy: Copy; id: string }) {
         head={
           <>
             <Eyebrow className={TYPE.eyebrow}>{t.eyebrow}</Eyebrow>
-            <h2 className={`${TYPE.h2} mt-3 md:max-w-[500px]`}>{t.title}</h2>
-            <p className={`${TYPE.lede} mt-4 text-ink-soft md:max-w-[460px]`}>{t.lede}</p>
+            <h2 className={`${TYPE.h2} mt-3 md:max-w-125`}>{t.title}</h2>
+            <p className={`${TYPE.lede} mt-4 text-ink-soft md:max-w-115`}>{t.lede}</p>
           </>
         }
       />

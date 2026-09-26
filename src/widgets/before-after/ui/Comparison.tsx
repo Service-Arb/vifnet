@@ -89,7 +89,7 @@ export function Comparison({ pairs, words, head }: ComparisonProps) {
               setIndex(i);
               setPosition(50);
             }}
-            className={`relative size-14 shrink-0 overflow-hidden rounded-lg md:size-[72px] ${i === index ? "ring-[2.5px] ring-primary-ink" : "ring-1 ring-border"}`}
+            className={`relative size-14 shrink-0 overflow-hidden rounded-lg md:size-18 ${i === index ? "ring-[2.5px] ring-primary-ink" : "ring-1 ring-border"}`}
           >
             <Picture set={p.thumb} alt="" sizes="72px" className="size-full object-cover" />
           </button>
