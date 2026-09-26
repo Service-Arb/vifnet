@@ -35,7 +35,7 @@ export function SiteHeader({ copy, home, quoteHref, links, phone, langHrefs, loc
   return (
     <header className="dark sticky top-0 z-40 border-b border-border bg-background/95 text-ink backdrop-blur-sm">
       <div className="flex h-16 items-center gap-2 px-[var(--page-px)] md:gap-6">
-        <a href={home} aria-label={t.header.home} className="mr-auto shrink-0 rounded-sm md:mr-0">
+        <a href={home} aria-label={t.header.home} className="mr-auto shrink-0 rounded-sm md:mr-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
           <Lockup className="h-8 w-auto min-[360px]:h-9 md:h-10" />
         </a>
         <nav aria-label={t.nav.menu} className="hidden flex-1 items-center justify-center gap-7 md:flex">

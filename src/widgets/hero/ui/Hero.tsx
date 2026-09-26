@@ -57,7 +57,7 @@ export function Hero({ copy, workHref, quote, rating, form }: HeroProps) {
               </li>
             ))}
           </ul>
-          <a href={workHref} className="mt-6 rounded-sm text-sm font-medium text-primary-ink hover:underline">
+          <a href={workHref} className="mt-6 rounded-sm text-sm font-medium text-primary-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
             {hero.toWork}
           </a>
         </div>
