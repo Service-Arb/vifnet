@@ -20,6 +20,18 @@ export const EN = {
       description: () =>
         "Deep cleans, upholstery and outdoor areas, at your place. Describe the job in a minute: we call you back.",
     },
+    prices: {
+      title: () => "Home cleaning prices",
+      description: () => "Flat prices for every service, quoted before we come. Pay after the clean, once you’re satisfied.",
+    },
+    guarantee: {
+      title: () => "Our satisfaction guarantee",
+      description: () => "Not happy with any area? Tell us within 24 hours and we come back to re-clean it at no charge.",
+    },
+    about: {
+      title: () => "About the team",
+      description: () => "Who cleans your home, how the team is vetted, and where we go.",
+    },
   },
   quoteForm: {
     title: "Get your free quote",
@@ -56,7 +68,7 @@ export const EN = {
   statusStrip: [],
   langName: "English",
   facts: () => ["Vifnet", "Legal notice in preparation"],
-  nav: { services: "Services", reviews: "Reviews", pricing: "Pricing", faq: "FAQ", menu: "Menu", book: "Book Now", home: "Vifnet — home" },
+  nav: { pricing: "Pricing", guarantee: "Guarantee", reviews: "Reviews", about: "About", menu: "Menu", book: "Book Now", home: "Vifnet — home" },
   rating: { value: "4.9", count: "(340)" },
   hero: {
     title: { first: "A home that", second: "feels ", accent: "genuinely", third: "clean." },
@@ -206,6 +218,98 @@ export const EN = {
     cta: "Get Free Quote →",
   },
   footer: { copyright: year => `© ${year} Vifnet House Cleaning · Boise, Idaho`, privacy: "Privacy", terms: "Terms" },
+  heads: {
+    prices: {
+      eyebrow: "Pricing",
+      title: "Every clean, every price.",
+      lede: "Flat prices for every service, quoted before we come. Every one is backed by our written satisfaction guarantee.",
+    },
+    guarantee: {
+      eyebrow: "Our guarantee",
+      title: "Not happy? We come back free.",
+      lede: "Not happy with any area? Tell us within 24 hours. We come back and re-clean it at no charge — no questions asked, no fine print.",
+    },
+    about: {
+      eyebrow: "About Vifnet",
+      title: "The team at your door.",
+      lede: "Who cleans your home, how they’re vetted, and where around Boise we go.",
+    },
+  },
+  priceTable: {
+    eyebrow: "What it costs",
+    title: "Pick your clean.",
+    lede: "Where each service starts. We call back in under 15 minutes with your flat quote.",
+    caption: "What each clean costs",
+    columns: { service: "Service", included: "What's included", price: "From" },
+    rows: {
+      standard: { label: "From", amount: "$89" },
+      deep: { label: "From", amount: "$179" },
+      move: { label: "From", amount: "$149" },
+      "post-construction": { label: "On the call", amount: "Custom quote" },
+    },
+    note: "Pay after the clean, once you’re satisfied — all major cards, Venmo, and Zelle. Weekly and bi-weekly clients get a discounted rate.",
+  },
+  promises: {
+    eyebrow: "Why people put off booking",
+    title: "Four worries, answered.",
+    lede: "Every service is backed by our written satisfaction guarantee. Here is what that covers.",
+    items: [
+      {
+        worry: "“They’ll miss half the house.”",
+        title: "Not happy? We re-clean it free.",
+        body: "Tell us within 24 hours. We come back and re-clean the area at no charge — no questions asked, no fine print.",
+      },
+      {
+        worry: "“I don’t want strangers in my home.”",
+        title: "Insured, bonded, background-checked.",
+        body: "Every team member is background-checked, and we carry general liability insurance. Documentation available on request.",
+      },
+      {
+        worry: "“The price will creep up.”",
+        title: "A flat quote before we come.",
+        body: "We call back in under 15 minutes with a flat quote. You pay after the clean, once you’re satisfied.",
+      },
+      {
+        worry: "“I’ll lose my deposit anyway.”",
+        title: "A written deposit guarantee.",
+        body: "Every Move-In / Move-Out clean comes with a written deposit guarantee. Our deposit-back success rate is 100%.",
+      },
+    ],
+  },
+  steps: {
+    eyebrow: "How it works",
+    title: "Three steps to a clean home.",
+    items: [
+      { title: "Request a quote.", body: "60 seconds to request. We call back in under 15 minutes with a flat quote." },
+      {
+        title: "Your team arrives.",
+        body: "A professional, insured team comes to your door with professional-grade products and equipment. You don’t need to be home.",
+      },
+      {
+        title: "Pay once you’re satisfied.",
+        body: "Payment after the clean — all major cards, Venmo, and Zelle. Not happy with any area? Tell us within 24 hours and we re-clean it free.",
+      },
+    ],
+  },
+  team: {
+    eyebrow: "The people in your home",
+    title: "Meet the team.",
+    lede: "Every team member is background-checked. We’re fully insured and bonded.",
+    facts: "Background-checked · Insured & bonded",
+    members: [
+      { initials: "AR", name: "Ana R.", role: "Team lead" },
+      { initials: "LM", name: "Luis M.", role: "Deep-clean specialist" },
+      { initials: "HK", name: "Hannah K.", role: "Move-out lead" },
+      { initials: "DP", name: "Dev P.", role: "Post-construction crew" },
+    ],
+  },
+  area: {
+    eyebrow: "Service area",
+    title: "Boise and the towns around it.",
+    lede: "Boise, Meridian, Eagle, Nampa and Caldwell — the towns our clients write from. Not sure you’re in the area? Ask when we call back.",
+    towns: ["Boise", "Meridian", "Eagle", "Nampa", "Caldwell"],
+    map: { label: "Vifnet · Boise, Idaho", show: "Show the map", title: "Map of Boise, Idaho" },
+  },
   sticky: { title: "Ready for a spotless home?", lede: "Same-day booking available", call: "Call", book: "Book Now" },
   brandPage: { title: "Vifnet", description: "Home cleaning.", open: "Open" },
 } satisfies Text;
