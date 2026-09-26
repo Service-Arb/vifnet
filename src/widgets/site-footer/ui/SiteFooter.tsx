@@ -1,33 +1,41 @@
-import { LangSwitch } from "@evinvest/kitstart/react";
+import { withLang } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
-import type { Locale } from "@/shared/config/i18n";
-import { Lockup } from "@/shared/ui";
+import { SAMPLE_PHONE } from "@/shared/config/sample";
+import { Logo } from "@/shared/ui";
 
 export interface SiteFooterProps {
   copy: Copy;
   year: number;
-  langHrefs: Readonly<Record<Locale, string>>;
-  locales: readonly Locale[];
-  labels: Readonly<Record<Locale, string>>;
+  /** The other language: this page in it, and its name in itself. */
+  other: { locale: string; href: string; label: string };
 }
 
+const LINK = "hover:text-white/70 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring";
+
 /**
- * One dark line: the lock-up, the legal line, the language switch — stacked
- * and centred on a phone. No street address (a service-area business has
- * none); the raison sociale and SIRET join the legal line once the owner
- * gives them (OWNER_TODO).
+ * The frame's footer (13:521 / 15:918) on forest-deep: the small logo, the
+ * line, and the row of links — a row from `md`, a centred stack below. Privacy
+ * and Terms are text as the frame draws them: there are no such pages to link
+ * to yet. The language switch is one more item of that row, in its style: the
+ * other language's name, through the kit's `?lang=` link (`withLang`).
  */
-export function SiteFooter({ copy, year, langHrefs, locales, labels }: SiteFooterProps) {
-  const { t, locale } = copy;
+export function SiteFooter({ copy, year, other }: SiteFooterProps) {
+  const { t } = copy;
   return (
-    <footer id="footer" className="dark border-t border-border bg-background px-[var(--page-px)] py-8 text-ink">
-      <div className="flex flex-col items-center gap-3 text-center md:flex-row md:justify-between md:gap-8 md:text-left">
-        <Lockup className="h-8 w-auto shrink-0" />
-        <p className="flex flex-col gap-1 text-sm text-ink-soft md:flex-row md:gap-4">
-          <span>{t.footer.copyright(year)}</span>
-          <span>{t.footer.legal}</span>
-        </p>
-        <LangSwitch current={locale} locales={locales} hrefs={langHrefs} labels={labels} label={t.langLabel} className="py-3 text-sm text-ink md:py-0" />
+    <footer id="footer" className="dark bg-popover px-[var(--page-px)] py-8 text-ink">
+      <div className="flex flex-col items-center gap-3 text-sm leading-5 text-white/40 md:flex-row md:justify-between">
+        <Logo size="sm" />
+        <p className="text-center">{t.footer.copyright(year)}</p>
+        <div className="flex flex-wrap justify-center gap-4 whitespace-nowrap">
+          <span>{t.footer.privacy}</span>
+          <span>{t.footer.terms}</span>
+          <a href={SAMPLE_PHONE.href} className={LINK}>
+            {SAMPLE_PHONE.display}
+          </a>
+          <a href={withLang(other.href, other.locale)} hrefLang={other.locale} lang={other.locale} className={LINK}>
+            {other.label}
+          </a>
+        </div>
       </div>
     </footer>
   );
