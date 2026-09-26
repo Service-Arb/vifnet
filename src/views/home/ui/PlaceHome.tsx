@@ -34,6 +34,9 @@ export const SECTION_IDS = {
 
 const FORM_ID = "quote";
 
+/** The call bar's phone and WhatsApp as the frame's ghost buttons (white/10 on forest); the quote stays gold. */
+const CALL_BAR_GHOST = "border-0 bg-secondary text-on-secondary shadow-none hover:bg-secondary/80 hover:text-on-secondary";
+
 /**
  * The home page, in the order of the Figma frame (Cleaning site 9:107 /
  * 14:502). The form sits in the hero, on the frame's quote card. Bands
@@ -83,7 +86,17 @@ export function PlaceHome({ view, copy, renderedAt }: { view: PlaceView<Locale>;
         <Closing copy={copy} id={SECTION_IDS.closing} quoteHref={quoteHref} phone={contact.phone} />
       </main>
       <SiteFooter copy={copy} year={now.getFullYear()} {...lang} />
-      <CallBar id="callbar" label={t.contactLabel} copy={copy} phone={contact.phone} whatsapp={contact.whatsapp} quoteHref={quoteHref} buttonClassName="font-medium" />
+      <CallBar
+        id="callbar"
+        label={t.contactLabel}
+        copy={copy}
+        phone={contact.phone}
+        whatsapp={contact.whatsapp}
+        quoteHref={quoteHref}
+        className="dark border-border bg-background/95 backdrop-blur-sm"
+        buttonClassName="rounded-sm text-sm font-bold"
+        classNames={{ call: CALL_BAR_GHOST, whatsapp: CALL_BAR_GHOST }}
+      />
     </>
   );
 }

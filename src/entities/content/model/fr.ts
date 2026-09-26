@@ -153,7 +153,6 @@ export const FR = {
     callback: "Nous vous rappelons pour convenir du prix et du créneau.",
   },
   footer: {
-    tagline: "Ménage à domicile, maison ou appartement.",
     legal: "Mentions légales (en cours de rédaction)",
     copyright: year => `© ${year} Vifnet`,
   },

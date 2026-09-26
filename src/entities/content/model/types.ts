@@ -75,7 +75,7 @@ export interface Text extends CoreText<PageKey, Facts> {
     mobileHint: string;
     callback: string;
   };
-  footer: { tagline: string; legal: string; copyright: (year: number) => string };
+  footer: { legal: string; copyright: (year: number) => string };
   /** The apex of a network of places: its `<head>` and the directory's link. */
   brandPage: { title: string; description: string; open: string };
   /** The contact bar's accessible name. */

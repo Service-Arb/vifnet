@@ -152,7 +152,6 @@ export const EN = {
     callback: "We call you back to agree the price and the time.",
   },
   footer: {
-    tagline: "Home cleaning, house or flat.",
     legal: "Legal notice (in preparation)",
     copyright: year => `© ${year} Vifnet`,
   },

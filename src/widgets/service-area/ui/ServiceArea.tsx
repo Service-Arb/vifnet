@@ -18,7 +18,7 @@ export function ServiceArea({ copy, id, place }: { copy: Copy; id: string; place
       <div className="flex flex-col gap-8 md:flex-row md:gap-20">
         <div className="flex flex-col gap-3 md:w-[400px] md:shrink-0 md:gap-4">
           <h2 className={TYPE.h2}>{t.title}</h2>
-          <p className={TYPE.lede}>{t.lede}</p>
+          <p className={`${TYPE.lede} text-ink-soft`}>{t.lede}</p>
         </div>
         <Coverage place={place} locale={copy.locale} className="flex-1" />
       </div>
