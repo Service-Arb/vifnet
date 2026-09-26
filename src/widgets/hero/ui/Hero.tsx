@@ -43,7 +43,7 @@ export function Hero({ copy, workHref, quote, rating, form }: HeroProps) {
         <div className="flex min-w-0 flex-1 flex-col items-start">
           <h1 className={`${TYPE.h1} text-ink`}>
             {lead}
-            <span className="text-positive">{accent}</span>
+            <span className="whitespace-nowrap text-positive">{accent}</span>
             {tail}
           </h1>
           <p className={`${TYPE.lede} mt-5 max-w-md text-ink-mid`}>{hero.lede}</p>

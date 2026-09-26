@@ -50,7 +50,7 @@ export function QuoteForm({ copy, placeSlug, renderedAt, formId }: QuoteFormProp
         />
       </Field>
       <div className="flex gap-3">
-        <Field className={`${FIELD} w-[128px] shrink-0`}>
+        <Field className={`${FIELD} w-[104px] shrink-0`}>
           <FieldLabel className={LABEL}>{l.surface}</FieldLabel>
           <Input name={SURFACE_M2.name} size="lg" inputMode="numeric" pattern="[0-9]*" placeholder={l.surfaceHint} />
         </Field>
