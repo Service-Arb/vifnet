@@ -16,7 +16,7 @@ export function HeroRating({ rating, copy }: { rating: Rating; copy: Copy }) {
             </svg>
           ))}
         </span>
-        <span className="text-sm font-bold text-ink">{value}</span>
+        <span className="text-sm font-bold text-ink" aria-hidden="true">{value}</span>
       </p>
       <p className="text-xs text-ink-soft">{copy.t.reviews.summary(value, rating.count)}</p>
     </div>
