@@ -1,5 +1,4 @@
-import { telHref } from "@evinvest/marketing";
-import type { ReactNode } from "react";
+import { SAMPLE_PHONE } from "@/shared/config/sample";
 import { CloseMenu } from "./CloseMenu";
 
 export interface HeaderLink {
@@ -7,47 +6,34 @@ export interface HeaderLink {
   label: string;
 }
 
+/** The checkbox the burger toggles; the panel shows while it is checked. */
+export const MENU_ID = "nav-menu";
+
+const LINK = "block py-2.5 text-sm leading-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+
 /**
- * The phone's menu: a `<details>`, so the button opens and closes it before
- * any script arrives. The panel hangs under the header at full width, on the
- * deepest forest (`popover`). The one script, `CloseMenu`, only closes it:
- * after a link is followed, on a press or focus outside it, or on Esc.
+ * The phone's menu (Figma 8:132): under the bar, in the header's flow — it
+ * pushes the page down as the frame draws it — on the deepest forest. It shows
+ * while the header's checkbox is checked, so it opens before any script; the
+ * one script, `CloseMenu`, only closes it after a link, a press outside or Esc.
  */
-export function MobileMenu({ label, links, phone, children }: { label: string; links: readonly HeaderLink[]; phone: string | null; children: ReactNode }) {
+export function MobileMenu({ label, links }: { label: string; links: readonly HeaderLink[] }) {
   return (
-    <details className="group md:hidden">
-      <summary
-        aria-label={label}
-        className="flex size-11 cursor-pointer list-none items-center justify-center rounded-sm text-ink hover:bg-hover focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden"
-      >
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-          <path className="group-open:hidden" d="M4 7h16M4 12h16M4 17h16" />
-          <path className="hidden group-open:block" d="M6 6l12 12M18 6 6 18" />
-        </svg>
-      </summary>
-      {/* The language switch is a `<nav>` of its own: beside the menu's, not in it. */}
-      <div className="absolute inset-x-0 top-full border-b border-border bg-popover px-[var(--page-px)] pb-2">
-        <nav aria-label={label}>
-          <ul>
-            {links.map(link => (
-              <li key={link.href} className="border-b border-border">
-                <a href={link.href} className="block rounded-sm py-3 text-sm text-ink-mid hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
-                  {link.label}
-                </a>
-              </li>
-            ))}
-            {phone && (
-              <li className="border-b border-border">
-                <a href={telHref(phone)} className="block rounded-sm py-3 text-sm font-semibold text-primary-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
-                  {phone}
-                </a>
-              </li>
-            )}
-          </ul>
-        </nav>
-        {children}
-      </div>
-      <CloseMenu />
-    </details>
+    <nav
+      id={`${MENU_ID}-panel`}
+      aria-label={label}
+      // Literal ids: Tailwind reads class names from the source, not at run time.
+      className="hidden flex-col gap-1 border-t border-white/5 bg-popover px-4 pb-4 group-has-[#nav-menu:checked]:flex md:group-has-[#nav-menu:checked]:hidden"
+    >
+      {links.map(link => (
+        <a key={link.label} href={link.href} className={`${LINK} border-b border-white/5 text-white/70 hover:text-white`}>
+          {link.label}
+        </a>
+      ))}
+      <a href={SAMPLE_PHONE.href} className={`${LINK} self-start font-semibold text-primary`}>
+        {SAMPLE_PHONE.display}
+      </a>
+      <CloseMenu toggle={MENU_ID} />
+    </nav>
   );
 }
