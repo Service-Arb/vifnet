@@ -4,7 +4,7 @@ import { StatusScreen } from "@evinvest/kitstart/react";
 import { copyFor } from "@/entities/content";
 import type { Locale } from "@/shared/config/i18n";
 import { site } from "@/shared/config/site";
-import { Lockup } from "@/shared/ui/brand/Lockup";
+import { Logo } from "@/shared/ui/brand/Logo";
 
 /**
  * The 404 for a dead path the proxy recognised, rendered on the server into
@@ -24,7 +24,7 @@ export function Gone({ locale, location }: { locale: Locale; location: string | 
         locales={site.i18n.locales}
         labels={site.i18n.labels}
         brandName={site.brand.name}
-        logo={<Lockup className="h-[42px] w-[176px]" />}
+        logo={<Logo />}
         buttonClassName="font-semibold"
       />
     </>

@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { copyFor } from "@/entities/content";
 import { i18n } from "@/shared/config/i18n";
 import { BRAND_PUBLIC } from "@/shared/config/public";
-import { Lockup } from "@/shared/ui/brand/Lockup";
+import { Logo } from "@/shared/ui/brand/Logo";
 
 /**
  * The `notFound()` boundary, for what the proxy could not foresee — a place
@@ -22,7 +22,7 @@ export function NotFound() {
   return (
     <>
       <title>{`${copy.t.notFound.title} · ${BRAND_PUBLIC.name}`}</title>
-      <StatusScreen copy={copy} status={copy.t.notFound} target={target} locales={i18n.locales} labels={i18n.labels} brandName={BRAND_PUBLIC.name} logo={<Lockup className="h-[42px] w-[176px]" />} buttonClassName="font-semibold" />
+      <StatusScreen copy={copy} status={copy.t.notFound} target={target} locales={i18n.locales} labels={i18n.labels} brandName={BRAND_PUBLIC.name} logo={<Logo />} buttonClassName="font-semibold" />
     </>
   );
 }
