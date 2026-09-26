@@ -9,77 +9,62 @@
 @source "../node_modules/@evinvest/uikit/dist";
 @source "../node_modules/@evinvest/kitstart/dist";
 
-/* Geometry of the Figma file 1wXlPmnmOdKYPDWz6N5EB8: radii (`rounded-sm` 8
-   for small buttons, `rounded-lg` 12 for fields and large buttons,
-   `rounded-xl` 16 for cards), the control (`Button size="xl"` is the frame's
-   Button lg: 32 × 14, 16 px) and the page grid — 1152 px of content, a 16 px
-   gutter on a phone and 48+ from a tablet up, bands of 64/80 px. The gold
-   band is tighter on a wide screen than on a phone, as the frames draw it.
-   Scoped to the brand so it outranks the kit's `:where()` defaults and their
-   scale-ups. */
+/* Geometry of the Figma file 1wXlPmnmOdKYPDWz6N5EB8, whose names are
+   Tailwind's: `--radius` 8 makes the kit's `rounded-md/lg/xl/2xl` 6/8/12/16 as
+   the frame draws them; a control (field, large button) is `rounded-xl`, and
+   the Xl button is the frame's Button lg (32 × 14, 16 px). The page grid is
+   the frame's container: 1152 px with a 16 px gutter, so 1120 px of content,
+   centred, and never less than the gutter. Scoped to the brand so it outranks
+   the kit's `:where()` defaults and their scale-ups. */
 [data-brand="vifnet"] {
-  --radius: 12px;
+  --radius: 8px;
   --control-radius: 12px;
   --control-px: 32px;
   --control-py: 14px;
   --control-text: 16px;
-  --page-max: 72rem;
-  --page-min-px: 1rem;
-  --page-px: max(var(--page-min-px), (100% - var(--page-max)) / 2);
-  --band-py: 4rem;
-  --band-py-tight: 4rem;
+  --page-max: 70rem;
+  --page-px: max(1rem, (100% - var(--page-max)) / 2);
   /* The face is the one `next/font` loaded (src/shared/ui/fonts.ts), not the
      family name brand.toml can spell. */
   --brand-font-sans: var(--font-instrument-sans);
   --brand-font-display: var(--font-fraunces);
 }
 
-@media (min-width: 768px) {
-  [data-brand="vifnet"] {
-    --page-min-px: 3rem;
-    --band-py: 5rem;
-    --band-py-tight: 3rem;
-  }
-}
-
-/* The mark's parts, each on a token (the lock-up is inline SVG): house and
-   word take the brand green on a light surface and the ink on a dark one; the
-   swoosh the leaf green of the printed identity (`positive`: leaf on light,
-   leaf-light on dark) — not `primary`, which is the gold action; the star the
-   gold. */
-[data-brand="vifnet"],
-[data-brand="vifnet"] .light {
-  --mark-house: var(--brand);
-  --mark-tagline: var(--primary-ink);
-}
-[data-brand="vifnet"] .dark {
-  --mark-house: var(--ink);
-  --mark-tagline: var(--ink-mid);
-}
-.vifnet-mark-house,
-.vifnet-lockup-word {
-  fill: var(--mark-house);
-}
-.vifnet-mark-swoosh {
-  fill: var(--positive);
-}
-.vifnet-mark-star {
-  fill: var(--accent-warn);
-}
-.vifnet-lockup-tagline {
-  fill: var(--mark-tagline);
-}
-
-/* The FAQ's chevron. The kit's `Faq` draws its icon part as a "+" glyph and
-   takes only classes for it: the glyph is hidden and a chevron masked in its
-   place, painted in the part's own text colour. */
-.vifnet-chevron {
-  width: 1rem;
-  height: 1rem;
-  font-size: 0;
+/* The frame's icons (Figma 5:5), one file each in assets/icons, painted in the
+   text colour of their use: the file masks `currentColor`. The bundler
+   fingerprints each url(). The Google G keeps its own colours. */
+.vf-icon {
+  display: block;
   background-color: currentColor;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E")
-    center / contain no-repeat;
+  mask: var(--vf-icon) center / 100% 100% no-repeat;
+}
+.vf-icon-phone {
+  --vf-icon: url("../assets/icons/phone.svg");
+}
+.vf-icon-home {
+  --vf-icon: url("../assets/icons/home.svg");
+}
+.vf-icon-home-outline {
+  --vf-icon: url("../assets/icons/home-outline.svg");
+}
+.vf-icon-check {
+  --vf-icon: url("../assets/icons/check.svg");
+}
+.vf-icon-chevron-down {
+  --vf-icon: url("../assets/icons/chevron-down.svg");
+}
+.vf-icon-shield-check {
+  --vf-icon: url("../assets/icons/shield-check.svg");
+}
+.vf-icon-menu {
+  --vf-icon: url("../assets/icons/menu.svg");
+}
+.vf-icon-star {
+  --vf-icon: url("../assets/icons/star.svg");
+}
+.vf-icon-google-g {
+  background: url("../assets/icons/google-g.svg") center / 100% 100% no-repeat;
+  mask: none;
 }
 
 html {
