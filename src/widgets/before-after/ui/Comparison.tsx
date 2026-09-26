@@ -43,9 +43,9 @@ export function Comparison({ pairs, words, head }: ComparisonProps) {
   const pair = pairs[index] ?? pairs[0];
   if (!pair) return null;
   return (
-    <div className="flex flex-col gap-7 md:grid md:grid-cols-[minmax(0,1fr)_560px] md:grid-rows-[1fr_auto_auto_auto_1fr] md:gap-x-20 md:gap-y-6">
-      <div className="flex flex-col md:col-start-1 md:row-start-2">{head}</div>
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-muted md:col-start-2 md:row-span-5 md:row-start-1">
+    <div className="flex flex-col gap-7 md:grid md:grid-cols-[minmax(0,1fr)_560px] md:grid-rows-[auto_auto_auto_1fr] md:gap-x-20 md:gap-y-6">
+      <div className="flex flex-col md:col-start-1 md:row-start-1">{head}</div>
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-muted md:col-start-2 md:row-span-4 md:row-start-1">
         <Picture set={pair.after} alt={`${pair.caption} — ${words.after}`} sizes={VIEWER_SIZES} className="absolute inset-0 size-full object-cover" />
         <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}>
           <Picture set={pair.before} alt="" sizes={VIEWER_SIZES} className="absolute inset-0 size-full object-cover" />
@@ -78,7 +78,7 @@ export function Comparison({ pairs, words, head }: ComparisonProps) {
           <Chevrons />
         </span>
       </div>
-      <div role="group" aria-label={words.picker} className="-mx-1 flex gap-2.5 overflow-x-auto p-1 md:col-start-1 md:row-start-3 md:flex-wrap md:gap-3 md:overflow-visible">
+      <div role="group" aria-label={words.picker} className="-mx-1 flex gap-2.5 overflow-x-auto p-1 md:col-start-1 md:row-start-2 md:flex-wrap md:gap-3 md:overflow-visible">
         {pairs.map((p, i) => (
           <button
             key={p.caption}
@@ -95,7 +95,7 @@ export function Comparison({ pairs, words, head }: ComparisonProps) {
           </button>
         ))}
       </div>
-      <p aria-live="polite" className="text-sm font-medium text-ink-mid md:col-start-1 md:row-start-4">
+      <p aria-live="polite" className="text-sm font-medium text-ink-mid md:col-start-1 md:row-start-3">
         {pair.caption}
       </p>
     </div>
