@@ -10,8 +10,8 @@ export interface HeaderLink {
 /**
  * The phone's menu: a `<details>`, so the button opens and closes it before
  * any script arrives. The panel hangs under the header at full width, on the
- * deepest forest (`popover`). The one script, `CloseMenu`, only closes it
- * after a link is followed or on Esc.
+ * deepest forest (`popover`). The one script, `CloseMenu`, only closes it:
+ * after a link is followed, on a press or focus outside it, or on Esc.
  */
 export function MobileMenu({ label, links, phone, children }: { label: string; links: readonly HeaderLink[]; phone: string | null; children: ReactNode }) {
   return (
