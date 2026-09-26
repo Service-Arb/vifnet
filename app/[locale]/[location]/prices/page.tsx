@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { PlaceHome } from "@/views/home";
 import { loadPlace, placePageMetadata } from "@/views/place/server";
+import { PlaceSubpage } from "@/views/subpage";
 
 type Props = { params: Promise<{ locale: string; location: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { view, copy } = await loadPlace(params);
-  return placePageMetadata(view, copy, "home");
+  return placePageMetadata(view, copy, "prices");
 }
 
-export default async function PlaceHomePage({ params }: Props) {
+export default async function PricesPage({ params }: Props) {
   const { view, copy, renderedAt } = await loadPlace(params);
-  return <PlaceHome view={view} copy={copy} renderedAt={renderedAt} />;
+  return <PlaceSubpage view={view} copy={copy} page="prices" renderedAt={renderedAt} />;
 }
