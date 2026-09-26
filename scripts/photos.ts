@@ -30,6 +30,8 @@ interface Cut {
   crop?: Crop;
   /** Centre-cropped to a square: a thumbnail the layout shows square. */
   square?: boolean;
+  /** Centre-cropped to this width : height — a frame the layout fixes the shape of. */
+  aspect?: readonly [number, number];
 }
 
 /**
@@ -51,17 +53,18 @@ function pair(stem: string, source: string, before: Crop, after: Crop): Cut[] {
 
 /** The plan. Widths never exceed the (cropped) source: an upscale is bytes with no detail in them. */
 export const CUTS: Cut[] = [
-  // 528×640 on desktop, full width × 400 on a phone.
+  // The hero's backdrop, faded to 20 % behind the copy: the source's full width
+  // is the most there is.
   { stem: "hero", source: "team_portrait_in_vifnet_uniforms.png", widths: [560, 1056] },
-  // 520×340 on desktop; not shown on a phone.
-  { stem: "closing", source: "staff_in_modern_kitchen_cleaning_cabinets.png", widths: [560, 1040] },
-  // Service rows: 168 px squares on desktop, 96 on a phone.
+  // Service cards: a 3:2 photo, 268 × 176 on desktop, full width (up to
+  // 358 × 176) on a phone.
   // A finished room, not the oven: cleaning an oven is a method the owner has
   // not confirmed (OWNER_TODO "copy: methods").
-  { stem: "svc-deep", source: "final_parisian_kitchen_with_black_countertop.png", widths: [192, 336], square: true },
-  { stem: "svc-upholstery", source: "in_progress_gray_sofa_upholstery_cleaning.png", widths: [192, 336], square: true },
-  { stem: "svc-exterior", source: "before_after_pressure_washing_gravel_patio.png", widths: [192, 336], square: true },
-  { stem: "svc-other", source: "staff_in_gilded_salon_mirror_cleaning.png", widths: [192, 336], square: true },
+  { stem: "svc-deep", source: "final_parisian_kitchen_with_black_countertop.png", widths: [400, 720], aspect: [3, 2] },
+  { stem: "svc-upholstery", source: "in_progress_gray_sofa_upholstery_cleaning.png", widths: [400, 720], aspect: [3, 2] },
+  // The source is 499 px wide: its full width is the larger file.
+  { stem: "svc-exterior", source: "before_after_pressure_washing_gravel_patio.png", widths: [400, 499], aspect: [3, 2] },
+  { stem: "svc-other", source: "staff_in_gilded_salon_mirror_cleaning.png", widths: [400, 720], aspect: [3, 2] },
   // The before/after viewer: 560×700 on desktop, 350×438 on a phone.
   ...pair(
     "sofa",
@@ -156,8 +159,9 @@ function cut(c: Cut, width: number, ext: string, options: string) {
     execFileSync("vips", ["extract_area", input, tmp, String(left), String(top), String(w), String(h)]);
     input = tmp;
   }
-  const square = c.square ? ["--height", String(width), "--crop", "centre"] : [];
-  execFileSync("vips", ["thumbnail", input, `${out}${options}`, String(width), "--size", "down", ...square]);
+  const [w, h] = c.square ? [1, 1] : (c.aspect ?? [0, 0]);
+  const shape = w > 0 ? ["--height", String(Math.round((width * h) / w)), "--crop", "centre"] : [];
+  execFileSync("vips", ["thumbnail", input, `${out}${options}`, String(width), "--size", "down", ...shape]);
   if (c.crop) rmSync(tmp);
 }
 
