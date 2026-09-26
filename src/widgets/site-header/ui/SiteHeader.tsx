@@ -50,13 +50,13 @@ export function SiteHeader({ copy, home, quoteHref, links, phone, langHrefs, loc
             {phone}
           </a>
         )}
-        <LangSwitch {...lang} className="hidden text-sm text-ink-mid md:flex" />
+        <LangSwitch {...lang} className="hidden text-sm text-ink md:flex" />
         <Button href={quoteHref} size="lg" data-intent="form_open" className="shrink-0 rounded-sm px-4 text-sm font-bold">
           <span className="md:hidden">{t.header.ctaCompact}</span>
           <span className="hidden md:inline">{t.header.cta}</span>
         </Button>
         <MobileMenu label={t.nav.menu} links={links} phone={phone}>
-          <LangSwitch {...lang} className="py-3 text-sm text-ink-mid" />
+          <LangSwitch {...lang} className="py-3 text-sm text-ink" />
         </MobileMenu>
       </div>
     </header>

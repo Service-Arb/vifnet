@@ -27,7 +27,7 @@ export function SiteFooter({ copy, year, langHrefs, locales, labels }: SiteFoote
           <span>{t.footer.copyright(year)}</span>
           <span>{t.footer.legal}</span>
         </p>
-        <LangSwitch current={locale} locales={locales} hrefs={langHrefs} labels={labels} label={t.langLabel} className="py-3 text-sm text-ink-mid md:py-0" />
+        <LangSwitch current={locale} locales={locales} hrefs={langHrefs} labels={labels} label={t.langLabel} className="py-3 text-sm text-ink md:py-0" />
       </div>
     </footer>
   );
