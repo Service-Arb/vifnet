@@ -143,6 +143,32 @@
         "type": "github"
       }
     },
+    "lean4-nix": {
+      "inputs": {
+        "flake-parts": [
+          "v_flakes",
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "v_flakes",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1787854620,
+        "narHash": "sha256-riKig+mBa13TIStQ+IvJzAdNaJmJmRwYMcgO9I9BdUM=",
+        "owner": "lenianiva",
+        "repo": "lean4-nix",
+        "rev": "e04ca093bca4c944f587c5e306cb5ff0c2c6ea87",
+        "type": "github"
+      },
+      "original": {
+        "owner": "lenianiva",
+        "repo": "lean4-nix",
+        "rev": "e04ca093bca4c944f587c5e306cb5ff0c2c6ea87",
+        "type": "github"
+      }
+    },
     "libgit2": {
       "flake": false,
       "locked": {
@@ -303,17 +329,18 @@
         "devenv": "devenv",
         "flake-parts": "flake-parts",
         "flake-utils": "flake-utils",
+        "lean4-nix": "lean4-nix",
         "nixpkgs": "nixpkgs",
         "pre-commit-hooks": "pre-commit-hooks",
         "process-compose-flake": "process-compose-flake",
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1788050703,
-        "narHash": "sha256-xxAMCcXX0h4OvMmn/YuWFzwRx4NzkXw//h6Q8GXsQQc=",
+        "lastModified": 1790280824,
+        "narHash": "sha256-+rO5mUTlHWCqGRl6eqDnL7dKEpI7P4vVLObm4LR469E=",
         "owner": "valeratrades",
         "repo": "v_flakes",
-        "rev": "c090687adaf35406763d123366d8cea9321f8727",
+        "rev": "92ab6751bc35ab9ca2163bfa91ca4d91302ff7df",
         "type": "github"
       },
       "original": {
