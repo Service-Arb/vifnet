@@ -36,7 +36,8 @@ export function ServiceCard({ subject, item, badge, quote }: ServiceCardProps) {
           </span>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-3 p-5">
+      {/* The rim takes the featured card's 4 px out of its bottom padding below `lg`, as the 410 px frame does. */}
+      <div className={`flex flex-1 flex-col gap-3 p-5 ${featured ? "max-lg:pb-4" : ""}`}>
         <div className="flex flex-col gap-0.5">
           <h3 className="text-base leading-6 font-bold text-ink">
             <SubjectLink
