@@ -1,15 +1,12 @@
-import { placeMetadata } from "@evinvest/kitstart/next";
 import type { Metadata } from "next";
-import { loadPlace } from "@/views/place/server";
-import { site } from "@/shared/config/site";
 import { PlaceHome } from "@/views/home";
+import { loadPlace, placePageMetadata } from "@/views/place/server";
 
 type Props = { params: Promise<{ locale: string; location: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { view, copy } = await loadPlace(params);
-  const page = copy.t.pages.home;
-  return placeMetadata(site, view, "home", { title: page.title(copy.f), description: page.description(copy.f) });
+  return placePageMetadata(view, copy, "home");
 }
 
 export default async function PlaceHomePage({ params }: Props) {

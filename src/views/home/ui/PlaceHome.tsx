@@ -1,7 +1,8 @@
-import { faqPageNode, perLocale, placeGraph, type PlaceView } from "@evinvest/kitstart";
+import { faqPageNode, placeGraph, type PlaceView } from "@evinvest/kitstart";
 import { JsonLd } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import type { Locale } from "@/shared/config/i18n";
+import { ANCHORS, placeNav } from "@/shared/config/nav";
 import { site } from "@/shared/config/site";
 import { Closing } from "@/widgets/closing";
 import { FaqBand } from "@/widgets/faq";
@@ -18,10 +19,10 @@ import { StickyBar } from "@/widgets/sticky-bar";
 /** The anchors the page links to, and the e2e sections are shot by. */
 export const SECTION_IDS = {
   services: "prestations",
-  reviews: "avis",
+  reviews: ANCHORS.reviews,
   faq: "faq",
-  /** The quote card in the hero: every CTA lands here. */
-  quote: "devis",
+  /** The quote card in the hero: every CTA lands here, from every page. */
+  quote: ANCHORS.quote,
   /** The gold band at the end, which sends back up to the form. */
   closing: "demande",
 } as const;
@@ -34,40 +35,29 @@ const FORM_ID = "quote";
  * the place only — never from the frame's sample rating, reviews or phone.
  */
 export function PlaceHome({ view, copy, renderedAt }: { view: PlaceView<Locale>; copy: Copy; renderedAt: number }) {
-  const { t, f, locale } = copy;
+  const { t, f } = copy;
   const now = new Date(renderedAt);
-  const at = (id: string) => view.href(`#${id}`);
-  const quoteHref = at(SECTION_IDS.quote);
-  const quote = { href: quoteHref, form: FORM_ID };
-  // Pricing lands on the services band: the prices are on its cards.
-  const links = [
-    { href: at(SECTION_IDS.services), label: t.nav.services },
-    { href: at(SECTION_IDS.reviews), label: t.nav.reviews },
-    { href: at(SECTION_IDS.services), label: t.nav.pricing },
-    { href: at(SECTION_IDS.faq), label: t.nav.faq },
-  ];
+  const nav = placeNav(view, t.nav, site.pages.home);
+  const quote = { href: nav.quoteHref, form: FORM_ID };
   const graph = placeGraph(site, view, "home", { placeName: f.place, title: t.pages.home.title(f), description: t.pages.home.description(f) }, now);
-  const hrefs = perLocale(site, l => view.href("", l));
-  const otherLocale = site.i18n.locales.find(l => l !== locale) ?? locale;
-  const other = { locale: otherLocale, href: hrefs[otherLocale], label: site.i18n.labels[otherLocale] };
   return (
     <>
       <JsonLd data={graph} />
       <JsonLd data={faqPageNode(t.faqs)} />
-      <SiteHeader copy={copy} home={view.href("")} quoteHref={quoteHref} links={links} />
+      <SiteHeader copy={copy} home={view.href("")} quoteHref={nav.quoteHref} links={nav.header} />
       <main>
         <Hero copy={copy} form={<QuoteCard copy={copy} id={SECTION_IDS.quote} placeSlug={view.place.slug} renderedAt={renderedAt} formId={FORM_ID} />} />
         <Stats copy={copy} />
         <Services copy={copy} id={SECTION_IDS.services} quote={quote} />
-        <Reviews copy={copy} id={SECTION_IDS.reviews} quoteHref={quoteHref} />
+        <Reviews copy={copy} id={SECTION_IDS.reviews} quoteHref={nav.quoteHref} />
         <Guarantee copy={copy} />
         <FaqBand copy={copy} id={SECTION_IDS.faq} />
-        <Closing copy={copy} id={SECTION_IDS.closing} quoteHref={quoteHref} />
+        <Closing copy={copy} id={SECTION_IDS.closing} quoteHref={nav.quoteHref} />
       </main>
-      <SiteFooter copy={copy} year={now.getFullYear()} other={other} />
+      <SiteFooter copy={copy} year={now.getFullYear()} links={nav.footer} other={nav.other} />
       {/* Room under the footer for the sticky bar, on the footer's colour. */}
       <div aria-hidden="true" className="dark h-14 bg-popover" />
-      <StickyBar copy={copy} quoteHref={quoteHref} />
+      <StickyBar copy={copy} quoteHref={nav.quoteHref} />
     </>
   );
 }

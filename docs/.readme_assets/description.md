@@ -6,7 +6,8 @@ the machinery the Service-Arb landings share (routing, the place model and its
 publication gate, the quote form and its lead store, SEO), built to the Figma
 file `1wXlPmnmOdKYPDWz6N5EB8`, band for band: header, hero with the quote
 card, stats, services, reviews, guarantee, FAQ, the gold CTA band, footer and
-the sticky bar. French by default, English beside it.
+the sticky bar — and its three sub-pages, `/prices`, `/guarantee` and
+`/about`. French by default, English beside it.
 
 There is no domain and no public phone number yet, so every page is `noindex`,
 `robots.txt` disallows everything, the sitemap is empty and the quote form is

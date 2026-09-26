@@ -7,6 +7,9 @@ import type { LeadSchema } from "@evinvest/kitstart";
 export const SUBJECTS = ["standard", "deep", "move", "post-construction"] as const;
 export type Subject = (typeof SUBJECTS)[number];
 
+/** The frame's featured service: the forest card on the home page, the "Most popular" row of the price table. */
+export const FEATURED: Subject = "deep";
+
 /** The size of the home, as the frame's second step asks it. */
 export const BEDROOMS = ["studio", "1", "2", "3", "4", "5+"] as const;
 export type Bedrooms = (typeof BEDROOMS)[number];
