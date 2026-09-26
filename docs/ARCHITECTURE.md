@@ -42,14 +42,30 @@ until the owner replaces it. The terms an earlier design proposed and the
 frame does not state are still `copy:` lines, and a test fails if one
 appears in the copy.
 
+## The sub-pages
+
+`/prices`, `/guarantee` and `/about` are the Figma file's sub-page frames
+(Prices 41:1627, Guarantee 40:1428, About 42:1910), listed once in
+`site.pages` — the proxy, the route tree, the sitemap and the nav read that
+list. They are one view (`views/subpage`), as aquafix's `LocationSubpage`:
+the home page's header, a `PageHead` with the proof card beside it from `lg`,
+the page's bands, the gold band, the footer and the sticky bar. They carry no
+form: every action lands on the home page's quote card (`#devis`). The
+header and footer links are `shared/config/nav.ts`. The About page's crew,
+towns and map are the frame's sample (OWNER_TODO "design sample content"):
+the chips and the click-to-load map are kitstart's `AreaChips` and
+`MapFacade`, fed from the copy and `shared/config/sample.ts`, never from the
+place, which still names no commune and has no address to map.
+
 ## Pages stay cached, and work without JavaScript
 
 Place pages are ISR (`revalidate = 600`): no page reads the request, the link
 mode rides in the `[location]` param. The quote form is a plain POST answered
 with a 303, so it submits before any script loads; it sits on the hero's
 card, the one place every CTA points at (`#devis`). The quote card's
-steps, the service cards' links, the sticky bar's reveal and the phone menu's
-closer are the only client islands, and the page reads the same without
+steps, the service cards' links, the sticky bar's reveal, the phone menu's
+closer and, on the About page, kitstart's map facade are the only client
+islands, and the page reads the same without
 them: the card is one form (`@media (scripting: none)`), the phone menu is a
 checkbox the burger toggles, the script only closes it after a link or on
 Esc. The selects are kitstart's `FormSelect`: a native `<select>` without a
