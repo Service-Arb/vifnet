@@ -41,19 +41,30 @@ export function PlaceHome({ view, copy, renderedAt }: { view: PlaceView<Locale>;
   const contact = contactOf(site, view.place);
   const quoteHref = view.href(`#${SECTION_IDS.quote}`);
   const graph = placeGraph(site, view, "home", { placeName: f.place, title: t.pages.home.title(f), description: t.pages.home.description(f) }, now);
+  const rating = freshRating(view.place, now);
+  const at = (id: string) => view.href(`#${id}`);
+  // A band without facts renders nothing, so it gets no link either.
+  const links = [
+    { href: at(SECTION_IDS.services), label: t.nav.services },
+    { href: at(SECTION_IDS.work), label: t.nav.work },
+    ...(PRICES ? [{ href: at(SECTION_IDS.prices), label: t.priceTable.title }] : []),
+    { href: at(SECTION_IDS.steps), label: t.nav.steps },
+    ...(rating ? [{ href: at(SECTION_IDS.reviews), label: t.reviews.title }] : []),
+    { href: at(SECTION_IDS.faq), label: t.nav.faq },
+  ];
   const lang = { langHrefs: perLocale(site, l => view.href("", l)), locales: site.i18n.locales, labels: site.i18n.labels };
   return (
     <>
       <JsonLd data={graph} />
       <JsonLd data={faqPageNode(t.faqs)} />
-      <SiteHeader copy={copy} home={view.href("")} quoteHref={quoteHref} {...lang} />
+      <SiteHeader copy={copy} home={view.href("")} quoteHref={quoteHref} links={links} phone={contact.phone} {...lang} />
       <main>
         <Hero copy={copy} quoteHref={quoteHref} workHref={view.href(`#${SECTION_IDS.work}`)} />
         <BeforeAfter copy={copy} id={SECTION_IDS.work} />
         <Services copy={copy} id={SECTION_IDS.services} quote={{ href: quoteHref, form: FORM_ID }} />
         <PriceTable copy={copy} id={SECTION_IDS.prices} prices={PRICES} />
         <HowItWorks copy={copy} id={SECTION_IDS.steps} />
-        <Reviews copy={copy} id={SECTION_IDS.reviews} rating={freshRating(view.place, now)} />
+        <Reviews copy={copy} id={SECTION_IDS.reviews} rating={rating} />
         <ServiceArea copy={copy} id={SECTION_IDS.area} place={view.place} />
         <FaqBand copy={copy} id={SECTION_IDS.faq} />
         <Closing copy={copy} id={SECTION_IDS.quote} placeSlug={view.place.slug} renderedAt={renderedAt} formId={FORM_ID} />
