@@ -26,8 +26,8 @@
   --band-py-tight: 2.5rem;
   /* The face is the one `next/font` loaded (src/shared/ui/fonts.ts), not the
      family name brand.toml can spell. */
-  --brand-font-sans: var(--font-inter);
-  --brand-font-display: var(--font-inter);
+  --brand-font-sans: var(--font-instrument-sans);
+  --brand-font-display: var(--font-fraunces);
 }
 
 @media (min-width: 768px) {

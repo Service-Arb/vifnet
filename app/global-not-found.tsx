@@ -2,7 +2,7 @@ import "./globals.css";
 import { GONE_HEADER, parseGoneHeader } from "@evinvest/kitstart";
 import { headers } from "next/headers";
 import { site } from "@/shared/config/site";
-import { text } from "@/shared/ui/fonts";
+import { display, text } from "@/shared/ui/fonts";
 import { Gone } from "@/views/not-found/server";
 
 /**
@@ -19,7 +19,7 @@ export default async function GlobalNotFound() {
   const gone = parseGoneHeader((await headers()).get(GONE_HEADER));
   const locale = site.i18n.isLocale(gone.locale) ? gone.locale : site.i18n.defaultLocale;
   return (
-    <html lang={locale} data-brand={site.brand.id} className={`light ${text.variable}`}>
+    <html lang={locale} data-brand={site.brand.id} className={`light ${text.variable} ${display.variable}`}>
       <body>
         <Gone locale={locale} location={gone.location ?? null} />
       </body>
