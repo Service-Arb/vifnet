@@ -22,6 +22,8 @@ export default defineConfig([
       "src/views/server-error/**",
       "src/widgets/before-after/ui/Comparison.tsx",
       "src/features/pick-subject/ui/SubjectLink.tsx",
+      "src/features/pick-subject/ui/SubjectSelect.tsx",
+      "src/widgets/site-header/ui/CloseMenu.tsx",
       "app/**/error.tsx",
       "app/**/not-found.tsx",
     ],
