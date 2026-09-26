@@ -40,7 +40,9 @@
 
 /* The mark's parts, each on a token (the lock-up is inline SVG): house and
    word take the brand green on a light surface and the ink on a dark one; the
-   swoosh the action green; the star the gold reserved for it. */
+   swoosh the leaf green of the printed identity (`positive`: leaf on light,
+   leaf-light on dark) — not `primary`, which is the gold action; the star the
+   gold. */
 [data-brand="vifnet"],
 [data-brand="vifnet"] .light {
   --mark-house: var(--brand);
@@ -55,7 +57,7 @@
   fill: var(--mark-house);
 }
 .vifnet-mark-swoosh {
-  fill: var(--primary);
+  fill: var(--positive);
 }
 .vifnet-mark-star {
   fill: var(--accent-warn);
