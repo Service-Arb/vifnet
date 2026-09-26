@@ -12,7 +12,9 @@ defineSectionSuite({ test, expect }, [
   { name: "services", url: "/fr#prestations", selector: "#prestations" },
   { name: "how-it-works", url: "/fr#etapes", selector: "#etapes" },
   { name: "faq", url: "/fr#faq", selector: "#faq" },
-  { name: "closing", url: "/fr#devis", selector: "#devis" },
+  // The gold band that sends back up to the form; the form itself is the
+  // hero's card (`#devis`), shot with the hero.
+  { name: "closing", url: "/fr#demande", selector: "#demande" },
   { name: "footer", url: "/fr#footer", selector: "footer#footer" },
   { name: "callbar", url: "/fr", selector: "#callbar", mobileOnly: true, bare: true },
   { name: "thanks", url: "/fr/thanks", selector: "body" },
