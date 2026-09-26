@@ -1,37 +1,25 @@
 # Vifnet's single source for colour, in the `@evinvest/uikit` token vocabulary.
-# Forest and leaf come from the printed identity (business cards, aprons, polos
-# in assets/profile_images); the page is drawn in Figma `1wXlPmnmOdKYPDWz6N5EB8`
-# ("Cleaning site"), whose variables map onto these tokens. The previous source
-# was Figma `11BVyibSdB8fBYrfBiLX3C`. `npm run palette` emits `app/brand.css`
+# The page is drawn in Figma `1wXlPmnmOdKYPDWz6N5EB8` (Vifnet, Desktop 1440
+# 9:107 / Mobile 390 14:502); every hex here is one of its variables, so the
+# page matches the frame to the value. `npm run palette` emits `app/brand.css`
 # from it and fails on a hole in either scope; a test holds the committed copy
 # to this file.
 #
-# Forest is the brand and the ink, gold the action, leaf the link and the ring.
-# Gold is `primary`: every CTA is a gold fill, and the label on it is dark
-# (forest, `on-primary`, 7.84:1) — never white. On a light surface gold is
-# never text or an indicator (2.08:1 on white), so there `primary-ink` and
-# `ring` are leaf; on a dark surface gold is both. The stars stay in
-# `accent-warn`, the same gold as a fill. The mark's swoosh reads `positive`
-# (leaf / leaf-light), not the gold action.
+# Figma → token: forest #0f2419 is `brand` (both scopes), light `secondary`,
+# dark `background` and `on-primary`; forest-mid #1a3a28 dark `card` (stats and
+# guarantee bands); forest-deep #0a1a10 dark `popover` (footer, phone menu);
+# leaf #2d6a4f light `positive`/`primary-ink`/`ring`; leaf-light #52b788 dark
+# `positive` (the headline's accent); gold #e8a838 `primary`, `accent-warn`
+# (stars) and the dark `ring`/`primary-ink`; cream #fafaf7 light `card`
+# (services and FAQ bands); sage #f0f7f0 light `hover` (FAQ row); ink #1a1a1a
+# light `ink`. The frame's neutrals are Tailwind's slate scale: slate-600/500
+# are light `ink-mid`/`ink-soft`, slate-100 `border`/`muted`, slate-200
+# `input`; the dark scope's ink is white, so kit parts inherit it. The dark
+# `ink-mid`/`ink-soft` are the frame's white/70 and white/50 over forest.
 #
-# Two scopes, because a `<Section polarity=…>` re-themes its subtree: both carry
-# every name. A surface takes its ink from its scope; a filled role carries its
-# own `on-*`. Accents are ordered quiet to loud (ev_lib docs/spec/accents.md);
-# trace/debug/info share one quiet value until a design separates them.
-# Neutrals are tinted green (the Figma file's are cold slate), never pure grey
-# or black.
-#
-# Held to the kit's floors (lib ts/uikit/test/tokens.test.ts) and WCAG AA:
-#   light  ink 16.3:1 on white, 15.6:1 on card · ink-mid 9.05:1 / 8.65:1
-#          ink-soft 5.45:1 on white, 5.21:1 on card, 5.0:1 on hover
-#          primary-ink and ring (leaf) 6.39:1 on white, 6.11:1 on card
-#          on-primary 7.84:1 on gold · on-secondary 15.6:1 · on-positive 6.39:1
-#          input 3.06:1 on white (WCAG 1.4.11) · muted vs card 1.42:1
-#   dark   ink 15.6:1 on background, 12.0:1 on card · ink-mid 9.87:1 / 7.56:1
-#          ink-soft 6.63:1 on background, 5.08:1 on card, 7.3:1 on popover
-#          primary-ink and ring (gold) 7.84:1 on background, 6.01:1 on card
-#          on-primary 7.84:1 · on-secondary 11.58:1 · positive 6.6:1 on background
-#          input 4.05:1 on background
+# The frame, not a floor, sets these values. Where it falls short of WCAG the
+# finding is reported, not patched here: the field border (slate-200 on white,
+# 1.23:1, wants 3:1), slate-400 meta text on white (2.6:1).
 #
 # Values only, no layout: geometry lives in `app/globals.css`.
 
@@ -48,21 +36,21 @@ wordmark = ["Vifnet", ""]
 [colors.light]
 background = "#ffffff"
 card = "#fafaf7"
-muted = "#cbd8c7"
+muted = "#f1f5f9"
 popover = "#ffffff"
 hover = "#f0f7f0"
-ink = "#0f2419"
-ink-mid = "#3b4d40"
-ink-soft = "#5c6e60"
-border = "#e3e9e1"
-input = "#879886"
+ink = "#1a1a1a"
+ink-mid = "#45556c"
+ink-soft = "#62748e"
+border = "#f1f5f9"
+input = "#e2e8f0"
 ring = "#2d6a4f"
 brand = "#0f2419"
 primary = "#e8a838"
 on-primary = "#0f2419"
 primary-ink = "#2d6a4f"
 secondary = "#0f2419"
-on-secondary = "#fafaf7"
+on-secondary = "#ffffff"
 positive = "#2d6a4f"
 on-positive = "#ffffff"
 accent-trace = "#5c6e60"
@@ -84,12 +72,12 @@ chart-5 = "#1f4d2e"
 [colors.dark]
 background = "#0f2419"
 card = "#1a3a28"
-muted = "#2b4b35"
+muted = "#1a3a28"
 popover = "#0a1a10"
-hover = "#22362b"
-ink = "#fafaf7"
-ink-mid = "#c4cbc6"
-ink-soft = "#9fa7a3"
+hover = "#1a3a28"
+ink = "#ffffff"
+ink-mid = "#b7bdba"
+ink-soft = "#87918c"
 border = "#273a30"
 input = "#6a8573"
 ring = "#e8a838"
@@ -97,8 +85,8 @@ brand = "#0f2419"
 primary = "#e8a838"
 on-primary = "#0f2419"
 primary-ink = "#e8a838"
-secondary = "#273a30"
-on-secondary = "#fafaf7"
+secondary = "#1a3a28"
+on-secondary = "#ffffff"
 positive = "#52b788"
 on-positive = "#0f2419"
 accent-trace = "#a9bfae"
