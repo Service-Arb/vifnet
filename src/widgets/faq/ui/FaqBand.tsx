@@ -11,7 +11,7 @@ import { TYPE } from "@/shared/ui";
 const CARDS = {
   list: "flex flex-col gap-2 overflow-visible rounded-none border-0 bg-transparent",
   item: "overflow-hidden rounded-xl border border-border bg-background last:border-b",
-  summary: "items-center px-6 py-4 hover:bg-hover md:px-6 md:py-4",
+  summary: "items-center px-6 py-4 hover:bg-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring md:px-6 md:py-4",
   question: "font-sans text-sm leading-5 font-semibold text-ink",
   icon: "vifnet-chevron text-ink-soft motion-safe:transition-transform group-open:rotate-180",
   answer: `border-t border-border px-6 pt-3 pb-4 md:px-6 md:pb-4 ${TYPE.body} text-ink-soft`,
