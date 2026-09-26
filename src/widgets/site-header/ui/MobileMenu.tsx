@@ -25,25 +25,28 @@ export function MobileMenu({ label, links, phone, children }: { label: string; l
           <path className="hidden group-open:block" d="M6 6l12 12M18 6 6 18" />
         </svg>
       </summary>
-      <nav aria-label={label} className="absolute inset-x-0 top-full border-b border-border bg-popover px-[var(--page-px)] pb-2">
-        <ul>
-          {links.map(link => (
-            <li key={link.href} className="border-b border-border">
-              <a href={link.href} className="block rounded-sm py-3 text-sm text-ink-mid hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
-                {link.label}
-              </a>
-            </li>
-          ))}
-          {phone && (
-            <li className="border-b border-border">
-              <a href={telHref(phone)} className="block rounded-sm py-3 text-sm font-semibold text-primary-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
-                {phone}
-              </a>
-            </li>
-          )}
-        </ul>
+      {/* The language switch is a `<nav>` of its own: beside the menu's, not in it. */}
+      <div className="absolute inset-x-0 top-full border-b border-border bg-popover px-[var(--page-px)] pb-2">
+        <nav aria-label={label}>
+          <ul>
+            {links.map(link => (
+              <li key={link.href} className="border-b border-border">
+                <a href={link.href} className="block rounded-sm py-3 text-sm text-ink-mid hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
+                  {link.label}
+                </a>
+              </li>
+            ))}
+            {phone && (
+              <li className="border-b border-border">
+                <a href={telHref(phone)} className="block rounded-sm py-3 text-sm font-semibold text-primary-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
+                  {phone}
+                </a>
+              </li>
+            )}
+          </ul>
+        </nav>
         {children}
-      </nav>
+      </div>
       <CloseMenu />
     </details>
   );
