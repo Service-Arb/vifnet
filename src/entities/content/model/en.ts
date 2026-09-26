@@ -153,7 +153,7 @@ export const EN = {
         city: "Nampa, ID",
         verified: "Verified · Jun 2025",
         quote:
-          "'Polite, fast, thorough. They cleaned my oven better than the day I bought the house. Booked weekly service on the spot. My husband literally asked if we'd gotten new appliances.'",
+          "\"Polite, fast, thorough. They cleaned my oven better than the day I bought the house. Booked weekly service on the spot. My husband literally asked if we'd gotten new appliances.\"",
       },
       priya: {
         name: "Priya S.",
@@ -168,7 +168,7 @@ export const EN = {
         city: "Caldwell, ID",
         verified: "Verified · Mar 2025",
         quote:
-          "'I run a short-term rental and turnovers need to be fast and perfect. Vifnet is now my only call. Arrive within the window, never go over time, guests leave 5-star cleanliness reviews every time.'",
+          "\"I run a short-term rental and turnovers need to be fast and perfect. Vifnet is now my only call. Arrive within the window, never go over time, guests leave 5-star cleanliness reviews every time.\"",
       },
     },
   },
