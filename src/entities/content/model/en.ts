@@ -57,11 +57,9 @@ export const EN = {
   header: { cta: "Get a quote", ctaCompact: "Get a quote", home: "Vifnet — home" },
   nav: { services: "Services", work: "Before / after", steps: "How it works", faq: "FAQ", menu: "Menu" },
   hero: {
-    title: "Cleaning done thoroughly, at your place.",
+    title: ["Cleaning done ", "thoroughly", ", at your place."],
     lede: "Deep cleans, upholstery or outdoor areas, in your house or flat. Describe the job in a minute: we call you back.",
-    cta: "Get a quote",
     toWork: "See before / after ↓",
-    photoAlt: "The Vifnet team in aprons, in a living room",
   },
   beforeAfter: {
     eyebrow: "Our work",
@@ -135,7 +133,6 @@ export const EN = {
   closing: {
     title: "Get your quote.",
     lede: "Four fields, one minute. We call you back to agree the price and the time.",
-    photoAlt: "A team member cleaning kitchen cupboards",
   },
   subjects: {
     deep: "Deep clean",

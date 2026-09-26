@@ -31,7 +31,8 @@ export interface Text extends CoreText<PageKey, Facts> {
   header: { cta: string; ctaCompact: string; home: string };
   /** The header's links to the bands; `menu` names the phone's menu button. */
   nav: { services: string; work: string; steps: string; faq: string; menu: string };
-  hero: { title: string; lede: string; cta: string; toWork: string; photoAlt: string };
+  /** `title`: the headline in three parts, the middle one set in the accent colour. */
+  hero: { title: readonly [string, string, string]; lede: string; toWork: string };
   beforeAfter: {
     eyebrow: string;
     title: string;
@@ -61,7 +62,7 @@ export interface Text extends CoreText<PageKey, Facts> {
   faqEyebrow: string;
   faqTitle: string;
   faqs: readonly { q: string; a: string }[];
-  closing: { title: string; lede: string; photoAlt: string };
+  closing: { title: string; lede: string };
   subjects: Record<Subject, string>;
   quoteLabels: {
     subject: string;

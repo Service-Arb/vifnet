@@ -58,11 +58,9 @@ export const FR = {
   header: { cta: "Demander un devis", ctaCompact: "Devis", home: "Vifnet — accueil" },
   nav: { services: "Prestations", work: "Avant / après", steps: "Étapes", faq: "FAQ", menu: "Menu" },
   hero: {
-    title: "Le ménage fait à fond, chez vous.",
+    title: ["Le ménage fait ", "à fond", ", chez vous."],
     lede: "Grand ménage, textiles ou extérieurs, à la maison ou dans l’appartement. Décrivez le besoin en une minute : nous vous rappelons.",
-    cta: "Demander un devis",
     toWork: "Voir avant / après ↓",
-    photoAlt: "L’équipe Vifnet en tablier, dans un salon",
   },
   beforeAfter: {
     eyebrow: "Nos réalisations",
@@ -136,7 +134,6 @@ export const FR = {
   closing: {
     title: "Recevez votre devis.",
     lede: "Quatre champs, une minute. Nous vous rappelons pour convenir du prix et du créneau.",
-    photoAlt: "Une équipière nettoie les placards d’une cuisine",
   },
   subjects: {
     deep: "Grand ménage",

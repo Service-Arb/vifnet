@@ -1,1 +1,1 @@
-export { Closing } from "./ui/Closing";
+export { Closing, type ClosingProps } from "./ui/Closing";
