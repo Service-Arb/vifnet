@@ -39,10 +39,10 @@ export type PageKey = (typeof site.pageKeys)[number];
 
 /**
  * Facts the owner has not given, listed once rather than found on the page.
- * The Figma note "Copy that states a term" (9:529) proposed promises the
- * company would pay for; none ships until the owner confirms it, so each is a
- * `copy:` line here (`COPY_TODO`, with how it would read) and nowhere in the
- * copy.
+ * The page is the Figma frame verbatim, sample content included ("design
+ * sample content", which blocks a launch); the `copy:` lines (`COPY_TODO`)
+ * are the terms of an earlier design the frame does not state, kept off the
+ * page until the owner confirms them.
  */
 export const OWNER_TODO: readonly OwnerTodo[] = [
   { field: "assets/card.toml site", why: "no domain yet — the site is noindex and robots Disallow until there is", blocksLaunch: true },
@@ -50,15 +50,15 @@ export const OWNER_TODO: readonly OwnerTodo[] = [
   { field: "assets/card.toml email", why: "no public mailbox; lead mail needs LEAD_NOTIFY_TO", blocksLaunch: false },
   { field: "site.brand.legalName", why: "raison sociale as registered; the brand name stands in", blocksLaunch: true },
   { field: "SIRET", why: "mentions légales (LCEN) need the operating entity's SIRET, in the footer's legal line", blocksLaunch: true },
+  { field: "places[vifnet].serviceArea", why: "which communes the crew covers: the structured data names none until then", blocksLaunch: true },
+  { field: "places[vifnet].hours", why: "working hours — the publication gate needs them", blocksLaunch: true },
+  { field: "places[vifnet].gbpName", why: "the Google Business Profile's exact name, for the live rating", blocksLaunch: false },
   {
-    field: "places[vifnet].serviceArea",
-    why: "which communes the crew covers; the Figma chips are guesses, so the service-area band stays hidden",
+    field: "design sample content",
+    why:
+      "the page shows the Figma file's sample content as it stands: the 4.9 / 340 Google rating and the stats (500+, 100 %, < 2 hr), six named reviews marked \"Verified\" with Google's logo, US prices in $, Boise, Idaho, the fictional (208) 555-0192, \"photos from actual client homes\" over stock photos, and review job photos that show other companies' branded staff (Greentree Cleaning Services, MYT Cleaning & Maintenance). Replace every one with Vifnet's own before a launch",
     blocksLaunch: true,
   },
-  { field: "places[vifnet].hours", why: "working hours — the publication gate needs them", blocksLaunch: true },
-  { field: "places[vifnet].gbpName", why: "the Google Business Profile's exact name; reviews show once it has some", blocksLaunch: false },
-  { field: "SUBJECTS", why: "regular cleaning, end of tenancy and after-works cleaning are held back until the owner confirms them", blocksLaunch: false },
-  { field: "PRICES", why: "no price list: the price-table band ships only with real numbers", blocksLaunch: false },
   ...COPY_TODO,
 ];
 
