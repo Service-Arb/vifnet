@@ -2,7 +2,7 @@ import { Button } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { SAMPLE_PHONE } from "@/shared/config/sample";
 import { Icon, Logo, Stars } from "@/shared/ui";
-import { type HeaderLink, MENU_ID, MobileMenu } from "./MobileMenu";
+import { type HeaderLink, MobileMenu } from "./MobileMenu";
 
 export type { HeaderLink } from "./MobileMenu";
 
@@ -21,13 +21,18 @@ const QUIET = "text-sm leading-5 font-medium text-white/70";
  * The frame's NavBar (8:143): sticky, forest at 95 % over a blur. From a
  * tablet up: the logo, the band links, the rating (from `sm`), the phone
  * (from `lg`) and the gold "Book Now". On a phone: the logo, "Book Now" and
- * the burger, whose menu opens under the bar.
+ * the burger, whose menu opens over the page under the bar.
+ *
+ * The forest and its blur are a layer under the content, not the header's
+ * own: a `backdrop-filter` on the header would make it the containing block
+ * of the menu's `fixed` scrim, which must cover the viewport. The layer
+ * draws the bottom rule too — it would paint over the header's own — and the
+ * header keeps a transparent one so the bar stays 65px (`--bar-h`).
  */
 export function SiteHeader({ copy, home, quoteHref, links }: SiteHeaderProps) {
   const { t } = copy;
   return (
-    <header className="group dark sticky top-0 z-40 border-b border-white/5 bg-background/95 text-ink backdrop-blur-sm">
-      <input type="checkbox" id={MENU_ID} aria-label={t.nav.menu} aria-controls={`${MENU_ID}-panel`} className="sr-only md:hidden" />
+    <header className="dark sticky top-0 z-40 border-b border-transparent text-ink before:absolute before:inset-x-0 before:top-0 before:-bottom-px before:-z-10 before:border-b before:border-white/5 before:bg-background/95 before:backdrop-blur-sm before:content-['']">
       <div className="flex h-16 items-center justify-between px-[var(--page-px)]">
         <a href={home} aria-label={t.nav.home} className="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
           <Logo size="md" tone="dark" />
@@ -54,16 +59,9 @@ export function SiteHeader({ copy, home, quoteHref, links }: SiteHeaderProps) {
           <Button href={quoteHref} data-intent="form_open" className="h-auto rounded-lg px-4 py-2 text-sm leading-5 font-bold hover:bg-amber-400">
             {t.nav.book}
           </Button>
-          <label
-            htmlFor={MENU_ID}
-            data-band="menu-toggle"
-            className="cursor-pointer rounded-sm p-1 text-white group-has-[#nav-menu:focus-visible]:outline-2 group-has-[#nav-menu:focus-visible]:outline-ring md:hidden"
-          >
-            <Icon name="menu" className="size-[22px]" />
-          </label>
+          <MobileMenu label={t.nav.menu} links={links} />
         </div>
       </div>
-      <MobileMenu label={t.nav.menu} links={links} />
     </header>
   );
 }
