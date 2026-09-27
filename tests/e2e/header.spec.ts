@@ -27,6 +27,11 @@ async function tap(page: Page) {
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
 }
 
+/** Two frames: a wheel scrolls the page, if it may, by the next paint. */
+function settle(page: Page) {
+  return page.evaluate(() => new Promise<void>(done => requestAnimationFrame(() => requestAnimationFrame(() => done()))));
+}
+
 test.describe("the phone's menu", () => {
   test.beforeEach(async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "the burger is the phone's");
@@ -50,11 +55,18 @@ test.describe("the phone's menu", () => {
       // The page behind is locked: a wheel over the scrim does not scroll it.
       await page.mouse.move(195, 800);
       await page.mouse.wheel(0, 400);
+      await settle(page);
+      await page.waitForTimeout(300);
       expect(await position(page)).toEqual(before);
 
       await tap(page);
       await expect(panel(page)).toBeHidden();
       expect(await position(page)).toEqual(before);
+
+      // The same wheel with the menu closed does scroll: the check above can fail.
+      await page.mouse.move(195, 800);
+      await page.mouse.wheel(0, 400);
+      await expect.poll(async () => (await position(page)).scrollY).toBeGreaterThan(y);
     });
   }
 
@@ -68,10 +80,39 @@ test.describe("the phone's menu", () => {
   });
 
   test("closes on a press on the scrim, without acting on the page beneath", async ({ page }) => {
+    // A point where, with the menu closed, a control of the page lies (the
+    // hero's form), below where the open panel reaches: the scrim is all that
+    // stands between the press and it.
+    const spot = await page.evaluate(() => {
+      const control = "a[href], button, input, select, textarea, summary, label";
+      for (let y = 420; y < 820; y += 10)
+        for (let x = 20; x < 370; x += 10) {
+          const hit = document.elementFromPoint(x, y)?.closest(control);
+          if (hit && !hit.closest("header")) {
+            hit.setAttribute("data-under-scrim", "");
+            return { x, y };
+          }
+        }
+      return null;
+    });
+    if (!spot) throw new Error("no control of the page under the scrim to guard");
+    const under = page.locator("[data-under-scrim]");
+
     await tap(page);
-    await page.locator("[data-nav-menu] [data-dismiss]").click({ position: { x: 195, y: 700 } });
+    await expect(page.locator("[data-nav-menu] [data-dismiss]")).toBeVisible();
+    await page.mouse.click(spot.x, spot.y);
     await expect(panel(page)).toBeHidden();
     await expect(page).toHaveURL("/fr");
+    expect(await under.evaluate(el => el.contains(document.activeElement))).toBe(false);
+  });
+
+  test("closes when Tab leaves its last link", async ({ page }) => {
+    await tap(page);
+    const links = panel(page).getByRole("link");
+    await links.last().focus();
+    await page.keyboard.press("Tab");
+    await expect(panel(page)).toBeHidden();
+    expect(await page.evaluate(() => document.querySelector("[data-nav-menu]")?.contains(document.activeElement))).toBe(false);
   });
 
   test("closes on Escape and hands focus back to the burger", async ({ page }) => {
