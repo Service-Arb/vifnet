@@ -25,12 +25,14 @@ const QUIET = "text-sm leading-5 font-medium text-white/70";
  *
  * The forest and its blur are a layer under the content, not the header's
  * own: a `backdrop-filter` on the header would make it the containing block
- * of the menu's `fixed` scrim, which must cover the viewport.
+ * of the menu's `fixed` scrim, which must cover the viewport. The layer
+ * draws the bottom rule too — it would paint over the header's own — and the
+ * header keeps a transparent one so the bar stays 65px (`--bar-h`).
  */
 export function SiteHeader({ copy, home, quoteHref, links }: SiteHeaderProps) {
   const { t } = copy;
   return (
-    <header className="dark sticky top-0 z-40 border-b border-white/5 text-ink before:absolute before:inset-x-0 before:top-0 before:-bottom-px before:-z-10 before:bg-background/95 before:backdrop-blur-sm before:content-['']">
+    <header className="dark sticky top-0 z-40 border-b border-transparent text-ink before:absolute before:inset-x-0 before:top-0 before:-bottom-px before:-z-10 before:border-b before:border-white/5 before:bg-background/95 before:backdrop-blur-sm before:content-['']">
       <div className="flex h-16 items-center justify-between px-[var(--page-px)]">
         <a href={home} aria-label={t.nav.home} className="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
           <Logo size="md" tone="dark" />

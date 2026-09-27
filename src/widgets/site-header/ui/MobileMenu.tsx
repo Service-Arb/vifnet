@@ -28,12 +28,12 @@ export function MobileMenu({ label, links }: { label: string; links: readonly He
         <Icon name="menu" className="size-[22px] group-open/menu:hidden" />
         <Icon name="x" className="size-[22px] not-group-open/menu:hidden" />
       </summary>
-      {/* The bar is 65px (h-16 + its border); the scrim covers what is under it. */}
-      <div data-dismiss aria-hidden="true" className="fixed inset-x-0 top-[65px] bottom-0 hidden bg-black/50 group-open/menu:block" />
+      {/* `--bar-h` (app/globals.css): the scrim covers what is under the bar. */}
+      <div data-dismiss aria-hidden="true" className="fixed inset-x-0 top-(--bar-h) bottom-0 hidden bg-black/50 group-open/menu:block" />
       <nav
         id="nav-menu-panel"
         aria-label={label}
-        className="absolute inset-x-0 top-full hidden max-h-[calc(100dvh-65px)] flex-col gap-1 overflow-y-auto overscroll-contain border-t border-white/5 bg-popover px-4 pb-4 group-open/menu:flex"
+        className="absolute inset-x-0 top-full hidden max-h-[calc(100dvh-var(--bar-h))] flex-col gap-1 overflow-y-auto overscroll-contain border-t border-white/5 bg-popover px-4 pb-4 group-open/menu:flex"
       >
         {links.map(link => (
           <a key={link.label} href={link.href} className={`${LINK} border-b border-white/5 text-white/70 hover:text-white`}>
@@ -44,6 +44,7 @@ export function MobileMenu({ label, links }: { label: string; links: readonly He
           {SAMPLE_PHONE.display}
         </a>
       </nav>
+      {/* Tailwind's `md`, as `md:hidden` above and the scroll lock in app/globals.css. */}
       <DetailsDismiss closeFrom="(min-width: 48rem)" />
     </details>
   );
