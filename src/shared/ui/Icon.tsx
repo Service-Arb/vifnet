@@ -1,4 +1,4 @@
-export type IconName = "phone" | "home" | "home-outline" | "check" | "chevron-down" | "shield-check" | "menu" | "star" | "google-g";
+export type IconName = "phone" | "home" | "home-outline" | "check" | "chevron-down" | "shield-check" | "menu" | "star" | "google-g" | "x";
 
 /**
  * Where an icon's file overhangs its box, as the frame places it (`inset-[…]`

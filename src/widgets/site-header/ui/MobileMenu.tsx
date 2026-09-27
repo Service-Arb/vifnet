@@ -1,39 +1,50 @@
 import { SAMPLE_PHONE } from "@/shared/config/sample";
-import { CloseMenu } from "./CloseMenu";
+import { DetailsDismiss, Icon } from "@/shared/ui";
 
 export interface HeaderLink {
   href: string;
   label: string;
 }
 
-/** The checkbox the burger toggles; the panel shows while it is checked. */
-export const MENU_ID = "nav-menu";
-
-const LINK = "block py-2.5 text-sm leading-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+const LINK = `block py-3 text-sm leading-5 ${FOCUS}`;
 
 /**
- * The phone's menu (Figma 8:132): under the bar, in the header's flow — it
- * pushes the page down as the frame draws it — on the deepest forest. It shows
- * while the header's checkbox is checked, so it opens before any script; the
- * one script, `CloseMenu`, only closes it after a link, a press outside or Esc.
+ * The phone's burger and menu (Figma NavBar Mobile/Open 8:114). A `<details>`,
+ * so it opens before any script. The panel is an overlay under the bar —
+ * `absolute` in the sticky header, which is its containing block — so opening
+ * it never changes the height of the header or the page and the page does not
+ * move; `app/globals.css` locks the page's scroll while it is open, and the
+ * scrim over the page closes it. Hidden from `md`, where the row shows the nav.
  */
 export function MobileMenu({ label, links }: { label: string; links: readonly HeaderLink[] }) {
   return (
-    <nav
-      id={`${MENU_ID}-panel`}
-      aria-label={label}
-      // Literal ids: Tailwind reads class names from the source, not at run time.
-      className="hidden flex-col gap-1 border-t border-white/5 bg-popover px-4 pb-4 group-has-[#nav-menu:checked]:flex md:group-has-[#nav-menu:checked]:hidden"
-    >
-      {links.map(link => (
-        <a key={link.label} href={link.href} className={`${LINK} border-b border-white/5 text-white/70 hover:text-white`}>
-          {link.label}
+    <details data-nav-menu className="group/menu md:hidden">
+      <summary
+        aria-label={label}
+        data-band="menu-toggle"
+        className="relative block cursor-pointer list-none rounded-sm p-1 text-white before:absolute before:-inset-[7px] before:content-[''] focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden"
+      >
+        <Icon name="menu" className="size-[22px] group-open/menu:hidden" />
+        <Icon name="x" className="size-[22px] not-group-open/menu:hidden" />
+      </summary>
+      {/* The bar is 65px (h-16 + its border); the scrim covers what is under it. */}
+      <div data-dismiss aria-hidden="true" className="fixed inset-x-0 top-[65px] bottom-0 hidden bg-black/50 group-open/menu:block" />
+      <nav
+        id="nav-menu-panel"
+        aria-label={label}
+        className="absolute inset-x-0 top-full hidden max-h-[calc(100dvh-65px)] flex-col gap-1 overflow-y-auto overscroll-contain border-t border-white/5 bg-popover px-4 pb-4 group-open/menu:flex"
+      >
+        {links.map(link => (
+          <a key={link.label} href={link.href} className={`${LINK} border-b border-white/5 text-white/70 hover:text-white`}>
+            {link.label}
+          </a>
+        ))}
+        <a href={SAMPLE_PHONE.href} className={`${LINK} self-start font-semibold text-primary`}>
+          {SAMPLE_PHONE.display}
         </a>
-      ))}
-      <a href={SAMPLE_PHONE.href} className={`${LINK} self-start font-semibold text-primary`}>
-        {SAMPLE_PHONE.display}
-      </a>
-      <CloseMenu toggle={MENU_ID} />
-    </nav>
+      </nav>
+      <DetailsDismiss closeFrom="(min-width: 48rem)" />
+    </details>
   );
 }

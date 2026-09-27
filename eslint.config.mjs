@@ -24,7 +24,7 @@ export default defineConfig([
       "src/widgets/sticky-bar/ui/Reveal.tsx",
       "src/features/pick-subject/ui/SubjectLink.tsx",
       "src/features/pick-subject/ui/SubjectSelect.tsx",
-      "src/widgets/site-header/ui/CloseMenu.tsx",
+      "src/shared/ui/DetailsDismiss.tsx",
       "app/**/error.tsx",
       "app/**/not-found.tsx",
     ],

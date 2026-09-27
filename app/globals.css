@@ -66,6 +66,9 @@
 .vf-icon-star {
   --vf-icon: url("../assets/icons/star.svg");
 }
+.vf-icon-x {
+  --vf-icon: url("../assets/icons/x.svg");
+}
 .vf-icon-google-g {
   background: url("../assets/icons/google-g.svg") center / 100% 100% no-repeat;
   mask: none;
@@ -92,8 +95,18 @@
 
 html {
   scroll-behavior: smooth;
-  /* The header sticks: an anchor lands below it, not under it. */
-  scroll-padding-top: 5rem;
+  /* The header sticks: an anchor lands just below its bar (h-16 + border),
+     not under it. */
+  scroll-padding-top: 65px;
+}
+
+/* The phone's menu is open over the page: the page behind it must not
+   scroll. Only below `md`, where the menu shows — past it the menu is hidden
+   and must not hold the page, script or not. */
+@media not (width >= 48rem) {
+  html:has(details[data-nav-menu][open]) {
+    overflow: hidden;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
