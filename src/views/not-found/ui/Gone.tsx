@@ -24,7 +24,7 @@ export function Gone({ locale, location }: { locale: Locale; location: string | 
         locales={site.i18n.locales}
         labels={site.i18n.labels}
         brandName={site.brand.name}
-        logo={<Logo />}
+        logo={<Logo tone="light" />}
         buttonClassName="font-semibold"
       />
     </>

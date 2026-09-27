@@ -71,6 +71,25 @@
   mask: none;
 }
 
+/* The lock-up's parts (src/shared/ui/brand/Logo.tsx, Figma Logo 5:66). Dark
+   sits on forest: the ink on forest is white (`on-secondary`, white in both
+   scopes). Light is forest (`brand`). The star is gold in either tone. */
+.vifnet-lockup {
+  --vifnet-lockup-ink: var(--brand);
+}
+.vifnet-lockup[data-tone="dark"] {
+  --vifnet-lockup-ink: var(--on-secondary);
+}
+.vifnet-mark-house,
+.vifnet-mark-swoosh,
+.vifnet-lockup-word,
+.vifnet-lockup-tagline {
+  fill: var(--vifnet-lockup-ink);
+}
+.vifnet-mark-star {
+  fill: var(--primary);
+}
+
 html {
   scroll-behavior: smooth;
   /* The header sticks: an anchor lands below it, not under it. */

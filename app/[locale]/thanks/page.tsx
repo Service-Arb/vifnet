@@ -18,5 +18,5 @@ export default async function BrandThanks({ params }: Props) {
   const locale = await loadLocale(site, params);
   const target = statusTarget(site, { locale }, { thanks: true });
   const copy = copyFor(locale, { place: site.brand.name, phone: target.phone });
-  return <StatusScreen copy={copy} status={copy.t.thanks} target={target} locales={site.i18n.locales} brandName={site.brand.name} logo={<Logo />} buttonClassName="font-semibold" />;
+  return <StatusScreen copy={copy} status={copy.t.thanks} target={target} locales={site.i18n.locales} brandName={site.brand.name} logo={<Logo tone="light" />} buttonClassName="font-semibold" />;
 }

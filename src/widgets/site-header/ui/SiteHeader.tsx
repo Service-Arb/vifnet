@@ -30,7 +30,7 @@ export function SiteHeader({ copy, home, quoteHref, links }: SiteHeaderProps) {
       <input type="checkbox" id={MENU_ID} aria-label={t.nav.menu} aria-controls={`${MENU_ID}-panel`} className="sr-only md:hidden" />
       <div className="flex h-16 items-center justify-between px-[var(--page-px)]">
         <a href={home} aria-label={t.nav.home} className="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
-          <Logo />
+          <Logo size="md" tone="dark" />
         </a>
         <nav aria-label={t.nav.menu} className="hidden items-center gap-7 md:flex">
           {links.map(link => (
