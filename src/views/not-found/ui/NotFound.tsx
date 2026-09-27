@@ -22,7 +22,7 @@ export function NotFound() {
   return (
     <>
       <title>{`${copy.t.notFound.title} · ${BRAND_PUBLIC.name}`}</title>
-      <StatusScreen copy={copy} status={copy.t.notFound} target={target} locales={i18n.locales} labels={i18n.labels} brandName={BRAND_PUBLIC.name} logo={<Logo />} buttonClassName="font-semibold" />
+      <StatusScreen copy={copy} status={copy.t.notFound} target={target} locales={i18n.locales} labels={i18n.labels} brandName={BRAND_PUBLIC.name} logo={<Logo tone="light" />} buttonClassName="font-semibold" />
     </>
   );
 }

@@ -20,6 +20,6 @@ export function ServerError() {
   const target = brandStatusTarget({ locales: i18n.locales, phone: BRAND_PUBLIC.phone }, locale, { retry: pathname });
   const copy = copyFor(locale, { place: BRAND_PUBLIC.name, phone: BRAND_PUBLIC.phone });
   return (
-    <StatusScreen copy={copy} status={copy.t.serverError} target={target} locales={i18n.locales} labels={i18n.labels} brandName={BRAND_PUBLIC.name} logo={<Logo />} buttonClassName="font-semibold" />
+    <StatusScreen copy={copy} status={copy.t.serverError} target={target} locales={i18n.locales} labels={i18n.labels} brandName={BRAND_PUBLIC.name} logo={<Logo tone="light" />} buttonClassName="font-semibold" />
   );
 }

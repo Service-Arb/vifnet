@@ -27,7 +27,7 @@ export function SiteFooter({ copy, year, links, other }: SiteFooterProps) {
   return (
     <footer id="footer" className="dark bg-popover px-[var(--page-px)] py-8 text-ink">
       <div className="flex flex-col items-center gap-3 text-sm leading-5 text-white/40 md:flex-row md:justify-between">
-        <Logo size="sm" />
+        <Logo size="sm" tone="dark" tagline={false} />
         <p className="text-center">{t.footer.copyright(year)}</p>
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 whitespace-nowrap">
           {links.map(link => (

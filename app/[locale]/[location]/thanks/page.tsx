@@ -17,5 +17,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PlaceThanks({ params }: Props) {
   const { copy } = await loadPlace(params);
   const target = statusTarget(site, await params, { thanks: true });
-  return <StatusScreen copy={copy} status={copy.t.thanks} target={target} locales={site.i18n.locales} brandName={site.brand.name} logo={<Logo />} buttonClassName="font-semibold" />;
+  return <StatusScreen copy={copy} status={copy.t.thanks} target={target} locales={site.i18n.locales} brandName={site.brand.name} logo={<Logo tone="light" />} buttonClassName="font-semibold" />;
 }
