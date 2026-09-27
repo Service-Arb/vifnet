@@ -19,6 +19,17 @@ defineSectionSuite({ test, expect }, [
   // hero's card (`#devis`), shot with the hero.
   { name: "closing", url: "/fr#demande", selector: "#demande" },
   { name: "footer", url: "/fr#footer", selector: "footer#footer" },
+  // The sub-pages (Figma Guarantee 40:1428, Prices 41:1627, About 42:1910):
+  // their head with the proof card, then each band between it and the gold
+  // band, which, the header and the footer are the home page's.
+  { name: "prices-head", url: "/fr/prices", selector: "[data-band=page-head]" },
+  { name: "price-table", url: "/fr/prices#tarifs", selector: "#tarifs" },
+  { name: "guarantee-head", url: "/fr/guarantee", selector: "[data-band=page-head]" },
+  { name: "promises", url: "/fr/guarantee#engagements", selector: "#engagements" },
+  { name: "how-it-works", url: "/fr/guarantee#etapes", selector: "#etapes" },
+  { name: "about-head", url: "/fr/about", selector: "[data-band=page-head]" },
+  { name: "crew", url: "/fr/about#equipe", selector: "#equipe" },
+  { name: "service-area", url: "/fr/about#zone", selector: "#zone" },
   { name: "thanks", url: "/fr/thanks", selector: "body" },
   { name: "not-found", url: "/fr/nope", selector: "body" },
 ]);

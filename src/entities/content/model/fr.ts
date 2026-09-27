@@ -20,6 +20,18 @@ export const FR = {
       title: () => "Vifnet — ménage à domicile",
       description: () => "Grand ménage, textiles et extérieurs, chez vous. Décrivez le besoin en une minute : nous vous rappelons.",
     },
+    prices: {
+      title: () => "Tarifs du ménage à domicile",
+      description: () => "Des prix forfaitaires pour chaque prestation, annoncés avant notre venue. Vous payez après le ménage, une fois satisfait.",
+    },
+    guarantee: {
+      title: () => "Notre garantie satisfaction",
+      description: () => "Une zone ne vous convient pas ? Prévenez-nous dans les 24 heures : nous revenons la nettoyer sans frais.",
+    },
+    about: {
+      title: () => "À propos de l’équipe",
+      description: () => "Qui nettoie chez vous, comment l’équipe est vérifiée, et où nous allons.",
+    },
   },
   quoteForm: {
     title: "Votre devis gratuit",
@@ -56,7 +68,7 @@ export const FR = {
   statusStrip: [],
   langName: "Français",
   facts: () => ["Vifnet", "Mentions légales en cours de rédaction"],
-  nav: { services: "Services", reviews: "Avis", pricing: "Tarifs", faq: "FAQ", menu: "Menu", book: "Réserver", home: "Vifnet — accueil" },
+  nav: { pricing: "Tarifs", guarantee: "Garantie", reviews: "Avis", about: "À propos", menu: "Menu", book: "Réserver", home: "Vifnet — accueil" },
   rating: { value: "4,9", count: "(340)" },
   hero: {
     title: { first: "Une maison", second: "enfin ", accent: "vraiment", third: "propre." },
@@ -236,6 +248,98 @@ export const FR = {
     cta: "Devis gratuit →",
   },
   footer: { copyright: year => `© ${year} Vifnet House Cleaning · Boise, Idaho`, privacy: "Confidentialité", terms: "Conditions" },
+  heads: {
+    prices: {
+      eyebrow: "Tarifs",
+      title: "Chaque ménage, chaque prix.",
+      lede: "Des prix forfaitaires pour chaque prestation, annoncés avant notre venue. Chacune est couverte par notre garantie satisfaction écrite.",
+    },
+    guarantee: {
+      eyebrow: "Notre garantie",
+      title: "Pas satisfait ? Nous revenons gratuitement.",
+      lede: "Une zone ne vous convient pas ? Prévenez-nous dans les 24 heures. Nous revenons la nettoyer sans frais — sans discussion, sans petites lignes.",
+    },
+    about: {
+      eyebrow: "À propos de Vifnet",
+      title: "L’équipe à votre porte.",
+      lede: "Qui nettoie chez vous, comment l’équipe est vérifiée, et où nous allons autour de Boise.",
+    },
+  },
+  priceTable: {
+    eyebrow: "Ce que ça coûte",
+    title: "Choisissez votre ménage.",
+    lede: "Le point de départ de chaque prestation. Nous vous rappelons en moins de 15 minutes avec votre prix forfaitaire.",
+    caption: "Ce que coûte chaque ménage",
+    columns: { service: "Prestation", included: "Ce qui est inclus", price: "À partir de" },
+    rows: {
+      standard: { label: "À partir de", amount: "89 $" },
+      deep: { label: "À partir de", amount: "179 $" },
+      move: { label: "À partir de", amount: "149 $" },
+      "post-construction": { label: "Au téléphone", amount: "Sur devis" },
+    },
+    note: "Vous payez après le ménage, une fois satisfait — toutes les grandes cartes, Venmo et Zelle. Les clients réguliers, chaque semaine ou toutes les deux semaines, bénéficient d’un tarif réduit.",
+  },
+  promises: {
+    eyebrow: "Pourquoi on hésite à réserver",
+    title: "Quatre inquiétudes, quatre réponses.",
+    lede: "Chaque prestation est couverte par notre garantie satisfaction écrite. Voici ce qu’elle couvre.",
+    items: [
+      {
+        worry: "« Ils vont oublier la moitié de la maison. »",
+        title: "Pas satisfait ? Nous renettoyons gratuitement.",
+        body: "Prévenez-nous dans les 24 heures. Nous revenons nettoyer la zone sans frais — sans discussion, sans petites lignes.",
+      },
+      {
+        worry: "« Je ne veux pas d’inconnus chez moi. »",
+        title: "Assurés, cautionnés, antécédents vérifiés.",
+        body: "Chaque membre de l’équipe a des antécédents vérifiés, et nous sommes couverts par une assurance responsabilité civile. Justificatifs sur demande.",
+      },
+      {
+        worry: "« Le prix va grimper. »",
+        title: "Un prix forfaitaire avant notre venue.",
+        body: "Nous vous rappelons en moins de 15 minutes avec un prix forfaitaire. Vous payez après le ménage, une fois satisfait.",
+      },
+      {
+        worry: "« Je vais perdre ma caution de toute façon. »",
+        title: "Une garantie de caution écrite.",
+        body: "Chaque ménage d’entrée ou de sortie est assorti d’une garantie de caution écrite. Nos clients récupèrent leur caution dans 100 % des cas.",
+      },
+    ],
+  },
+  steps: {
+    eyebrow: "Comment ça marche",
+    title: "Trois étapes vers une maison propre.",
+    items: [
+      { title: "Demandez un devis.", body: "60 secondes pour demander. Rappel en moins de 15 minutes avec un prix fixe." },
+      {
+        title: "Votre équipe arrive.",
+        body: "Une équipe professionnelle et assurée vient chez vous avec des produits et du matériel de qualité professionnelle. Vous n’avez pas besoin d’être là.",
+      },
+      {
+        title: "Payez une fois satisfait.",
+        body: "Paiement après le ménage — toutes les grandes cartes, Venmo et Zelle. Une zone ne vous convient pas ? Prévenez-nous dans les 24 heures : nous la renettoyons gratuitement.",
+      },
+    ],
+  },
+  team: {
+    eyebrow: "Les personnes chez vous",
+    title: "Rencontrez l’équipe.",
+    lede: "Chaque membre de l’équipe a des antécédents vérifiés. Nous sommes entièrement assurés et cautionnés.",
+    facts: "Antécédents vérifiés · Assuré et cautionné",
+    members: [
+      { initials: "AR", name: "Ana R.", role: "Cheffe d’équipe" },
+      { initials: "LM", name: "Luis M.", role: "Spécialiste du grand ménage" },
+      { initials: "HK", name: "Hannah K.", role: "Responsable entrées et sorties" },
+      { initials: "DP", name: "Dev P.", role: "Équipe fin de chantier" },
+    ],
+  },
+  area: {
+    eyebrow: "Zone d’intervention",
+    title: "Boise et les villes alentour.",
+    lede: "Boise, Meridian, Eagle, Nampa et Caldwell — les villes d’où nos clients nous écrivent. Vous ne savez pas si vous êtes dans la zone ? Demandez-le-nous lors de notre rappel.",
+    towns: ["Boise", "Meridian", "Eagle", "Nampa", "Caldwell"],
+    map: { label: "Vifnet · Boise, Idaho", show: "Afficher la carte", title: "Carte de Boise, Idaho" },
+  },
   sticky: { title: "Prêt pour une maison impeccable ?", lede: "Réservation possible le jour même", call: "Appeler", book: "Réserver" },
   brandPage: { title: "Vifnet", description: "Ménage à domicile.", open: "Ouvrir" },
 } satisfies Text;

@@ -27,7 +27,9 @@ export const site = defineSite({
   ogLocale: { fr: "fr_FR", en: "en_GB" },
   // One place, served at the apex: the crew goes to the customer.
   topology: { kind: "single", place: "vifnet" },
-  pages: { home: "" },
+  // The Figma file's sub-pages (Guarantee 40:1428, Prices 41:1627, About
+  // 42:1910): the proxy, the route tree, the sitemap and the nav read this list.
+  pages: { home: "", prices: "/prices", guarantee: "/guarantee", about: "/about" },
   places: PLACES,
   publication: SERVICE_AREA_GATE,
   lead: LEAD,
@@ -36,6 +38,7 @@ export const site = defineSite({
 });
 
 export type PageKey = (typeof site.pageKeys)[number];
+export type Subpage = Exclude<PageKey, "home">;
 
 /**
  * Facts the owner has not given, listed once rather than found on the page.
@@ -56,7 +59,7 @@ export const OWNER_TODO: readonly OwnerTodo[] = [
   {
     field: "design sample content",
     why:
-      "the page shows the Figma file's sample content as it stands: the 4.9 / 340 Google rating and the stats (500+, 100 %, < 2 hr), six named reviews marked \"Verified\" with Google's logo, US prices in $, Boise, Idaho, the fictional (208) 555-0192, \"photos from actual client homes\" over stock photos, and review job photos that show other companies' branded staff (Greentree Cleaning Services, MYT Cleaning & Maintenance). Replace every one with Vifnet's own before a launch",
+      "the page shows the Figma file's sample content as it stands: the 4.9 / 340 Google rating and the stats (500+, 100 %, < 2 hr), six named reviews marked \"Verified\" with Google's logo, US prices in $, Boise, Idaho, the fictional (208) 555-0192, \"photos from actual client homes\" over stock photos, and review job photos that show other companies' branded staff (Greentree Cleaning Services, MYT Cleaning & Maintenance); on the sub-pages, the four named team members, the Boise-area towns and the map of Boise behind the About page's button. Replace every one with Vifnet's own before a launch",
     blocksLaunch: true,
   },
   ...COPY_TODO,

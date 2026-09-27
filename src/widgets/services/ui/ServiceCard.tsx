@@ -1,10 +1,7 @@
 import type { ServiceItem } from "@/entities/content";
 import { SubjectLink } from "@/features/pick-subject";
-import type { Subject } from "@/shared/config/lead";
+import { FEATURED, type Subject } from "@/shared/config/lead";
 import { Photo } from "@/shared/ui";
-
-// The featured card (forest, gold rim, "Most popular") is the frame's Deep Clean.
-const FEATURED: Subject = "deep";
 
 // Heights as drawn — 412 on a phone (410 with the 2 px rim), 428 in the desktop row —
 // as floors, so a longer French line grows the card instead of clipping it.
