@@ -1,5 +1,6 @@
 import { MIN_FILL_MS } from "@evinvest/kitstart";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { abState } from "./env";
 
 // The quote card is the frame's two steps and its Done state. The selects are
 // kitstart's FormSelect: the platform's select until the page hydrates (the
@@ -55,7 +56,8 @@ test("with JavaScript the steps lead to Done, and the form posts every field", a
 
 test("the select is the same box before and after hydration", async ({ browser }, testInfo) => {
   const open = async (javaScriptEnabled: boolean) => {
-    const context = await browser.newContext({ javaScriptEnabled, viewport: testInfo.project.use.viewport ?? null });
+    // A context of its own does not inherit `use`: pin it to the control too.
+    const context = await browser.newContext({ javaScriptEnabled, viewport: testInfo.project.use.viewport ?? null, storageState: abState("a") });
     const page = await context.newPage();
     await page.goto(`${testInfo.project.use.baseURL ?? ""}/fr#devis`);
     return page;

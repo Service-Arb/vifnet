@@ -8,6 +8,7 @@ import type { Locale } from "@/shared/config/i18n";
 import { LEAD, SUBJECTS } from "@/shared/config/lead";
 import { SAMPLE_PHONE } from "@/shared/config/sample";
 import { site } from "@/shared/config/site";
+import { CONTROL } from "@/shared/lib/experiments";
 import { PlaceHome, SECTION_IDS } from "@/views/home";
 
 const place = site.places[0];
@@ -16,7 +17,14 @@ if (!place) throw new Error("the site has no place");
 const home = (locale: Locale) => {
   const view = createPlaceView(site, place, locale, "host");
   const copy = copyFor(locale, { place: place.name[locale], phone: null });
-  return renderToStaticMarkup(createElement(PlaceHome, { view, copy, renderedAt: Date.UTC(2026, 8, 24) }));
+  return renderToStaticMarkup(
+    createElement(PlaceHome, {
+      view,
+      copy,
+      renderedAt: Date.UTC(2026, 8, 24),
+      experiments: { assignment: CONTROL, target: { key: null, host: "https://us.i.posthog.com", brandId: site.brand.id } },
+    }),
+  );
 };
 
 /** Every JSON-LD block of the page, parsed. */
