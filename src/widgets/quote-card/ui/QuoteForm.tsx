@@ -2,6 +2,7 @@
 
 import { Button, Field, FieldLabel, FormSelect, type FormSelectOption, QuoteFormShell } from "@evinvest/kitstart/react";
 import { useEffect, useRef, useState } from "react";
+import { useExperimentStep } from "@/features/experiment";
 import { DEFAULTS, EXTRAS } from "@/shared/config/lead";
 import { ContactFields, type QuoteWords, SubjectField, TrustLine } from "./fields";
 import { FIELD, WIDE_BUTTON } from "./look";
@@ -21,7 +22,8 @@ export interface QuoteFormProps {
 }
 
 /**
- * The frame's two steps and its Done state in one card. Step 1 asks name, phone and ZIP; "Continue"
+ * The frame's two steps and its Done state in one card — experiment
+ * `quote_single_step`'s control. Step 1 asks name, phone and ZIP; "Continue"
  * checks them and shows step 2, bedrooms and service; the submit is
  * `useQuoteSubmit`'s.
  *
@@ -31,6 +33,7 @@ export interface QuoteFormProps {
 export function QuoteForm({ formId, placeSlug, locale, renderedAt, words, bedrooms, subjects }: QuoteFormProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const { submit, done } = useQuoteSubmit();
+  const reached = useExperimentStep();
   const first = useRef<HTMLDivElement>(null);
   const second = useRef<HTMLParagraphElement>(null);
 
@@ -44,6 +47,7 @@ export function QuoteForm({ formId, placeSlug, locale, renderedAt, words, bedroo
   const next = () => {
     for (const input of first.current?.querySelectorAll("input") ?? []) if (!input.reportValidity()) return;
     setStep(2);
+    reached(2);
   };
 
   return (

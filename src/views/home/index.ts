@@ -1,1 +1,1 @@
-export { PlaceHome, SECTION_IDS } from "./ui/PlaceHome";
+export { PlaceHome, type PlaceHomeProps, SECTION_IDS } from "./ui/PlaceHome";
