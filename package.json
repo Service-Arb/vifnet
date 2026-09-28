@@ -10,6 +10,7 @@
   "scripts": {
     "palette": "evinvest-palette --brand vifnet --out app/brand.css assets/brand.toml",
     "photos": "node --experimental-strip-types scripts/photos.ts",
+    "ab:report": "node --experimental-strip-types scripts/ab-report.ts",
     "dev": "npm run palette && next dev",
     "build": "npm run palette && next build",
     "postbuild": "rm -rf .next/standalone/.next/static && cp -R .next/static .next/standalone/.next/static",
