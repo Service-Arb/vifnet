@@ -1,7 +1,7 @@
 import { dirname } from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 import { BREAKPOINTS } from "@evinvest/kitstart/testing/e2e";
-import { LEADS_DB, PORT } from "./env";
+import { abState, LEADS_DB, PORT, POSTHOG_HOST } from "./env";
 
 // Run through the flake (`nix run .#test`), which supplies `@playwright/test`
 // and the nixpkgs-pinned browsers — the pin is what makes a screenshot render
@@ -21,7 +21,7 @@ export default defineConfig({
   outputDir: "../../test-results",
   reporter: process.env["CI"] ? [["github"], ["list"]] : [["list"]],
   expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.01, animations: "disabled", stylePath: "./screenshot-section.css" } },
-  use: { baseURL: `http://localhost:${PORT}`, deviceScaleFactor: 1, colorScheme: "light", locale: "fr-FR" },
+  use: { baseURL: `http://localhost:${PORT}`, deviceScaleFactor: 1, colorScheme: "light", locale: "fr-FR", storageState: abState("a") },
   // The two breakpoints the design draws: 1440 and 390.
   projects: BREAKPOINTS.map(b => ({ name: b.name, use: { ...devices["Desktop Chrome"], viewport: b.viewport } })),
   // The artefact that ships, not `next dev`: `npm run build` first.
@@ -33,6 +33,7 @@ export default defineConfig({
     timeout: 60_000,
     // The standalone server runs as production, which refuses to boot without
     // knowing whose address the rate limit counts.
-    env: { PORT: String(PORT), HOSTNAME: "127.0.0.1", LEADS_DB_PATH: LEADS_DB, TRUSTED_PROXY: "xff:1" },
+    // A key, so the experiments' events are sent — to a host that is nowhere.
+    env: { PORT: String(PORT), HOSTNAME: "127.0.0.1", LEADS_DB_PATH: LEADS_DB, TRUSTED_PROXY: "xff:1", POSTHOG_KEY: "phc_e2e", POSTHOG_HOST },
   },
 });
