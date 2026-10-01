@@ -87,13 +87,25 @@ function piiOf(lead: Lead): Record<string, string> {
 }
 
 /**
+ * The lead's id for the panel: the row id, for a person matching it to the
+ * mail, plus 8 hex of the kit's per-lead key — row ids start over if the
+ * leads file is ever recreated, and the panel counts only the first
+ * `lead.created` of a lead id. The letter prefix keeps it from looking like a
+ * phone number to the panel.
+ */
+export function panelLeadId(ctx: Pick<LeadWebhookContext, "leadId" | "idempotencyKey">): string {
+  const tag = createHash("sha256").update(ctx.idempotencyKey).digest("hex").slice(0, 8);
+  return `lead-${ctx.leadId}-${tag}`;
+}
+
+/**
  * The webhook body for one lead. `sourceId` is the key id the batch is signed
  * with — the panel rejects an event whose `source.id` is anything else.
  * `locationId` is the point the form was posted from (its slug, which is its
  * subdomain); a lead from no point carries none.
  */
 export function leadCreatedBody(lead: Lead, ctx: LeadWebhookContext, sourceId: string): IngestBody {
-  const subject: LeadCreatedEvent["subject"] = { brandId: ctx.brandId, leadId: `lead-${ctx.leadId}` };
+  const subject: LeadCreatedEvent["subject"] = { brandId: ctx.brandId, leadId: panelLeadId(ctx) };
   if (lead.placeSlug !== null && isOpaqueId(lead.placeSlug)) subject.locationId = lead.placeSlug;
   const event: LeadCreatedEvent = {
     id: uuidV7(ctx.at, ctx.idempotencyKey),
