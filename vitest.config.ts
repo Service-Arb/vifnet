@@ -14,6 +14,9 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts"],
+    // Through Vite rather than Node, so the alias above reaches kitstart's own
+    // `server-only` imports (its `./server` entry, which the webhook test uses).
+    server: { deps: { inline: [/@evinvest\/kitstart/] } },
     // The facts `next.config.ts` inlines, so the site reads the card here too.
     env: buildEnv(fileURLToPath(new URL(".", import.meta.url))),
   },
