@@ -15,6 +15,15 @@ read from: the brand, the locales, the topology (one place, served at the
 apex), the pages, the places, the publication policy and the lead schema. The
 contact facts come from `assets/card.toml`, inlined at build.
 
+## Leads reach the panel
+
+Each lead also goes to the Service-Arb panel as one `lead.created` event
+(`sa.funnel.v1`, built in `src/shared/lib/funnel-event.ts`): queued in the
+leads file before the visitor is thanked, signed, and retried from there.
+`LEAD_WEBHOOK_URL`, `LEAD_WEBHOOK_KEY_ID` and `LEAD_WEBHOOK_SECRET` come from
+the container's Secret, all three or none; without the URL the webhook is off,
+which is why it is not in `deploy/config.nix`.
+
 ## A place without an address
 
 Vifnet goes to its customers. Its place is a `service-area` presence, which

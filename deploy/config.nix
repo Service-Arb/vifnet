@@ -1,8 +1,11 @@
 # The prod environment of the server, baked into the image as plain env
 # (flake.nix: `prodEnv`). Secret-free: SMTP_URL and SMS_TOKEN (and
 # LEAD_NOTIFY_TO/FROM, LOCATIONS_API_URL when used) arrive from the container
-# environment a Secret injects. POSTHOG_KEY is not a secret: a project's
-# ingest token is public by design — every page view carries it to the browser.
+# environment a Secret injects. So do LEAD_WEBHOOK_URL, LEAD_WEBHOOK_KEY_ID and
+# LEAD_WEBHOOK_SECRET, together: the URL alone fails boot, and it is not set
+# here because without it the lead webhook is simply off. POSTHOG_KEY is not a
+# secret: a project's ingest token is public by design — every page view
+# carries it to the browser.
 #
 # Explicit because the defaults are dev's: without HOSTNAME the standalone
 # server binds one interface the readiness probe may not reach; without

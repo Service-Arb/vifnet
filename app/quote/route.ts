@@ -2,7 +2,7 @@ import { quoteRoute } from "@evinvest/kitstart/next";
 import { after } from "next/server";
 import { TEXT } from "@/entities/content";
 import { experimentSink, withExperimentLead, witnessedDefer } from "@/features/experiment/server";
-import { notifier, serverEnv } from "@/shared/config/env";
+import { notifier, serverEnv, webhook } from "@/shared/config/env";
 import { site } from "@/shared/config/site";
 
 /** The no-JS path: a plain form POST answered with a 303. */
@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 const route = quoteRoute(site, {
   env: serverEnv,
   notifier,
+  webhook,
   defer: witnessedDefer(after),
   unavailable: locale => {
     const t = TEXT[locale];
