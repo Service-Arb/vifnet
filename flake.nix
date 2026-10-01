@@ -7,9 +7,8 @@
   inputs = {
     v_flakes.url = "github:valeratrades/v_flakes?ref=v1.6";
     # The lib flake at the tag of the @evinvest/kitstart version in
-    # package-lock.json — mkLanding refuses a mismatch. A commit past v0.4.0 until
-    # the next kitstart tag: the one whose mkLanding declares the lead store `sqlite`.
-    ev.url = "github:EV-invest/lib/72b4ed6aacb630626c2d56ecc025006c9890de7f";
+    # package-lock.json — mkLanding refuses a mismatch.
+    ev.url = "github:EV-invest/lib?ref=@evinvest/kitstart-v0.5.0";
     ev.inputs.v_flakes.follows = "v_flakes";
   };
 
