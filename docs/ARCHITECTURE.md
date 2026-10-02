@@ -70,15 +70,19 @@ place, which still names no commune and has no address to map.
 
 Place pages are ISR (`revalidate = 600`): no page reads the request, the link
 mode rides in the `[location]` param — and so does the home page's A/B
-bucket (`_vifnet~quote_single_step.b`, docs/EXPERIMENTS.md), which the proxy
-writes from the visitor's `ab_<key>` cookie. The quote form is a plain POST answered
-with a 303, so it submits before any script loads; it sits on the hero's
-card, the one place every CTA points at (`#devis`). The quote card's
-steps, the service cards' links, the sticky bar's reveal, the phone menu's
+bucket (`_vifnet~lead_layout.b`, docs/EXPERIMENTS.md), which the proxy
+writes from the visitor's `ab_<key>` cookie. The quote form is kitstart's
+`LeadCapture` — the form every Service-Arb brand shares, in the frame's card
+through its `classNames` — and a plain POST answered with a 303, so it
+submits before any script loads; it sits on the hero's card, the one place
+every CTA points at (`#devis`), beside its "call me back" (`#quote-callback`).
+A service card's link names its service (`data-need`), so the card does not
+ask it again. The quote card, the sticky bar's reveal, the phone menu's
 closer and, on the About page, kitstart's map facade are the only client
-islands, and the page reads the same without
-them: the card is one form (`@media (scripting: none)`), the phone menu is a
-checkbox the burger toggles, the script only closes it after a link or on
-Esc. The selects are kitstart's `FormSelect`: a native `<select>` without a
-script, the kit's list once the page hydrates — never a bare
-`NativeSelect`, whose popup is the platform's menu.
+islands, and the page reads the same without them: `qualify-first` shows
+the contact once a service's radio is checked (`:has`), the callback is a
+`<details>`, the phone menu is a checkbox the burger toggles, the script
+only closes it after a link or on Esc. The selects are kitstart's
+`FormSelect`: a native `<select>` without a script, the kit's list once the
+page hydrates — never a bare `NativeSelect`, whose popup is the platform's
+menu.
