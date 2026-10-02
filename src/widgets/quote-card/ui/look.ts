@@ -20,12 +20,8 @@ export const WIDE_BUTTON = "w-full py-4 leading-6 font-bold shadow-sm hover:bg-a
  */
 export const LABEL = "text-xs leading-4 font-semibold text-ink-soft";
 
-/**
- * The frame's 11 px grey under the submit: the trust line and the privacy
- * note. 16 px lines, not the frame's 16.5: the card now sets the hero's
- * height, and a half-pixel card shifts every band under it off the pixel grid.
- */
-export const FINE_PRINT = "text-center text-[11px] leading-4 text-slate-400";
+/** The frame's 11 px grey under the submit: the trust line and the privacy note. */
+export const FINE_PRINT = "text-center text-[11px] leading-[16.5px] text-slate-400";
 
 /**
  * `LeadCapture`'s parts in the frame's QuoteCard: its 20 px between the head
