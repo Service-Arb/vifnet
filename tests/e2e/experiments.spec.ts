@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import { MIN_FILL_MS } from "@evinvest/kitstart";
+import { MIN_FILL_MS, normalizePhone } from "@evinvest/kitstart";
 import { expect, test, type Page } from "@playwright/test";
 import { abState, LEADS_DB, POSTHOG_HOST } from "./env";
 
@@ -68,7 +68,7 @@ test.describe("variant b", () => {
 
       const db = new DatabaseSync(LEADS_DB, { readOnly: true });
       try {
-        const row = db.prepare("SELECT job, location_id, spam_verdict, extras FROM leads WHERE mobile = ?").get(mobile);
+        const row = db.prepare("SELECT job, location_id, spam_verdict, extras FROM leads WHERE mobile = ?").get(normalizePhone(mobile));
         expect(row).toEqual({ job: "move", location_id: "vifnet", spam_verdict: null, extras: JSON.stringify({ name: "Camille Martin" }) });
       } finally {
         db.close();

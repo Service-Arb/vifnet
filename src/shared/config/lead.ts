@@ -30,6 +30,9 @@ export const LEAD: LeadSchema<Subject> = {
   subjects: SUBJECTS,
   wire: { subject: "subject", locality: "locality", mobile: "mobile" },
   extras: [EXTRAS.name, EXTRAS.bedrooms],
+  // One spelling per number (`+33612345678`), so the panel and a person
+  // searching the leads file find a customer however they typed it.
+  mobileFormat: "e164",
   validate: lead => {
     if (lead.mobile.replace(/\D/g, "").length < 10) return "a mobile number";
     if ((lead.extras[EXTRAS.name.name] ?? "").trim() === "") return "a name";

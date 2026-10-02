@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import { MIN_FILL_MS } from "@evinvest/kitstart";
+import { MIN_FILL_MS, normalizePhone } from "@evinvest/kitstart";
 import { expect, test } from "@playwright/test";
 import { LEADS_DB } from "./env";
 
@@ -36,7 +36,7 @@ test.describe("without JavaScript", () => {
     // A suspected bot gets the same 303, so the redirect proves nothing: the row does.
     const db = new DatabaseSync(LEADS_DB, { readOnly: true });
     try {
-      const row = db.prepare("SELECT job, zip, location_id, spam_verdict, extras FROM leads WHERE mobile = ?").get(mobile);
+      const row = db.prepare("SELECT job, zip, location_id, spam_verdict, extras FROM leads WHERE mobile = ?").get(normalizePhone(mobile));
       expect(row).toEqual({
         job: "deep",
         zip: locality,
