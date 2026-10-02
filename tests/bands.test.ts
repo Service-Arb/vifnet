@@ -12,7 +12,7 @@ import { Stats } from "@/widgets/stats";
 // sample figures, reviews and prices (OWNER_TODO "design sample content").
 const copy = (locale: Locale) => copyFor(locale, { place: "Vifnet", phone: null });
 const html = (el: ReturnType<typeof createElement>) => renderToStaticMarkup(el);
-const quote = { href: "/fr#devis", form: "quote" };
+const quote = { href: "/fr#devis" };
 
 describe("the stats band", () => {
   it.each([
@@ -27,12 +27,13 @@ describe("the stats band", () => {
 
 describe("the services band", () => {
   it("prints the four cards with their prices, the featured one badged", () => {
-    const out = html(createElement(Services, { copy: copy("en"), id: "prestations", quote }));
+    const out = html(createElement(Services, { copy: copy("en"), id: "prestations", quoteHref: quote.href }));
     for (const name of ["Standard Clean", "Deep Clean", "Move-In / Move-Out", "Post-Construction"]) expect(out).toContain(name);
     for (const price of ["From $89", "From $179", "From $149", "Custom quote"]) expect(out).toContain(price);
     expect(out.match(/Most popular/g)).toHaveLength(1);
-    // Every card leads to the form.
+    // Every card leads to the form, naming its service so the form does not ask it.
     expect(out.match(/href="\/fr#devis"/g)?.length).toBeGreaterThanOrEqual(4);
+    for (const need of ["standard", "deep", "move", "post-construction"]) expect(out).toContain(`data-need="${need}"`);
   });
 });
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { copyFor, REVIEWS, TEXT, type Facts } from "@/entities/content";
 import { COPY_TODO } from "@/shared/config/copy-todo";
 import { i18n, type Locale } from "@/shared/config/i18n";
-import { SUBJECTS } from "@/shared/config/lead";
+import { BEDROOMS, SUBJECTS } from "@/shared/config/lead";
 import { OWNER_TODO, site } from "@/shared/config/site";
 
 // Completeness is the compiler's: `FR` and `EN` satisfy one `Text`. What the
@@ -93,7 +93,7 @@ describe("the copy", () => {
     for (const subject of SUBJECTS) expect(t.services.items[subject].points, subject).toHaveLength(5);
     for (const key of REVIEWS) expect(t.reviews.items[key].quote, key).not.toBe("");
     expect(t.stats).toHaveLength(4);
-    expect(t.quote.doneTitle).toContain("{first}");
+    for (const b of BEDROOMS) expect(t.quote.bedrooms[b], b).not.toBe("");
   });
 
   it("sets French typography: no straight quote, a no-break space before ? ! : ;", () => {

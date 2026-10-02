@@ -4,8 +4,7 @@ import { expect, test } from "@playwright/test";
 import { LEADS_DB } from "./env";
 
 // The funnel's floor: the form must submit before any JavaScript has loaded.
-// Without a script the card's two steps are one form. A regression here is
-// invisible to every other test and costs every lead.
+// A regression here is invisible to every other test and costs every lead.
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
@@ -16,8 +15,6 @@ test.describe("without JavaScript", () => {
 
     await page.goto("/fr#devis");
     const form = page.locator("form#quote");
-    // No "Continue" without a script: both steps show, and submit is the only button.
-    await expect(form.getByRole("button", { name: "Continuer →" })).toBeHidden();
     await form.locator("input[name=name]").fill("Amanda Reyes");
     await form.locator("input[name=mobile]").fill(mobile);
     await form.locator("input[name=locality]").fill(locality);
@@ -101,7 +98,7 @@ test.describe("before launch", () => {
   });
 });
 
-test("a service card picks its service in the form", async ({ page }) => {
+test("a service card names its service, and the form does not ask it again", async ({ page }) => {
   await page.goto("/fr#prestations");
   // Hydrated: before that the click lands on a plain link and picks nothing.
   await expect(page.locator("form#quote select")).toHaveCount(0);
@@ -109,12 +106,12 @@ test("a service card picks its service in the form", async ({ page }) => {
   await expect(page).toHaveURL(/#devis$/);
 
   const form = page.locator("form#quote");
-  await form.locator("input[name=name]").fill("Jordan Taylor");
-  await form.locator("input[name=mobile]").fill("06 12 34 56 78");
-  await form.locator("input[name=locality]").fill("75015");
-  await page.getByRole("button", { name: "Continuer →" }).click();
-  await expect(page.getByRole("combobox", { name: "Prestation" })).toHaveText("Grand ménage");
+  await expect(page.getByRole("combobox", { name: "Prestation" })).toHaveCount(0);
+  await expect(form).toContainText("Grand ménage");
   await expect(form.locator("input[name=subject]")).toHaveValue("deep");
+  // Still the visitor's to change.
+  await form.getByRole("button", { name: "Modifier" }).click();
+  await expect(page.getByRole("combobox", { name: "Prestation" })).toHaveText("Grand ménage");
 });
 
 test("the sticky bar slides in after the hero", async ({ page }) => {

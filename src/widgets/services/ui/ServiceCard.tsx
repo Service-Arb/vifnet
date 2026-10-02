@@ -1,5 +1,4 @@
 import type { ServiceItem } from "@/entities/content";
-import { SubjectLink } from "@/features/pick-subject";
 import { FEATURED, type Subject } from "@/shared/config/lead";
 import { Photo } from "@/shared/ui";
 
@@ -12,11 +11,17 @@ export interface ServiceCardProps {
   subject: Subject;
   item: ServiceItem;
   badge: string;
-  quote: { href: string; form: string };
+  /** The quote card's anchor: `#devis`. */
+  quoteHref: string;
 }
 
-/** The frame's ServiceCard (7:76). The whole card is the link: the name stretches its hit area over it. */
-export function ServiceCard({ subject, item, badge, quote }: ServiceCardProps) {
+/**
+ * The frame's ServiceCard (7:76). The whole card is the link: the name
+ * stretches its hit area over it. It lands on the quote card, and its
+ * `data-need` tells the card the service, which is then not asked again — a
+ * plain link without a script, which still lands on the form.
+ */
+export function ServiceCard({ subject, item, badge, quoteHref }: ServiceCardProps) {
   const featured = subject === FEATURED;
   return (
     <li className={`${CARD} ${featured ? "dark min-h-[410px] border-2 border-primary bg-background" : "min-h-[412px] border border-border bg-background"}`}>
@@ -37,14 +42,14 @@ export function ServiceCard({ subject, item, badge, quote }: ServiceCardProps) {
       <div className={`flex flex-1 flex-col gap-3 p-5 ${featured ? "max-lg:pb-4" : ""}`}>
         <div className="flex flex-col gap-0.5">
           <h3 className="text-base leading-6 font-bold text-ink">
-            <SubjectLink
-              href={quote.href}
-              form={quote.form}
-              subject={subject}
+            <a
+              href={quoteHref}
+              data-intent="form_open"
+              data-need={subject}
               className="after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-ring"
             >
               {item.name}
-            </SubjectLink>
+            </a>
           </h3>
           <p className={`text-xs leading-4 ${featured ? "text-white/50" : "text-slate-400"}`}>{item.tagline}</p>
         </div>

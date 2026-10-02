@@ -8,17 +8,17 @@ import { assignedBy, bucketSuffix, CONTROL, isBot, parseLocation, placeOfLocatio
 describe("the bucket in the place param", () => {
   it("is no suffix for the control, one `~key.variant` otherwise", () => {
     expect(bucketSuffix(CONTROL)).toBe("");
-    expect(bucketSuffix({ ...CONTROL, quote_single_step: "b" })).toBe("~quote_single_step.b");
+    expect(bucketSuffix({ ...CONTROL, lead_layout: "b" })).toBe("~lead_layout.b");
   });
 
   it("round-trips, and the place is what the loader gets", () => {
-    expect(parseLocation("_vifnet~quote_single_step.b")).toEqual({ place: "_vifnet", assignment: { quote_single_step: "b" } });
+    expect(parseLocation("_vifnet~lead_layout.b")).toEqual({ place: "_vifnet", assignment: { lead_layout: "b" } });
     expect(parseLocation("_vifnet")).toEqual({ place: "_vifnet", assignment: CONTROL });
-    expect(placeOfLocation("_vifnet~quote_single_step.b")).toBe("_vifnet");
+    expect(placeOfLocation("_vifnet~lead_layout.b")).toBe("_vifnet");
   });
 
   it("refuses a suffix the proxy never writes: no second cache entry for the same page", () => {
-    for (const bad of ["_vifnet~quote_single_step.a", "_vifnet~quote_single_step.z", "_vifnet~nope.b", "_vifnet~quote_single_step.b~quote_single_step.b"]) {
+    for (const bad of ["_vifnet~lead_layout.a", "_vifnet~lead_layout.z", "_vifnet~nope.b", "_vifnet~lead_layout.b~lead_layout.b"]) {
       expect(parseLocation(bad)).toBeNull();
       expect(placeOfLocation(bad)).toBe(bad);
     }
@@ -34,10 +34,10 @@ describe("the bucket in the place param", () => {
 
 describe("who is in the experiment", () => {
   it("is whoever carries an ab_ cookie; the QA cookie marks it forced", () => {
-    const jar: Record<string, string> = { ab_quote_single_step: "b", ab__qa: "1" };
-    expect(assignedBy(n => jar[n])).toEqual({ assigned: { quote_single_step: "b" }, forced: true });
+    const jar: Record<string, string> = { ab_lead_layout: "b", ab__qa: "1" };
+    expect(assignedBy(n => jar[n])).toEqual({ assigned: { lead_layout: "b" }, forced: true });
     expect(assignedBy(() => undefined)).toEqual({ assigned: {}, forced: false });
-    expect(assignedBy(n => (n === "ab_quote_single_step" ? "garbage" : undefined)).assigned).toEqual({ quote_single_step: "a" });
+    expect(assignedBy(n => (n === "ab_lead_layout" ? "garbage" : undefined)).assigned).toEqual({ lead_layout: "a" });
   });
 
   it("never counts crawlers and previews", () => {
@@ -59,16 +59,16 @@ describe("who is in the experiment", () => {
 
 describe("event names", () => {
   it("map the library's `<key>_<action>` to one name per action", () => {
-    expect(experimentEvent("quote_single_step", "quote_single_step_exposed", { variant: "b" }, false)).toEqual([
+    expect(experimentEvent("lead_layout", "lead_layout_exposed", { variant: "b" }, false)).toEqual([
       "experiment_exposed",
-      { experiment: "quote_single_step", variant: "b", forced: false },
+      { experiment: "lead_layout", variant: "b", forced: false },
     ]);
-    expect(experimentEvent("quote_single_step", "quote_single_step_step", { variant: "a", step: 2 }, true)).toEqual([
+    expect(experimentEvent("lead_layout", "lead_layout_step", { variant: "a", step: 2 }, true)).toEqual([
       "experiment_step",
-      { experiment: "quote_single_step", variant: "a", step: 2, forced: true },
+      { experiment: "lead_layout", variant: "a", step: 2, forced: true },
     ]);
-    expect(experimentEvent("quote_single_step", "quote_single_step_clicked", {}, false)).toBeNull();
-    expect(experimentEvent("quote_single_step", "other_exposed", {}, false)).toBeNull();
+    expect(experimentEvent("lead_layout", "lead_layout_clicked", {}, false)).toBeNull();
+    expect(experimentEvent("lead_layout", "other_exposed", {}, false)).toBeNull();
   });
 });
 
@@ -94,12 +94,12 @@ describe("experiment_lead on /quote", () => {
   };
 
   it("is sent once per experiment for an accepted lead, forced or not", async () => {
-    expect(await setup(true)("lang=fr; ab_quote_single_step=b")).toEqual([["experiment_lead", { experiment: "quote_single_step", variant: "b", forced: false }]]);
-    expect(await setup(true)("ab_quote_single_step=a; ab__qa=1")).toEqual([["experiment_lead", { experiment: "quote_single_step", variant: "a", forced: true }]]);
+    expect(await setup(true)("lang=fr; ab_lead_layout=b")).toEqual([["experiment_lead", { experiment: "lead_layout", variant: "b", forced: false }]]);
+    expect(await setup(true)("ab_lead_layout=a; ab__qa=1")).toEqual([["experiment_lead", { experiment: "lead_layout", variant: "a", forced: true }]]);
   });
 
   it("is not sent for a rejected or suspected submission, nor without a cookie", async () => {
-    expect(await setup(false)("ab_quote_single_step=b")).toEqual([]);
+    expect(await setup(false)("ab_lead_layout=b")).toEqual([]);
     expect(await setup(true)()).toEqual([]);
   });
 });

@@ -1,8 +1,8 @@
-import { faqPageNode, placeGraph, type AnalyticsTarget, type PlaceView } from "@evinvest/kitstart";
+import { contactOf, faqPageNode, placeGraph, type AnalyticsTarget, type PlaceView } from "@evinvest/kitstart";
 import { JsonLd } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { ExperimentScope } from "@/features/experiment";
-import { EXPERIMENTS } from "@/shared/config/experiments";
+import { EXPERIMENTS, LEAD_LAYOUTS } from "@/shared/config/experiments";
 import type { Locale } from "@/shared/config/i18n";
 import { ANCHORS, placeNav } from "@/shared/config/nav";
 import { site } from "@/shared/config/site";
@@ -30,8 +30,6 @@ export const SECTION_IDS = {
   closing: "demande",
 } as const;
 
-const FORM_ID = "quote";
-
 export interface PlaceHomeProps {
   view: PlaceView<Locale>;
   copy: Copy;
@@ -49,9 +47,9 @@ export function PlaceHome({ view, copy, renderedAt, experiments }: PlaceHomeProp
   const { t, f } = copy;
   const now = new Date(renderedAt);
   const nav = placeNav(view, t.nav, site.pages.home);
-  const quote = { href: nav.quoteHref, form: FORM_ID };
   const graph = placeGraph(site, view, "home", { placeName: f.place, title: t.pages.home.title(f), description: t.pages.home.description(f) }, now);
-  const variant = experiments.assignment.quote_single_step;
+  const variant = experiments.assignment.lead_layout;
+  const running = EXPERIMENTS.lead_layout.enabled;
   return (
     <>
       <JsonLd data={graph} />
@@ -59,15 +57,28 @@ export function PlaceHome({ view, copy, renderedAt, experiments }: PlaceHomeProp
       <ExperimentScope
         target={experiments.target}
         placeSlug={view.place.slug}
-        experiment="quote_single_step"
+        experiment="lead_layout"
         variant={variant}
-        enabled={EXPERIMENTS.quote_single_step.enabled}
+        enabled={running}
       >
         <SiteHeader copy={copy} home={view.href("")} quoteHref={nav.quoteHref} links={nav.header} />
         <main>
-          <Hero copy={copy} form={<QuoteCard copy={copy} id={SECTION_IDS.quote} placeSlug={view.place.slug} renderedAt={renderedAt} formId={FORM_ID} variant={variant} />} />
+          <Hero
+            copy={copy}
+            form={
+              <QuoteCard
+                copy={copy}
+                id={SECTION_IDS.quote}
+                place={view.place}
+                contact={contactOf(site, view.place)}
+                renderedAt={renderedAt}
+                layout={LEAD_LAYOUTS[variant]}
+                experiment={running ? { name: "lead_layout", variant } : undefined}
+              />
+            }
+          />
           <Stats copy={copy} />
-          <Services copy={copy} id={SECTION_IDS.services} quote={quote} />
+          <Services copy={copy} id={SECTION_IDS.services} quoteHref={nav.quoteHref} />
           <Reviews copy={copy} id={SECTION_IDS.reviews} quoteHref={nav.quoteHref} />
           <Guarantee copy={copy} />
           <FaqBand copy={copy} id={SECTION_IDS.faq} />

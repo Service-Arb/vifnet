@@ -10,12 +10,9 @@ export type Subject = (typeof SUBJECTS)[number];
 /** The frame's featured service: the forest card on the home page, the "Most popular" row of the price table. */
 export const FEATURED: Subject = "deep";
 
-/** The size of the home, as the frame's second step asks it. */
+/** The size of the home: an optional question after the phone. */
 export const BEDROOMS = ["studio", "1", "2", "3", "4", "5+"] as const;
 export type Bedrooms = (typeof BEDROOMS)[number];
-
-/** The frame's defaults for the second step: "3 bedrooms", "Standard Clean". */
-export const DEFAULTS = { bedrooms: "3", subject: "standard" } as const satisfies { bedrooms: Bedrooms; subject: Subject };
 
 /** The extra fields the form posts beyond the core three, each capped at `max` characters. */
 export const EXTRAS = { name: { name: "name", max: 100 }, bedrooms: { name: "bedrooms", max: 3 } } as const;

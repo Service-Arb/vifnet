@@ -1,4 +1,5 @@
 import type { ExperimentConfig } from "@evinvest/experiments";
+import type { LeadCaptureLayout } from "@evinvest/kitstart/react";
 
 /**
  * The A/B tests running on the home page (docs/EXPERIMENTS.md). `variants[0]`
@@ -9,12 +10,19 @@ import type { ExperimentConfig } from "@evinvest/experiments";
  * so they stay `[a-z0-9_]`.
  */
 export const EXPERIMENTS = {
-  /** b: the quote card as one step — name, phone, postcode, service; no bedrooms. */
-  quote_single_step: { variants: ["a", "b"], weights: [0.5, 0.5], enabled: true },
+  /**
+   * kitstart's `LeadCapture` layout, the same key and arms as aquafix's so the
+   * two sites' results pool: a, everything on one screen; b, the service
+   * first, then the contact.
+   */
+  lead_layout: { variants: ["a", "b"], weights: [0.5, 0.5], enabled: true },
 } as const satisfies ExperimentConfig;
 
 export type ExperimentKey = keyof typeof EXPERIMENTS;
 export type VariantOf<K extends ExperimentKey> = (typeof EXPERIMENTS)[K]["variants"][number];
+
+/** `lead_layout`'s arms as `LeadCapture` names them. */
+export const LEAD_LAYOUTS = { a: "single", b: "qualify-first" } as const satisfies Record<VariantOf<"lead_layout">, LeadCaptureLayout>;
 
 /** `?ab_<key>=<variant>` forces a variant (QA); the same prefix as the cookie. */
 export const FORCE_PARAM = "ab_";
