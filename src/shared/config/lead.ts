@@ -21,10 +21,12 @@ export const DEFAULTS = { bedrooms: "3", subject: "standard" } as const satisfie
 export const EXTRAS = { name: { name: "name", max: 100 }, bedrooms: { name: "bedrooms", max: 3 } } as const;
 
 /**
- * What the quote form asks — name, phone and ZIP, then bedrooms and service —
- * and the rules worth enforcing: a lead with no way to reach the customer or
- * no one to ask for is not a lead. ZIP is the locality. The reason is for the
- * log only.
+ * What the quote form posts — service, ZIP (the locality) and phone, then an
+ * optional name and bedrooms — and the one rule worth enforcing: a lead with
+ * no way to reach the customer is not a lead. The name is not one: the call
+ * back asks it, and nothing downstream needs it (the panel and the mail take
+ * a lead without one), while every required field costs leads. The reason is
+ * for the log only.
  */
 export const LEAD: LeadSchema<Subject> = {
   subjects: SUBJECTS,
@@ -35,7 +37,6 @@ export const LEAD: LeadSchema<Subject> = {
   mobileFormat: "e164",
   validate: lead => {
     if (lead.mobile.replace(/\D/g, "").length < 10) return "a mobile number";
-    if ((lead.extras[EXTRAS.name.name] ?? "").trim() === "") return "a name";
     const bedrooms = lead.extras[EXTRAS.bedrooms.name];
     if (bedrooms !== undefined && bedrooms !== "" && !(BEDROOMS as readonly string[]).includes(bedrooms)) return "bedrooms out of range";
     return null;

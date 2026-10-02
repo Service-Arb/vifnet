@@ -94,13 +94,13 @@ describe("the home page", () => {
 describe("the lead", () => {
   const lead = (extras: Record<string, string>) => ({ ...testLead(), subject: "standard", extras });
 
-  it("takes a name, and bedrooms from the list or none", () => {
+  it("takes a name or none, and bedrooms from the list or none", () => {
     expect(LEAD.validate?.(lead({ name: "Amanda Reyes", bedrooms: "3" }))).toBeNull();
     expect(LEAD.validate?.(lead({ name: "Amanda Reyes" }))).toBeNull();
+    expect(LEAD.validate?.(lead({}))).toBeNull();
   });
 
-  it("refuses no name, bedrooms off the list, and a short number", () => {
-    expect(LEAD.validate?.(lead({ name: " " }))).not.toBeNull();
+  it("refuses bedrooms off the list, and a short number", () => {
     expect(LEAD.validate?.(lead({ name: "Amanda", bedrooms: "12" }))).not.toBeNull();
     expect(LEAD.validate?.({ ...lead({ name: "Amanda" }), mobile: "0612" })).not.toBeNull();
   });
