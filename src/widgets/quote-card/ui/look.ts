@@ -40,7 +40,9 @@ export const LEAD_CAPTURE_LOOK: Readonly<Partial<Record<LeadCapturePart, string>
   need: "rounded-xl py-3.5 text-sm leading-5 text-slate-700",
   summary: "text-sm leading-5",
   submit: `${WIDE_BUTTON} px-(--control-px) text-(length:--control-text)`,
-  privacy: FINE_PRINT,
+  // 16 px, not the trust line's 16.5: a half-pixel card shifts every band
+  // under the hero off the pixel grid, and each would rasterise anew.
+  privacy: `${FINE_PRINT} leading-4`,
   others: "gap-2",
   channel: "rounded-xl font-semibold",
 };
