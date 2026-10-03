@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pricing } from "@/shared/config/env";
 import { loadPlace, placePageMetadata } from "@/views/place/server";
 import { PlaceSubpage } from "@/views/subpage";
 
@@ -10,6 +11,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PricesPage({ params }: Props) {
-  const { view, copy, renderedAt } = await loadPlace(params);
-  return <PlaceSubpage view={view} copy={copy} page="prices" renderedAt={renderedAt} />;
+  // The price list the table starts each priced job at, live or baked: under ISR, read with the page.
+  const [{ view, copy, renderedAt }, model] = await Promise.all([loadPlace(params), pricing.model()]);
+  return <PlaceSubpage view={view} copy={copy} page="prices" renderedAt={renderedAt} pricing={model} />;
 }

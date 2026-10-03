@@ -130,6 +130,47 @@ The same key, arms and weights as aquafix's, so the two sites' results pool
 - **Diagnostic**: kitstart's `lead_form_start`, `lead_form_step` and
   `lead_form_field_error` per variant, pooled across brands in PostHog.
 
+### `booking_provider` — inert until the panel sets a Google schedule
+
+kitstart's experiment key (`BOOKING_EXPERIMENT`), the same on every brand so
+the arms pool; aquafix is to run it with the same arms.
+
+- **Inert today.** The arm only picks among the booking pages the place has,
+  and the panel has not given Vifnet's place a Google appointment schedule
+  (`PlaceLive.booking.providers.google_calendar.url`, set in the panel's place
+  settings). Without one, kitstart's `bookingOf` falls back to the place's
+  default, `manual`, so both arms are offered the call and the test is an
+  A/A. It needs no deploy to come alive: once the panel serves the URL, b
+  gets the schedule on the next render of the page (ISR, 10 minutes).
+  `tests/experiments.test.ts` holds both cases.
+- **Hypothesis**: after a priced lead, letting the visitor pick a slot on the
+  owner's Google schedule books more slots than the promise of a call
+  (where customers book more easily — FORM-VARIANTS-SPEC.md, "Booking
+  providers contract").
+- **Control (a)**: `manual` — the card says "Nous vous rappelons pour fixer le
+  créneau" and offers an optional preference (a day, a part of the day),
+  sent as `booking.requested@1` once the panel accepts it (`PANEL_BOOKING`).
+- **Variant (b)**: `google_calendar` — "Choisir un créneau" opens the
+  schedule in a new tab, nothing loaded before the click. Google takes no
+  parameter, so the card asks the visitor to enter the same phone number
+  there (kitstart's `bookPhoneHint`); the panel matches the booking to the
+  lead by contact and time. The schedule's booking form must ask for the
+  phone ("Téléphone", required).
+- **Both arms**: only a priced lead (the regular clean, an estimate) books;
+  a quote's slot is set on the call. The page view counts an exposure and
+  the taps a contact under `booking_provider`, as for `lead_layout`, so
+  `npm run ab:report` lists it; its lead rate is a guardrail here (the arm
+  shows only after the lead), not the result.
+- **Primary metric**: slots booked per lead, by arm. A Google schedule
+  opens in a new tab and never tells the page a slot was taken, so the
+  booked count is the panel's: its booked slots per lead (b's from Google
+  through its Calendar sync, a's set by the operator after the call). On
+  the page, kitstart's `lead_booking_open {provider}` over `experiment_lead`
+  of `booking_provider` per variant is the diagnostic: how many reach for a
+  slot. The denominator counts quotes too, which never book; randomised,
+  their share is the same in both arms. `provider` is what was offered, so
+  while the arm is inert both read `manual`.
+
 ## Ended experiments
 
 ### `quote_single_step` — ended unresolved (code 2026-10-03; live with the next release)

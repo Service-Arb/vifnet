@@ -10,6 +10,8 @@ const CARD =
 export interface ServiceCardProps {
   subject: Subject;
   item: ServiceItem;
+  /** The card's price line: the price list's "from", or the item's words when there is no number. */
+  price: string;
   badge: string;
   /** The quote card's anchor: `#devis`. */
   quoteHref: string;
@@ -21,7 +23,7 @@ export interface ServiceCardProps {
  * `data-need` tells the card the service, which is then not asked again — a
  * plain link without a script, which still lands on the form.
  */
-export function ServiceCard({ subject, item, badge, quoteHref }: ServiceCardProps) {
+export function ServiceCard({ subject, item, price, badge, quoteHref }: ServiceCardProps) {
   const featured = subject === FEATURED;
   return (
     <li className={`${CARD} ${featured ? "dark min-h-[410px] border-2 border-primary bg-background" : "min-h-[412px] border border-border bg-background"}`}>
@@ -65,7 +67,7 @@ export function ServiceCard({ subject, item, badge, quoteHref }: ServiceCardProp
             </li>
           ))}
         </ul>
-        <p className={`text-sm leading-5 font-bold ${featured ? "text-primary" : "text-positive"}`}>{item.price}</p>
+        <p className={`text-sm leading-5 font-bold ${featured ? "text-primary" : "text-positive"}`}>{price}</p>
       </div>
     </li>
   );

@@ -99,24 +99,25 @@ export const EN = {
     badge: "Most popular",
     note: "Photos above are from actual client homes — not stock photography. ",
     noteLink: "Book any service →",
+    fromPrice: amount => `From ${amount}`,
     items: {
       standard: {
         name: "Standard Clean",
         tagline: "Regular upkeep done right.",
         points: ["Kitchen surfaces & appliance exteriors", "Bathrooms scrubbed", "All floors vacuumed & mopped", "Dusting throughout", "Trash emptied · Beds made"],
-        price: "From $89",
+        price: "Custom quote",
       },
       deep: {
         name: "Deep Clean",
         tagline: "Top-to-bottom. Nothing missed.",
         points: ["Everything in Standard", "Inside oven & refrigerator", "Baseboards, trim & window sills", "Inside cabinets & drawers", "Detailed grout & tile scrub"],
-        price: "From $179",
+        price: "Custom quote",
       },
       move: {
         name: "Move-In / Move-Out",
         tagline: "Get your deposit back — guaranteed.",
         points: ["Deep-clean level throughout", "Inside all appliances", "Every closet, shelf & corner", "Garage sweep", "Written deposit guarantee"],
-        price: "From $149",
+        price: "Custom quote",
       },
       "post-construction": {
         name: "Post-Construction",
@@ -241,10 +242,11 @@ export const EN = {
     lede: "Where each service starts. We call back in under 15 minutes with your flat quote.",
     caption: "What each clean costs",
     columns: { service: "Service", included: "What's included", price: "From" },
+    from: "From",
     rows: {
-      standard: { label: "From", amount: "$89" },
-      deep: { label: "From", amount: "$179" },
-      move: { label: "From", amount: "$149" },
+      standard: { label: "On the call", amount: "Custom quote" },
+      deep: { label: "On the call", amount: "Custom quote" },
+      move: { label: "On the call", amount: "Custom quote" },
       "post-construction": { label: "On the call", amount: "Custom quote" },
     },
     note: "Pay after the clean, once you’re satisfied — all major cards, Venmo, and Zelle. Weekly and bi-weekly clients get a discounted rate.",

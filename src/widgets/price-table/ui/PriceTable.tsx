@@ -1,6 +1,8 @@
+import { formatCents } from "@evinvest/kitstart";
 import { Section } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { FEATURED, SUBJECTS, type Subject } from "@/shared/config/lead";
+import type { FromPrices } from "@/shared/lib/from-price";
 import { BandHead, TYPE } from "@/shared/ui";
 
 // From `md` the frame's columns: 300 | the rest | 160, 32 apart, in 24 px of
@@ -19,9 +21,11 @@ const CELL = "py-4 md:py-6";
  * The prices page's table (Figma PriceRow 38:1460): a real `<table>` with its
  * caption for screen readers only, the header row on sage, a row a service —
  * its name, the "Most popular" badge on the featured one, the tagline, what
- * the home card lists, and where its price starts.
+ * the home card lists, and where its price starts: the price list's
+ * minimum for a priced job (`from`), the copy's words with no number for a
+ * quote.
  */
-export function PriceTable({ copy, id }: { copy: Copy; id: string }) {
+export function PriceTable({ copy, id, from }: { copy: Copy; id: string; from: FromPrices }) {
   const p = copy.t.priceTable;
   return (
     <Section id={id} data-band="price-table" className="py-20">
@@ -44,7 +48,7 @@ export function PriceTable({ copy, id }: { copy: Copy; id: string }) {
           </thead>
           <tbody role="rowgroup">
             {SUBJECTS.map(subject => (
-              <PriceRow key={subject} copy={copy} subject={subject} />
+              <PriceRow key={subject} copy={copy} subject={subject} from={from[subject]} />
             ))}
           </tbody>
         </table>
@@ -54,10 +58,10 @@ export function PriceTable({ copy, id }: { copy: Copy; id: string }) {
   );
 }
 
-function PriceRow({ copy, subject }: { copy: Copy; subject: Subject }) {
+function PriceRow({ copy, subject, from }: { copy: Copy; subject: Subject; from: number | null }) {
   const { t } = copy;
   const item = t.services.items[subject];
-  const price = t.priceTable.rows[subject];
+  const price = from === null ? t.priceTable.rows[subject] : { label: t.priceTable.from, amount: formatCents(from, copy.locale) };
   return (
     <tr role="row" className={`${ROW_BOX} border-border align-top max-md:items-start`}>
       <th role="rowheader" scope="row" className={`${SERVICE} ${CELL} font-normal`}>

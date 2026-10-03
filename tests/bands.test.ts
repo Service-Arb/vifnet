@@ -3,6 +3,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { copyFor } from "@/entities/content";
 import type { Locale } from "@/shared/config/i18n";
+import { PRICING } from "@/shared/config/pricing";
+import { fromPrices } from "@/shared/lib/from-price";
 import { Guarantee } from "@/widgets/guarantee";
 import { Reviews } from "@/widgets/reviews";
 import { Services } from "@/widgets/services";
@@ -26,14 +28,35 @@ describe("the stats band", () => {
 });
 
 describe("the services band", () => {
-  it("prints the four cards with their prices, the featured one badged", () => {
-    const out = html(createElement(Services, { copy: copy("en"), id: "prestations", quoteHref: quote.href }));
+  it("prints the four cards, the featured one badged", () => {
+    const out = html(createElement(Services, { copy: copy("en"), id: "prestations", quoteHref: quote.href, from: fromPrices(PRICING) }));
     for (const name of ["Standard Clean", "Deep Clean", "Move-In / Move-Out", "Post-Construction"]) expect(out).toContain(name);
-    for (const price of ["From $89", "From $179", "From $149", "Custom quote"]) expect(out).toContain(price);
     expect(out.match(/Most popular/g)).toHaveLength(1);
     // Every card leads to the form, naming its service so the form does not ask it.
     expect(out.match(/href="\/fr#devis"/g)?.length).toBeGreaterThanOrEqual(4);
     for (const need of ["standard", "deep", "move", "post-construction"]) expect(out).toContain(`data-need="${need}"`);
+  });
+});
+
+describe("the services band's prices", () => {
+  const band = (locale: Locale, from: ReturnType<typeof fromPrices>) =>
+    html(createElement(Services, { copy: copy(locale), id: "prestations", quoteHref: quote.href, from }));
+
+  it.each([
+    ["fr", /À partir de 49\s€/, "Sur devis"],
+    ["en", /From €49/, "Custom quote"],
+  ] as const)("starts the regular clean at the price list's minimum, and states no number for a quote (%s)", (locale, from, quoted) => {
+    const out = band(locale, fromPrices(PRICING));
+    expect(out).toMatch(from);
+    // Deep, move and after-works: a quote each.
+    expect(out.split(quoted)).toHaveLength(4);
+    expect(out).not.toMatch(/\$|\d+\s?\$/);
+  });
+
+  it("states no number at all without a price list", () => {
+    const out = band("fr", fromPrices(null));
+    expect(out.split("Sur devis")).toHaveLength(5);
+    expect(out).not.toMatch(/€|\$/);
   });
 });
 

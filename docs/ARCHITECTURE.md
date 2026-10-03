@@ -25,9 +25,12 @@ the container's Secret, all three or none; without the URL the webhook is off,
 which is why it is not in `deploy/config.nix`.
 The event's `pii.need` is the job in the operator's words — the French name
 of its service card (`PANEL_NEED`), not the posted id. Why a lead is suspect
-(`rate_limited`, `too_fast`) is wired into the body as `properties.suspect`,
-but `PANEL_SUSPECT` keeps it off until the panel's `lead.created` accepts the
-property: it refuses an unknown one, and the outbox would park the lead.
+(`rate_limited`, `too_fast`) goes as `properties.suspect`, and a
+rate-limited lead goes at all (`PANEL_SUSPECT`, on since the panel v0.3.0
+accepts the property). Each such switch stays off until the panel in
+production accepts what it adds: it refuses an unknown property, and the
+outbox would park the lead. The lead's id is kitstart's `leadRef`, the
+reference the page was answered with, so a booking joins its lead.
 
 ## A place without an address
 
@@ -48,7 +51,9 @@ is open fails the build.
 
 The home page is the Figma frame (`1wXlPmnmOdKYPDWz6N5EB8`, Desktop 1440 /
 Mobile 390) verbatim, its sample content included: the rating, the stats, six
-named reviews, US prices. That content lives in the
+named reviews. Its prices are not: a figure on the page is the price list's —
+the regular clean starts at the list's lowest `priceOf` over every answer
+(`shared/lib/from-price.ts`), and the jobs sold as quotes state none. That content lives in the
 copy (`src/entities/content`) and `shared/config/sample.ts`, never in `site`
 or `assets/card.toml`, so no JSON-LD, OG card or notification carries it
 (`tests/site.test.ts`). The frame's sample phone number is the exception: it
@@ -112,10 +117,20 @@ names more than one commune — and shows the price live, "Réserver" under
 it. `/quote` prices the posted answers again with the same `priceOf` and
 stores its own number (`flow`, `quoted_cents`, `pricing_valid_from`,
 `estimate_inputs`); a posted amount is never read. The card then confirms
-that price and promises a call to set the slot — no booking provider yet.
+that price and offers the place's booking (below).
 A deep clean, a move and after-works are quotes: the crew has to see the
 place, so the card offers to send photos on WhatsApp (once the place has a
 number) and the callback.
+
+A priced lead sets its slot through kitstart's booking: the place's
+`booking` (from the panel's place settings; none baked) names its booking
+pages, and experiment `booking_provider` (docs/EXPERIMENTS.md) picks between
+the call (`manual`) and a Google schedule. Without a schedule the card
+promises the call and offers an optional preference, which it posts to
+`/quote/booking`; that queues `booking.requested@1` on the lead webhook's
+outbox only under `PANEL_BOOKING`, off until the panel accepts the event. A
+plain post whose price changed under the page lands on `/quote/confirm`,
+never cached, which asks again at the fresh price.
 
 The price list is `shared/config/pricing.ts`, placeholder amounts until the
 owner sets them (OWNER_TODO, blocks a launch). The panel's
@@ -124,5 +139,6 @@ owner sets them (OWNER_TODO, blocks a launch). The panel's
 does not validate, the page and the route price from the baked one. The
 estimate asks the bedrooms itself, so while its tiles are in the form the
 card's optional bedrooms question is not shown.
-`PANEL_FLOW` (`shared/lib/funnel-event.ts`) keeps the sale out of
-`lead.created` until the panel in production accepts those properties.
+`lead.created` carries the sale (`flow`, `quoted_cents`, `pricing_valid_from`,
+`estimate_inputs`) under `PANEL_FLOW` (`shared/lib/funnel-event.ts`), on since
+the panel v0.3.0 accepts those properties.

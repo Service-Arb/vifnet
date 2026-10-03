@@ -49,6 +49,11 @@ export interface ServiceItem {
   name: string;
   tagline: string;
   points: readonly string[];
+  /**
+   * The card's price line when the page has no number for the job: a quote,
+   * or a price list that does not price it. No figure: a number is only ever
+   * the price list's (`services.fromPrice`).
+   */
   price: string;
 }
 
@@ -87,7 +92,17 @@ export interface Text extends CoreText<PageKey, Facts> {
     doneBody: readonly [string, string];
   };
   stats: readonly { value: string; label: string }[];
-  services: { eyebrow: string; title: string; lede: string; badge: string; note: string; noteLink: string; items: Record<Subject, ServiceItem> };
+  services: {
+    eyebrow: string;
+    title: string;
+    lede: string;
+    badge: string;
+    note: string;
+    noteLink: string;
+    items: Record<Subject, ServiceItem>;
+    /** A priced job's line: where the price list's price starts, formatted in the page's language. */
+    fromPrice: (amount: string) => string;
+  };
   reviews: { eyebrow: string; title: string; google: string; average: string; total: string; cta: string; items: Record<ReviewKey, Review> };
   guarantee: { title: string; body: string };
   faqEyebrow: string;
@@ -103,8 +118,13 @@ export interface Text extends CoreText<PageKey, Facts> {
     /** Visually hidden, as the frame asks. */
     caption: string;
     columns: { service: string; included: string; price: string };
-    /** The price under the column's "From": `label` above `amount`, as a row draws it. */
+    /**
+     * The price under the column's "From": `label` above `amount`, as a row
+     * draws it — for a job the page has no number for. A priced job's row is
+     * `from` above the price list's starting price.
+     */
     rows: Record<Subject, { label: string; amount: string }>;
+    from: string;
     note: string;
   };
   /** Guarantee (40:1428): four worries and the term that answers each (PromiseCard 38:1463). */

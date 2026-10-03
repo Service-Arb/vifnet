@@ -1,10 +1,11 @@
-import { placeGraph, type PlaceView } from "@evinvest/kitstart";
+import { placeGraph, type PlaceView, type PricingModel } from "@evinvest/kitstart";
 import { JsonLd } from "@evinvest/kitstart/react";
 import type { ReactNode } from "react";
 import type { Copy } from "@/entities/content";
 import type { Locale } from "@/shared/config/i18n";
 import { placeNav } from "@/shared/config/nav";
 import { site, type Subpage } from "@/shared/config/site";
+import { fromPrices } from "@/shared/lib/from-price";
 import { Closing } from "@/widgets/closing";
 import { Crew } from "@/widgets/crew";
 import { FaqBand } from "@/widgets/faq";
@@ -31,12 +32,12 @@ export const SUBPAGE_IDS = {
 } as const;
 
 /** Each page's bands between its head and the gold band, as its frame orders them. */
-function bands(copy: Copy, page: Subpage): ReactNode {
+function bands(copy: Copy, page: Subpage, pricing: PricingModel | null): ReactNode {
   switch (page) {
     case "prices":
       return (
         <>
-          <PriceTable copy={copy} id={SUBPAGE_IDS.prices} />
+          <PriceTable copy={copy} id={SUBPAGE_IDS.prices} from={fromPrices(pricing)} />
           <FaqBand copy={copy} id={SUBPAGE_IDS.faq} />
         </>
       );
@@ -57,6 +58,15 @@ function bands(copy: Copy, page: Subpage): ReactNode {
   }
 }
 
+export interface PlaceSubpageProps {
+  view: PlaceView<Locale>;
+  copy: Copy;
+  page: Subpage;
+  renderedAt: number;
+  /** The price list the prices page starts each priced job at: the panel's, else the baked one. Other pages show no price. */
+  pricing?: PricingModel | null;
+}
+
 /**
  * A sub-page (Figma Guarantee 40:1428, Prices 41:1627, About 42:1910): the
  * home page's header, the page's head with the proof card, its bands, the gold
@@ -64,7 +74,7 @@ function bands(copy: Copy, page: Subpage): ReactNode {
  * quote card: the form is there, once. The structured data is `site`'s and
  * the place's only, as on the home page.
  */
-export function PlaceSubpage({ view, copy, page, renderedAt }: { view: PlaceView<Locale>; copy: Copy; page: Subpage; renderedAt: number }) {
+export function PlaceSubpage({ view, copy, page, renderedAt, pricing = null }: PlaceSubpageProps) {
   const { t, f } = copy;
   const now = new Date(renderedAt);
   const nav = placeNav(view, t.nav, site.pages[page]);
@@ -76,7 +86,7 @@ export function PlaceSubpage({ view, copy, page, renderedAt }: { view: PlaceView
       <SiteHeader copy={copy} home={view.href("")} quoteHref={nav.quoteHref} links={nav.header} />
       <main>
         <PageHead head={t.heads[page]} aside={<ProofAside copy={copy} quoteHref={nav.quoteHref} />} />
-        {bands(copy, page)}
+        {bands(copy, page, pricing)}
         <Closing copy={copy} id={SUBPAGE_IDS.closing} quoteHref={nav.quoteHref} />
       </main>
       <SiteFooter copy={copy} year={now.getFullYear()} links={nav.footer} other={nav.other} />

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { copyFor, REVIEWS, TEXT, type Facts } from "@/entities/content";
+import { copyFor, leadCaptureText, REVIEWS, TEXT, type Facts } from "@/entities/content";
 import { COPY_TODO } from "@/shared/config/copy-todo";
 import { i18n, type Locale } from "@/shared/config/i18n";
 import { BEDROOMS, SUBJECTS } from "@/shared/config/lead";
@@ -99,5 +99,14 @@ describe("the copy", () => {
   it("sets French typography: no straight quote, a no-break space before ? ! : ;", () => {
     const said = copyOf("fr").filter(([, s]) => /['"]|[^\u00a0][?!:;](\s|$)/.test(s));
     expect(said).toEqual([]);
+  });
+});
+
+// booking_provider b: a Google schedule takes no parameter, so the card asks
+// the visitor to type the same phone there, and the panel matches by it.
+describe("the Google booking hint", () => {
+  it.each(i18n.locales)("asks for the phone in the words the form's field uses (%s)", locale => {
+    const text = leadCaptureText(TEXT[locale], locale);
+    expect(text.bookPhoneHint?.toLowerCase()).toContain(TEXT[locale].quote.placeholders.mobile.toLowerCase());
   });
 });

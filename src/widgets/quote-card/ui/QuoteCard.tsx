@@ -1,6 +1,6 @@
-import { LEAD_CAPTURE_TEXT, type Place, type PricingModel } from "@evinvest/kitstart";
+import type { BookingProvider, Place, PricingModel } from "@evinvest/kitstart";
 import type { LeadCaptureLayout } from "@evinvest/kitstart/react";
-import type { Copy } from "@/entities/content";
+import { leadCaptureText, type Copy } from "@/entities/content";
 import { BEDROOMS, EXTRAS, FLOWS, LEAD, PHOTO_NEEDS, SUBJECTS, type Subject } from "@/shared/config/lead";
 import { BedroomsField, TrustLine } from "./fields";
 import { LEAD_CAPTURE_LOOK } from "./look";
@@ -22,6 +22,12 @@ export interface QuoteCardProps {
   layout: LeadCaptureLayout;
   /** The assignment the card's events and its post carry; none when no test runs. */
   experiment: { name: string; variant: string } | undefined;
+  /**
+   * Experiment `booking_provider`'s arm as a provider: kitstart offers it after
+   * a priced lead when the place has it, else the place's default (`bookingOf`);
+   * `null` when the test is off.
+   */
+  bookingVariant: BookingProvider | null;
 }
 
 /**
@@ -37,21 +43,9 @@ export interface QuoteCardProps {
  * an estimate (`FLOWS`): its answers as tiles, the price live, "Réserver";
  * the other jobs are quotes, with photos on WhatsApp when the place has it.
  */
-export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need, layout, experiment }: QuoteCardProps) {
+export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need, layout, experiment, bookingVariant }: QuoteCardProps) {
   const { t, locale } = copy;
-  const kit = LEAD_CAPTURE_TEXT[locale];
-  const text = {
-    ...kit,
-    needLabel: t.quote.labels.subject,
-    localityLabel: t.quote.labels.locality,
-    phoneLabel: t.quote.labels.mobile,
-    nameLabel: t.quote.labels.name,
-    localityPlaceholder: t.quote.placeholders.locality,
-    phonePlaceholder: t.quote.placeholders.mobile,
-    namePlaceholder: t.quote.placeholders.name,
-    submit: t.quoteForm.submit,
-    honeypotLabel: t.quoteForm.honeypotLabel,
-  };
+  const text = leadCaptureText(t, locale);
   return (
     <QuoteCapture
       id={id}
@@ -70,24 +64,20 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
       name={{ field: EXTRAS.name.name }}
       extras={
         <BedroomsField
-          label={`${t.quote.labels.bedrooms} (${kit.optional})`}
+          label={`${t.quote.labels.bedrooms} (${text.optional})`}
           placeholder={t.quote.bedroomsPlaceholder}
           options={BEDROOMS.map(b => ({ value: b, label: t.quote.bedrooms[b] }))}
         />
       }
       experiment={experiment}
+      bookingVariant={bookingVariant}
       text={text}
       labels="hidden"
       // Folded: the frame's card has no callback, so it is one quiet line
       // until asked for — even when the place is closed and it would lead.
       callbackOpen={false}
-      // Keyed: built here, on the server, and handed to the kit's client
-      // island as a prop, this element alone set off React's dev warning
-      // "Each child in a list should have a unique key… render method of
-      // LeadCapture" (found by taking the slots out one at a time); the
-      // extras and the trust line, server components, do not.
       head={
-        <div key="head" className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1">
           <h2 className="font-display text-2xl leading-8 font-bold text-brand">{t.quoteForm.title}</h2>
           <p className="text-sm leading-5 text-ink-soft">{t.quoteForm.lede}</p>
         </div>

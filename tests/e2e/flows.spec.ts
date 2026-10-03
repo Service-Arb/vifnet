@@ -77,7 +77,7 @@ test.describe("a regular clean, priced live", () => {
     await expect(card(page).getByRole("button", { name: "Réserver" })).toBeVisible();
   });
 
-  test("the server stores its own price: a posted amount and a forged answer are not the screen's", async ({ page }) => {
+  test("the server stores its own price: a posted amount is ignored, a forged answer is confirmed first", async ({ page }) => {
     const mobile = freshMobile("06");
     await page.goto("/fr#devis");
     await hydrated(page);
@@ -87,20 +87,33 @@ test.describe("a regular clean, priced live", () => {
     await expect(price(page)).toHaveAttribute("data-price-cents", "7700");
     await contact(page, mobile);
     // A tampered page: an amount of its own, and an answer the screen did not price.
-    await form(page).evaluate(el => {
-      for (const name of ["quoted_cents", "cents", "price"]) {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = name;
-        input.value = "1";
-        el.append(input);
-      }
-      const two = el.querySelector<HTMLInputElement>("input[name=estimate_bedrooms][value='2']");
-      if (two) two.value = "3";
-    });
+    const tamper = () =>
+      form(page).evaluate(el => {
+        for (const name of ["quoted_cents", "cents", "price"]) {
+          if (el.querySelector(`input[name=${name}]`)) continue;
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = name;
+          input.value = "1";
+          el.append(input);
+        }
+        const two = el.querySelector<HTMLInputElement>("input[name=estimate_bedrooms][value='2']");
+        if (two) two.value = "3";
+      });
+    await tamper();
+    // The server prices the answers it got: 45 + 45 + 10 = 100 €, 10 % off = 90 €.
+    // Not the 77 € the screen showed (kitstart 0.11.0's `shown_cents`), so the
+    // lead is not taken at either until the visitor confirms the server's price.
+    const refused = page.waitForResponse(r => r.request().method() === "POST" && isQuote(r.url()));
+    await card(page).getByRole("button", { name: "Réserver" }).click();
+    expect(await (await refused).json()).toMatchObject({ ok: false, field: "price_changed", cents: 9000 });
+    await expect(card(page)).toContainText(/Le prix a changé : 90\s€ au lieu de 77\s€\./);
+    expect(leadRow(mobile)).toBeUndefined();
+
+    // React drew the card again, the answer's value with it: tampered once more, as a forger would.
+    await tamper();
     const answered = page.waitForResponse(r => r.request().method() === "POST" && isQuote(r.url()));
     await card(page).getByRole("button", { name: "Réserver" }).click();
-    // 45 + 45 + 10 = 100 €, 10 % off = 90 €.
     expect(await (await answered).json()).toMatchObject({ ok: true, cents: 9000 });
     expect(leadRow(mobile)).toEqual({
       job: "standard",
@@ -214,5 +227,27 @@ test.describe("variant b", () => {
     await card(page).getByRole("radio", { name: "Grand ménage" }).click();
     await expect(form(page).locator("input[name^=estimate_]")).toHaveCount(0);
     await expect(card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" })).toBeVisible();
+  });
+});
+
+// booking_provider b (docs/EXPERIMENTS.md): the place's Google schedule. The
+// mock panel serves the place with none, as the panel does today, so the arm
+// is inert: kitstart offers the call, exactly as in a.
+test.describe("booking_provider b, no Google schedule set", () => {
+  test.use({ storageState: abState("a", "b"), extraHTTPHeaders: { "x-forwarded-for": "10.7.0.4" } });
+
+  test("a priced lead is offered the call, not a booking page", async ({ page }) => {
+    await page.goto("/fr#devis");
+    await hydrated(page);
+    await answer(page, "Studio");
+    await answer(page, "Moins de 40 m²");
+    await answer(page, "Une fois");
+    await contact(page, freshMobile("07"));
+    await card(page).getByRole("button", { name: "Réserver" }).click();
+    const status = card(page).getByRole("status");
+    await expect(status).toContainText(/Demande enregistrée au prix de 49\s€\./);
+    await expect(status).toContainText("Nous vous rappelons pour fixer le créneau.");
+    await expect(card(page).getByRole("link", { name: "Choisir un créneau" })).toHaveCount(0);
+    await expect(page.locator('a[href*="calendar.app.google"], a[href*="calendar.google.com"]')).toHaveCount(0);
   });
 });

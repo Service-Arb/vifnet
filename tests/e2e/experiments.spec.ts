@@ -22,6 +22,8 @@ async function beacons(page: Page): Promise<Sent[]> {
 }
 
 const ours = (sent: Sent[], event: string) => sent.filter(s => s.event === event).map(s => s.properties);
+/** One experiment's events: every page carries both tests, each with its own exposure and contacts. */
+const of = (sent: Sent[], event: string, experiment = "lead_layout") => ours(sent, event).filter(p => p["experiment"] === experiment);
 
 const card = (page: Page) => page.locator("#devis");
 
@@ -48,7 +50,7 @@ test.describe("variant b", () => {
     await expect(card(page).getByRole("status")).toBeVisible();
 
     const arm = { experiment: "lead_layout", variant: "b" };
-    await expect.poll(() => ours(sent, "experiment_exposed")).toEqual([expect.objectContaining({ ...arm, forced: false, brand_id: "vifnet", location_id: "vifnet" })]);
+    await expect.poll(() => of(sent, "experiment_exposed")).toEqual([expect.objectContaining({ ...arm, forced: false, brand_id: "vifnet", location_id: "vifnet" })]);
     expect(ours(sent, "lead_form_step")).toEqual([expect.objectContaining({ ...arm, step: "contact", layout: "qualify-first", form_id: "quote" })]);
     expect(ours(sent, "lead_form_start")).toEqual([expect.objectContaining({ ...arm, layout: "qualify-first" })]);
   });
@@ -97,11 +99,15 @@ test("the control's events carry the experiment and its variant", async ({ page 
   });
 
   const base = { experiment: "lead_layout", variant: "a", forced: false, brand_id: "vifnet" };
-  await expect.poll(() => ours(sent, "experiment_exposed")).toEqual([expect.objectContaining(base)]);
+  await expect.poll(() => of(sent, "experiment_exposed")).toEqual([expect.objectContaining(base)]);
   await expect
-    .poll(() => ours(sent, "experiment_contact").map(p => p["channel"]))
+    .poll(() => of(sent, "experiment_contact").map(p => p["channel"]))
     .toEqual(["form_open", "phone"]);
-  for (const p of ours(sent, "experiment_contact")) expect(p).toMatchObject(base);
+  for (const p of of(sent, "experiment_contact")) expect(p).toMatchObject(base);
+  // booking_provider counts the same page view and taps under its own name.
+  const booking = { ...base, experiment: "booking_provider" };
+  await expect.poll(() => of(sent, "experiment_exposed", "booking_provider")).toEqual([expect.objectContaining(booking)]);
+  await expect.poll(() => of(sent, "experiment_contact", "booking_provider").map(p => p["channel"])).toEqual(["form_open", "phone"]);
   // kitstart's own funnel, on one schema across brands: the arm rides on it too.
   const kit = { experiment: "lead_layout", variant: "a", layout: "single", form_id: "quote", brand_id: "vifnet" };
   await expect.poll(() => ours(sent, "lead_form_start")).toEqual([expect.objectContaining(kit)]);
@@ -115,7 +121,7 @@ test.describe("a forced visit", () => {
     const sent = await beacons(page);
     await page.goto("/fr?ab_lead_layout=b#devis");
     await expect(page.locator("form#devis-form [data-need-option]")).toHaveCount(4);
-    await expect.poll(() => ours(sent, "experiment_exposed")).toEqual([expect.objectContaining({ variant: "b", forced: true })]);
+    await expect.poll(() => of(sent, "experiment_exposed")).toEqual([expect.objectContaining({ variant: "b", forced: true })]);
     const jar = Object.fromEntries((await context.cookies()).map(c => [c.name, c.value]));
     expect(jar).toMatchObject({ ab_lead_layout: "b", ab__qa: "1" });
   });
@@ -127,6 +133,7 @@ test.describe("a new visitor", () => {
   test("gets a sticky assignment on the home page, and none on a sub-page", async ({ request }) => {
     const home = await request.get("/fr", { headers: { cookie: "" } });
     expect(home.headers()["set-cookie"] ?? "").toMatch(/ab_lead_layout=[ab];/);
+    expect(home.headers()["set-cookie"] ?? "").toMatch(/ab_booking_provider=[ab];/);
     const sub = await request.get("/fr/prices", { headers: { cookie: "" } });
     expect(sub.headers()["set-cookie"] ?? "").not.toContain("ab_");
   });
