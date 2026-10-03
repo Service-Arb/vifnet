@@ -68,7 +68,8 @@ export const LEAD_CAPTURE_LOOK: Readonly<Partial<Record<LeadCapturePart, string>
   price: "gap-1 rounded-xl border-input px-4 py-3",
   priceTotal: "text-3xl leading-9 text-brand",
   breakdown: "leading-5",
-  priceNote: "text-[11px] leading-[16.5px] text-slate-400",
+  // 16 px, not the fine print's 16.5: one odd half pixel put every band under the hero off the pixel grid.
+  priceNote: "text-[11px] leading-4 text-slate-400",
   photos: "rounded-xl border-input",
   // After a priced lead: under the Done check, centred like it.
   priced: "-mt-2 items-center gap-1 pb-6 text-center",
