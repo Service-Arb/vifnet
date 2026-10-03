@@ -7,6 +7,7 @@ import type { Locale } from "@/shared/config/i18n";
 import { ANCHORS, placeNav } from "@/shared/config/nav";
 import { site } from "@/shared/config/site";
 import type { Assignment } from "@/shared/lib/experiments";
+import { fromPrices } from "@/shared/lib/from-price";
 import { Closing } from "@/widgets/closing";
 import { FaqBand } from "@/widgets/faq";
 import { Guarantee } from "@/widgets/guarantee";
@@ -34,7 +35,7 @@ export interface PlaceHomeProps {
   view: PlaceView<Locale>;
   copy: Copy;
   renderedAt: number;
-  /** The price list the quote card prices estimates from: the panel's, else the baked one. */
+  /** The price list the quote card prices estimates from, and the service cards start theirs at: the panel's, else the baked one. */
   pricing: PricingModel | null;
   /** The bucket this render is (the path's, never the request's) and where its events go. */
   experiments: { assignment: Assignment; target: AnalyticsTarget };
@@ -92,7 +93,7 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
               }
             />
             <Stats copy={copy} />
-            <Services copy={copy} id={SECTION_IDS.services} quoteHref={nav.quoteHref} />
+            <Services copy={copy} id={SECTION_IDS.services} quoteHref={nav.quoteHref} from={fromPrices(pricing)} />
             <Reviews copy={copy} id={SECTION_IDS.reviews} quoteHref={nav.quoteHref} />
             <Guarantee copy={copy} />
             <FaqBand copy={copy} id={SECTION_IDS.faq} />

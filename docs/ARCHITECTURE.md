@@ -48,7 +48,9 @@ is open fails the build.
 
 The home page is the Figma frame (`1wXlPmnmOdKYPDWz6N5EB8`, Desktop 1440 /
 Mobile 390) verbatim, its sample content included: the rating, the stats, six
-named reviews, US prices. That content lives in the
+named reviews. Its prices are not: a figure on the page is the price list's —
+the regular clean starts at the list's lowest `priceOf` over every answer
+(`shared/lib/from-price.ts`), and the jobs sold as quotes state none. That content lives in the
 copy (`src/entities/content`) and `shared/config/sample.ts`, never in `site`
 or `assets/card.toml`, so no JSON-LD, OG card or notification carries it
 (`tests/site.test.ts`). The frame's sample phone number is the exception: it

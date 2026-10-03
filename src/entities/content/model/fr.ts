@@ -99,6 +99,7 @@ export const FR = {
     badge: "Le plus demandé",
     note: "Les photos ci-dessus viennent de vrais logements clients — pas d’une banque d’images. ",
     noteLink: "Réserver une prestation →",
+    fromPrice: amount => `À partir de ${amount}`,
     items: {
       standard: {
         name: "Ménage standard",
@@ -110,7 +111,7 @@ export const FR = {
           "Dépoussiérage complet",
           "Poubelles vidées · Lits faits",
         ],
-        price: "À partir de 89 $",
+        price: "Sur devis",
       },
       deep: {
         name: "Grand ménage",
@@ -122,7 +123,7 @@ export const FR = {
           "Intérieur des placards et tiroirs",
           "Joints et carrelage frottés en détail",
         ],
-        price: "À partir de 179 $",
+        price: "Sur devis",
       },
       move: {
         name: "Entrée / sortie",
@@ -134,7 +135,7 @@ export const FR = {
           "Garage balayé",
           "Garantie de caution écrite",
         ],
-        price: "À partir de 149 $",
+        price: "Sur devis",
       },
       "post-construction": {
         name: "Fin de chantier",
@@ -271,10 +272,11 @@ export const FR = {
     lede: "Le point de départ de chaque prestation. Nous vous rappelons en moins de 15 minutes avec votre prix forfaitaire.",
     caption: "Ce que coûte chaque ménage",
     columns: { service: "Prestation", included: "Ce qui est inclus", price: "À partir de" },
+    from: "À partir de",
     rows: {
-      standard: { label: "À partir de", amount: "89 $" },
-      deep: { label: "À partir de", amount: "179 $" },
-      move: { label: "À partir de", amount: "149 $" },
+      standard: { label: "Au téléphone", amount: "Sur devis" },
+      deep: { label: "Au téléphone", amount: "Sur devis" },
+      move: { label: "Au téléphone", amount: "Sur devis" },
       "post-construction": { label: "Au téléphone", amount: "Sur devis" },
     },
     note: "Vous payez après le ménage, une fois satisfait — toutes les grandes cartes, Venmo et Zelle. Les clients réguliers, chaque semaine ou toutes les deux semaines, bénéficient d’un tarif réduit.",

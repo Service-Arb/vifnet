@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { copyFor } from "@/entities/content";
 import type { Locale } from "@/shared/config/i18n";
+import { PRICING } from "@/shared/config/pricing";
 import { site, type Subpage } from "@/shared/config/site";
 import { PlaceSubpage } from "@/views/subpage";
 
@@ -16,7 +17,7 @@ const LOCALES = ["fr", "en"] as const satisfies readonly Locale[];
 const render = (locale: Locale, page: Subpage) => {
   const view = createPlaceView(site, place, locale, "host");
   const copy = copyFor(locale, { place: place.name[locale], phone: null });
-  return renderToStaticMarkup(createElement(PlaceSubpage, { view, copy, page, renderedAt: Date.UTC(2026, 8, 27) }));
+  return renderToStaticMarkup(createElement(PlaceSubpage, { view, copy, page, renderedAt: Date.UTC(2026, 8, 27), pricing: PRICING }));
 };
 
 const jsonLd = (html: string): string =>
@@ -82,7 +83,10 @@ describe("the prices page", () => {
     const html = render("en", "prices");
     expect(html).toContain('<caption class="sr-only">What each clean costs</caption>');
     expect(html.match(/<th role="rowheader" scope="row"/g)).toHaveLength(4);
-    for (const amount of ["$89", "$179", "$149", "Custom quote"]) expect(html).toContain(amount);
+    // The regular clean from the price list's minimum; the three quotes with no number.
+    expect(html).toMatch(/>From<\/span><span[^>]*>€49<\/span>/);
+    expect(html.match(/>On the call<\/span><span[^>]*>Custom quote<\/span>/g)).toHaveLength(3);
+    expect(html).not.toContain("$");
     expect(html.match(/Most popular/g)).toHaveLength(1);
     // What each includes is the home card's list; the phone drops the column.
     expect(html).toContain("Kitchen surfaces &amp; appliance exteriors · Bathrooms scrubbed");

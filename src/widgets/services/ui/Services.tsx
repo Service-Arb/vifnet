@@ -1,16 +1,21 @@
+import { formatCents } from "@evinvest/kitstart";
 import { Section } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { SUBJECTS } from "@/shared/config/lead";
+import type { FromPrices } from "@/shared/lib/from-price";
 import { TYPE } from "@/shared/ui";
 import { ServiceCard } from "./ServiceCard";
 
 /**
  * The frame's services band (12:181 / 14:592) on cream: the heading and its
  * lede, the four cards (one column, two from `sm`, four from `lg`) and the
- * note under them, whose link opens the form.
+ * note under them, whose link opens the form. A priced job's card says where
+ * its price starts on the price list the page was rendered with (`from`); a
+ * quote states no number.
  */
-export function Services({ copy, id, quoteHref }: { copy: Copy; id: string; quoteHref: string }) {
+export function Services({ copy, id, quoteHref, from }: { copy: Copy; id: string; quoteHref: string; from: FromPrices }) {
   const t = copy.t.services;
+  const priceOf = (cents: number | null, fallback: string) => (cents === null ? fallback : t.fromPrice(formatCents(cents, copy.locale)));
   return (
     <Section surface="card" id={id} data-band="services" className="py-20">
       <p className={`${TYPE.eyebrow} text-positive`}>{t.eyebrow}</p>
@@ -20,7 +25,7 @@ export function Services({ copy, id, quoteHref }: { copy: Copy; id: string; quot
       </div>
       <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {SUBJECTS.map(subject => (
-          <ServiceCard key={subject} subject={subject} item={t.items[subject]} badge={t.badge} quoteHref={quoteHref} />
+          <ServiceCard key={subject} subject={subject} item={t.items[subject]} price={priceOf(from[subject], t.items[subject].price)} badge={t.badge} quoteHref={quoteHref} />
         ))}
       </ul>
       <p className="mt-6 text-center text-xs leading-4 text-slate-400">
