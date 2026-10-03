@@ -49,11 +49,12 @@ describe("Vifnet before launch", () => {
 });
 
 describe("the home page", () => {
-  it.each(["fr", "en"] as const)("posts one form, on the hero's card, with every field (%s)", locale => {
+  it.each(["fr", "en"] as const)("posts the quote form and its callback, on the hero's card, with every field (%s)", locale => {
     const html = home(locale);
     expect(html).toMatch(/<form id="quote"[^>]*action="\/quote"[^>]*method="post"/);
     for (const name of [LEAD.wire.subject, LEAD.wire.locality, LEAD.wire.mobile, "name", "bedrooms"]) expect(html).toContain(`name="${name}"`);
-    expect(html.match(/<form\b/g)).toHaveLength(1);
+    // No number to call yet: the form and "call me back" are the two ways in.
+    expect(html.match(/<form id="[^"]+"/g)).toEqual(['<form id="quote"', '<form id="quote-callback-form"']);
     expect(html).toMatch(new RegExp(`id="${SECTION_IDS.quote}"[^]*<form id="quote"`));
     expect(html).toContain(`href="/${locale}#${SECTION_IDS.quote}"`);
   });
@@ -94,13 +95,13 @@ describe("the home page", () => {
 describe("the lead", () => {
   const lead = (extras: Record<string, string>) => ({ ...testLead(), subject: "standard", extras });
 
-  it("takes a name, and bedrooms from the list or none", () => {
+  it("takes a name or none, and bedrooms from the list or none", () => {
     expect(LEAD.validate?.(lead({ name: "Amanda Reyes", bedrooms: "3" }))).toBeNull();
     expect(LEAD.validate?.(lead({ name: "Amanda Reyes" }))).toBeNull();
+    expect(LEAD.validate?.(lead({}))).toBeNull();
   });
 
-  it("refuses no name, bedrooms off the list, and a short number", () => {
-    expect(LEAD.validate?.(lead({ name: " " }))).not.toBeNull();
+  it("refuses bedrooms off the list, and a short number", () => {
     expect(LEAD.validate?.(lead({ name: "Amanda", bedrooms: "12" }))).not.toBeNull();
     expect(LEAD.validate?.({ ...lead({ name: "Amanda" }), mobile: "0612" })).not.toBeNull();
   });

@@ -24,6 +24,6 @@ export const POSTHOG_HOST = "https://posthog.e2e.invalid";
  * spec's page a coin toss. `experiments.spec.ts` sets its own.
  */
 export function abState(variant: string | null): { cookies: { name: string; value: string; domain: string; path: string; expires: number; httpOnly: boolean; secure: boolean; sameSite: "Lax" }[]; origins: [] } {
-  const cookies = variant === null ? [] : [{ name: "ab_quote_single_step", value: variant, domain: "localhost", path: "/", expires: -1, httpOnly: false, secure: false, sameSite: "Lax" as const }];
+  const cookies = variant === null ? [] : [{ name: "ab_lead_layout", value: variant, domain: "localhost", path: "/", expires: -1, httpOnly: false, secure: false, sameSite: "Lax" as const }];
   return { cookies, origins: [] };
 }

@@ -1,1 +1,1 @@
-export { ExperimentScope, type ExperimentScopeProps, useExperimentStep } from "./ui/ExperimentScope";
+export { ExperimentScope, type ExperimentScopeProps } from "./ui/ExperimentScope";

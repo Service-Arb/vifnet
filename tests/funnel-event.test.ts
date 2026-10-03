@@ -103,6 +103,13 @@ describe("lead.created for the panel", () => {
     expect(JSON.stringify(event)).not.toContain("\\u0000");
   });
 
+  it("sends a callback as the panel's form, without its consent", () => {
+    const consent = { text: "J’accepte d’être rappelé·e à ce numéro au sujet de ma demande.", at: "2026-10-01T09:30:00.000Z" };
+    const [event] = leadCreatedBody({ ...lead, channel: "callback", consent }, ctx, "vifnet-site").events;
+    expect(event.properties).toEqual({ channel: "form" });
+    expect(JSON.stringify(event)).not.toContain(consent.text);
+  });
+
   it("leaves the location out for a lead from no point", () => {
     const [event] = leadCreatedBody({ ...lead, placeSlug: null }, ctx, "vifnet-site").events;
     expect(event.subject).toEqual({ brandId: "vifnet", leadId: LEAD_ID });

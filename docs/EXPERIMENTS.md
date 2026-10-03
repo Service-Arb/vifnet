@@ -15,7 +15,7 @@ event names and the same `npm run ab:report`, so the two reports read alike.
   bingbot, AdsBot, anything saying bot/crawler/spider/preview, and no user
   agent at all) get the control and no cookie.
 - **Rendering stays ISR.** A visitor off the control is rewritten to the
-  bucket's own path, `/fr/_vifnet~quote_single_step.b`; the page reads its
+  bucket's own path, `/fr/_vifnet~lead_layout.b`; the page reads its
   variant from the `[location]` param, never from the request, so each bucket
   is its own cache entry and the control's entry is the page as it always
   was. There is no per-request rendering cost.
@@ -27,7 +27,7 @@ event names and the same `npm run ab:report`, so the two reports read alike.
   | --- | --- | --- |
   | `experiment_exposed` | experiment, variant, forced | once per page view |
   | `experiment_contact` | experiment, variant, channel, forced | a `tel:`/WhatsApp tap, or a `data-intent` of `form_open`/`booking` |
-  | `experiment_step` | experiment, variant, step, forced | the two-step card reaching step 2 (control only) |
+  | `experiment_step` | experiment, variant, step, forced | nothing since `quote_single_step` ended (its two-step card sent it); the report keeps the column for that history |
   | `experiment_lead` | experiment, variant, forced | server side, in `/quote`, after kitstart accepted the lead |
 
   Every event also carries `brand_id`; the client ones carry `location_id`.
@@ -35,7 +35,17 @@ event names and the same `npm run ab:report`, so the two reports read alike.
   a crawler rendering the cached control page is never an exposure.
   `experiment_lead` is sent only when kitstart stored the lead and did not
   suspect it (a validation failure, the honeypot or the rate limit send
-  nothing), for both the no-JS POST and the card's `fetch`.
+  nothing), for the no-JS POST and the scripted one alike.
+- **kitstart's form funnel.** The quote card is kitstart's `LeadCapture`,
+  given the assignment (`experiment`, `variant`), so its own events carry it
+  on kitstart's schema — the same on every brand, which is what lets an
+  experiment's results pool across sites (the site is the stratum):
+  `lead_form_view`, `lead_form_start`, `lead_form_field_error {field}`,
+  `lead_form_step {step}` (`qualify-first` only), with `form_id` and
+  `layout`; `contact_intent_click {channel}`; and, server side,
+  `lead_form_submit` with the posted assignment. They go through kitstart's
+  sink, not ours: they are not gated on the cookie and carry no `forced`, so
+  they are the funnel's diagnostics, not the report's primary metric.
 - **No person is joined.** The sink is cookieless and its `distinct_id` is
   random per page, so exposure and lead are compared as aggregates per
   variant, not per visitor.
@@ -68,7 +78,7 @@ stop early on a lucky day — the thresholds assume the minimums above.
 
 ## Forcing a variant (QA)
 
-`/fr?ab_quote_single_step=b` renders b and stores it in the cookie. A forced
+`/fr?ab_lead_layout=b` renders b and stores it in the cookie. A forced
 visit also sets `ab__qa=1` for 30 days: every event from that browser says
 `forced: true` and the report leaves it out. Clear the site's cookies to be a
 normal visitor again.
@@ -81,26 +91,57 @@ normal visitor again.
 2. If b won, make b the page (the Figma frame follows, or the owner signs the
    departure off), then delete the experiment, its variant code and its row
    here.
+3. If the thing under test is gone — the form replaced, say — delete the
+   experiment outright: with no variant code left there is nothing for
+   `enabled: false` to switch. Its old `ab_<key>` cookies are then ignored
+   and its bucket paths are no longer written. Move its row to "Ended
+   experiments" with what it tested and why it stopped.
 
 ## Running experiments
 
-### `quote_single_step`
+### `lead_layout`
 
-- **Hypothesis**: collapsing the quote card into one step raises the share of
-  visitors who send a lead. Every extra field and every extra step costs
-  leads on a phone, and our visitors arrive from Google Maps on a phone with
-  intent.
-- **Evidence**: general form-usability findings (completion falls as fields
-  are added, and a hidden submit behind a "Continue" loses some who never
-  press it), and this form's own shape: the second step asks nothing the
-  callback cannot (bedrooms). No site data yet — analytics was off in prod
-  until this change; `experiment_step` shows how many start the form.
-- **Control (a)**: the Figma frame's two steps — name, phone, postcode, then
-  bedrooms and service. Untouched.
-- **Variant (b)**: one step — name (the lead schema requires it), phone,
-  postcode, service, submit. Bedrooms is dropped (optional in the schema).
-  Same words, fields and look; `form_id = quote_single_step`, so kitstart's
-  `lead_form_submit` splits too.
+The same key, arms and weights as aquafix's, so the two sites' results pool
+(site as the stratum): both run kitstart's `LeadCapture`, and only its
+`layout` differs between the arms.
+
+- **Hypothesis**: asking the service first, as one tap on a tile, and only
+  then the postcode and the phone (`qualify-first`) raises the share of
+  visitors who send a lead, against everything on one screen (`single`). A
+  first question that costs nothing commits the visitor; a wall of fields
+  turns some away.
+- **Evidence**: mixed, which is why it is a test and not a default:
+  qualification-first multi-step forms beat single screens in some published
+  form studies and lose in others (Zuko), while fewer visible fields reliably
+  help (LEAD-CAPTURE-SPEC.md, Service-Arb). No site data of ours.
+- **Control (a)**: `single` — service (the kit's select), postcode, phone,
+  then the optional name and bedrooms, and the submit, in the frame's card.
+- **Variant (b)**: `qualify-first` — a tile per service; the tap shows the
+  contact step and focuses its first empty field. A service card's link
+  (`data-need`) or `?need=` answers the first step for the visitor, in both
+  arms.
+- **Both arms**: the name is optional (the lead schema no longer requires
+  it), bedrooms is an optional select after the phone, and "Rappelez-moi"
+  (kitstart's callback: the phone and a consent) sits under the form — with
+  no public number yet, it and the form are the only channels.
 - **Primary metric**: lead rate, `experiment_lead / experiment_exposed`.
 - **Guardrail**: contact rate, (leads + calls) / exposures.
-- **Diagnostic**: `experiment_step` (control only) — how many start the form.
+- **Diagnostic**: kitstart's `lead_form_start`, `lead_form_step` and
+  `lead_form_field_error` per variant, pooled across brands in PostHog.
+
+## Ended experiments
+
+### `quote_single_step` — ended unresolved (code 2026-10-03; live with the next release)
+
+- **What it tested**: the Figma frame's two-step quote card (name, phone,
+  postcode, then "Continue", bedrooms and service; a) against the same card
+  as one step (name, phone, postcode, service; no bedrooms; b,
+  `form_id = quote_single_step`). Hypothesis: one step raises the lead rate.
+- **Why it ended**: the form it tested was replaced by kitstart's
+  `LeadCapture`, the lead form every Service-Arb brand now shares, so neither
+  arm exists any more. It was removed outright (step 3 above) before reaching
+  the stop rule — no verdict. Its events stay in PostHog under
+  `experiment = quote_single_step`; `npm run ab:report` still prints them
+  while they are inside `AB_DAYS`.
+- **Successor**: `lead_layout`, which asks the same question — how much of
+  the form a visitor faces at once — on the shared component.

@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import type { Lead } from "@evinvest/kitstart";
-import type { LeadWebhookContext, WebhookSigning } from "@evinvest/kitstart/server";
+import { channelOf, type Lead } from "@evinvest/kitstart";
+import { panelChannel, type LeadWebhookContext, type WebhookSigning } from "@evinvest/kitstart/server";
 
 /**
  * The panel's ingest scheme (Service-Arb/panel README, "Sending events"): the
@@ -24,7 +24,8 @@ export interface LeadCreatedEvent {
   occurredAt: string;
   source: { kind: "site"; id: string };
   subject: { brandId: string; locationId?: string; leadId: string };
-  properties: { channel: "form" };
+  /** The panel's closed set: a callback travels as `form` until it accepts `callback` (`panelChannel`). */
+  properties: { channel: ReturnType<typeof panelChannel> };
   pii?: Record<string, string>;
 }
 
@@ -71,7 +72,8 @@ const clean = (s: string): string => s.replaceAll("\u0000", "");
  * What the customer typed, kept apart from `properties`: the panel seals
  * `pii` and reads `name`, `phone` and `need` from it. The fields are capped by
  * the lead schema (200 characters, an extra its own `max`), far below the
- * panel's 16 KiB.
+ * panel's 16 KiB. A callback's consent stays in the leads file: the panel's
+ * contract has no field for it.
  */
 function piiOf(lead: Lead): Record<string, string> {
   const pii: Record<string, string> = {};
@@ -115,7 +117,7 @@ export function leadCreatedBody(lead: Lead, ctx: LeadWebhookContext, sourceId: s
     occurredAt: ctx.at.toISOString(),
     source: { kind: "site", id: sourceId },
     subject,
-    properties: { channel: "form" },
+    properties: { channel: panelChannel(channelOf(lead)) },
   };
   const pii = piiOf(lead);
   if (Object.keys(pii).length > 0) event.pii = pii;

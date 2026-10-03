@@ -9,7 +9,7 @@ import { ServiceCard } from "./ServiceCard";
  * lede, the four cards (one column, two from `sm`, four from `lg`) and the
  * note under them, whose link opens the form.
  */
-export function Services({ copy, id, quote }: { copy: Copy; id: string; quote: { href: string; form: string } }) {
+export function Services({ copy, id, quoteHref }: { copy: Copy; id: string; quoteHref: string }) {
   const t = copy.t.services;
   return (
     <Section surface="card" id={id} data-band="services" className="py-20">
@@ -20,12 +20,12 @@ export function Services({ copy, id, quote }: { copy: Copy; id: string; quote: {
       </div>
       <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {SUBJECTS.map(subject => (
-          <ServiceCard key={subject} subject={subject} item={t.items[subject]} badge={t.badge} quote={quote} />
+          <ServiceCard key={subject} subject={subject} item={t.items[subject]} badge={t.badge} quoteHref={quoteHref} />
         ))}
       </ul>
       <p className="mt-6 text-center text-xs leading-4 text-slate-400">
         {t.note}
-        <a href={quote.href} data-intent="form_open" className="text-positive underline hover:no-underline">
+        <a href={quoteHref} data-intent="form_open" className="text-positive underline hover:no-underline">
           {t.noteLink}
         </a>
       </p>

@@ -1,57 +1,99 @@
-import { MIN_FILL_MS } from "@evinvest/kitstart";
+import { DatabaseSync } from "node:sqlite";
+import { MIN_FILL_MS, normalizePhone } from "@evinvest/kitstart";
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { abState } from "./env";
+import { abState, LEADS_DB } from "./env";
 
-// The quote card is the frame's two steps and its Done state. The selects are
-// kitstart's FormSelect: the platform's select until the page hydrates (the
+// The quote card is kitstart's LeadCapture in the frame's card (experiment
+// `lead_layout`'s control, `single`, which the suite is pinned to). The selects
+// are kitstart's FormSelect: the platform's select until the page hydrates (the
 // no-JS post is in funnel.spec.ts), the kit's list after — never the OS menu,
 // which ignores the palette — in the same box, so nothing moves when one
 // becomes the other.
 const SERVICE = "Prestation";
 
 const card = (page: Page) => page.locator("[data-band=quote-card]");
+const hydrated = (page: Page) => expect(page.locator("form#quote select")).toHaveCount(0);
 
-async function stepOne(page: Page) {
-  const form = page.locator("form#quote");
-  await form.locator("input[name=name]").fill("Amanda Reyes");
-  await form.locator("input[name=mobile]").fill("06 12 34 56 78");
-  await form.locator("input[name=locality]").fill("75015");
-  await card(page).getByRole("button", { name: "Continuer →" }).click();
+/** A number no other test (or project) submits, so the row found is this one. */
+const freshMobile = (prefix: string) => `${prefix}${String(Date.now() % 1e8).padStart(8, "0")}`;
+
+function leadRow(mobile: string): unknown {
+  const db = new DatabaseSync(LEADS_DB, { readOnly: true });
+  try {
+    return db.prepare("SELECT job, zip, location_id, spam_verdict, extras, channel FROM leads WHERE mobile = ?").get(normalizePhone(mobile));
+  } finally {
+    db.close();
+  }
 }
 
-test("step 1 refuses to go on without a name, a number and a postcode", async ({ page }) => {
-  await page.goto("/fr#devis");
-  await expect(page.locator("form#quote select")).toHaveCount(0);
-  await card(page).getByRole("button", { name: "Continuer →" }).click();
-  await expect(page.getByText("Encore un détail")).toBeHidden();
-  await expect(page.locator("form#quote input[name=name]")).toBeFocused();
+// The rate limit counts 5 leads per address: each posting test has its own.
+test.describe("with JavaScript", () => {
+  test.use({ extraHTTPHeaders: { "x-forwarded-for": "10.8.0.1" } });
+
+  test("asks only the postcode and the phone; the name and bedrooms are optional", async ({ page }) => {
+    await page.goto("/fr#devis");
+    await hydrated(page);
+    await card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" }).click();
+    await expect(page.locator("form#quote input[name=locality]")).toBeFocused();
+    await expect(page.locator("form#quote input[name=mobile]")).toHaveAttribute("required", "");
+    await expect(page.locator("form#quote input[name=name]")).not.toHaveAttribute("required", "");
+    await expect(page.getByRole("combobox", { name: "Chambres (facultatif)" })).toHaveText("Nombre de chambres");
+    await expect(page).toHaveURL(/\/fr#devis$/);
+  });
+
+  test("posts every field and thanks on the thanks page", async ({ page }, testInfo) => {
+    const mobile = freshMobile("06");
+    const locality = `75015-${testInfo.project.name}`;
+    await page.goto("/fr#devis");
+    await hydrated(page);
+
+    const trigger = page.getByRole("combobox", { name: SERVICE });
+    await expect(trigger).toHaveText("Ménage standard");
+    await trigger.click();
+    const list = page.getByRole("listbox");
+    await list.getByRole("option", { name: "Fin de chantier" }).click();
+    await expect(list).toBeHidden();
+    await expect(trigger).toHaveText("Fin de chantier");
+
+    const form = page.locator("form#quote");
+    await form.locator("input[name=locality]").fill(locality);
+    await form.locator("input[name=mobile]").fill(mobile);
+    await form.locator("input[name=name]").fill("Amanda Reyes");
+    await page.getByRole("combobox", { name: "Chambres (facultatif)" }).click();
+    await page.getByRole("listbox").getByRole("option", { name: "2 chambres" }).click();
+
+    // The time trap flags anything faster than a person; this is a person.
+    await page.waitForTimeout(MIN_FILL_MS + 500);
+    await card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" }).click();
+    await page.waitForURL("**/fr/thanks");
+    expect(leadRow(mobile)).toEqual({
+      job: "post-construction",
+      zip: locality,
+      location_id: "vifnet",
+      spam_verdict: null,
+      extras: JSON.stringify({ name: "Amanda Reyes", bedrooms: "2" }),
+      channel: "form",
+    });
+  });
 });
 
-test("with JavaScript the steps lead to Done, and the form posts every field", async ({ page }) => {
-  await page.goto("/fr#devis");
-  await expect(page.locator("form#quote select")).toHaveCount(0);
-  await stepOne(page);
+test.describe("call me back", () => {
+  test.use({ extraHTTPHeaders: { "x-forwarded-for": "10.8.0.2" } });
 
-  const trigger = page.getByRole("combobox", { name: SERVICE });
-  await expect(trigger).toHaveText("Ménage standard");
-  await expect(page.getByRole("combobox", { name: "Chambres" })).toHaveText("3 chambres");
-  await trigger.click();
-  const list = page.getByRole("listbox");
-  await list.getByRole("option", { name: "Fin de chantier" }).click();
-  await expect(list).toBeHidden();
-  await expect(trigger).toHaveText("Fin de chantier");
-
-  // The time trap flags anything faster than a person; this is a person.
-  await page.waitForTimeout(MIN_FILL_MS + 500);
-  const posted = page.waitForRequest(r => r.method() === "POST" && new URL(r.url()).pathname === "/quote");
-  await card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" }).click();
-  const body = (await posted).postDataBuffer()?.toString("utf8") ?? "";
-  for (const field of ["Amanda Reyes", "post-construction", "75015", 'name="bedrooms"']) expect(body).toContain(field);
-
-  // Done in place: the first name and the number as typed, no navigation.
-  await expect(card(page).getByRole("status")).toContainText("C’est noté, Amanda");
-  await expect(card(page).getByRole("status")).toContainText("06 12 34 56 78");
-  await expect(page).toHaveURL(/\/fr(#devis)?$/);
+  test("takes a number and a consent, and stores a callback lead", async ({ page }) => {
+    const mobile = freshMobile("07");
+    await page.goto("/fr#devis");
+    await hydrated(page);
+    const callback = page.locator("#quote-callback");
+    await callback.getByText("Rappelez-moi").click();
+    const form = page.locator("form#quote-callback-form");
+    await form.locator("input[name=mobile]").fill(mobile);
+    await form.getByRole("checkbox").check();
+    await page.waitForTimeout(MIN_FILL_MS + 500);
+    await form.getByRole("button", { name: "Être rappelé" }).click();
+    await page.waitForURL("**/fr/thanks");
+    expect(leadRow(mobile)).toMatchObject({ location_id: "vifnet", spam_verdict: null, channel: "callback" });
+  });
 });
 
 test("the select is the same box before and after hydration", async ({ browser }, testInfo) => {
@@ -73,19 +115,18 @@ test("the select is the same box before and after hydration", async ({ browser }
   // hydrates the role finds it — and hydration detaches it, leaving a
   // measurement of zeros. Measure only once the kit's button has replaced it.
   const scripted = await open(true);
-  await expect(scripted.locator("form#quote select")).toHaveCount(0);
-  await stepOne(scripted);
+  await hydrated(scripted);
   const kit = scripted.getByRole("combobox", { name: SERVICE });
   await expect(kit).toHaveJSProperty("tagName", "BUTTON");
   await expect(kit).toBeVisible();
-  const hydrated = await measure(kit);
+  const after = await measure(kit);
   await scripted.context().close();
 
   const bare = await open(false);
   const native = bare.locator("form#quote select[name=subject]");
   await expect(native).toBeVisible();
-  const server = await measure(native);
+  const before = await measure(native);
   await bare.context().close();
 
-  expect(hydrated).toEqual(server);
+  expect(after).toEqual(before);
 });

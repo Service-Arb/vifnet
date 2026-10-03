@@ -28,7 +28,7 @@ function withoutGoneHeader(request: NextRequest): Headers {
 /**
  * kitstart's routing, then the home page's experiments: `abProxy` assigns the
  * sticky `ab_<key>` cookies (bots skipped), and a visitor off the control is
- * rewritten to the bucket's own path — `/fr/_vifnet~quote_single_step.b` —
+ * rewritten to the bucket's own path — `/fr/_vifnet~lead_layout.b` —
  * so every bucket is an ISR entry and no page reads the request.
  */
 export function proxy(request: NextRequest): NextResponse {

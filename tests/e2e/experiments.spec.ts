@@ -1,10 +1,11 @@
 import { DatabaseSync } from "node:sqlite";
-import { MIN_FILL_MS } from "@evinvest/kitstart";
+import { MIN_FILL_MS, normalizePhone } from "@evinvest/kitstart";
 import { expect, test, type Page } from "@playwright/test";
 import { abState, LEADS_DB, POSTHOG_HOST } from "./env";
 
-// Experiment `quote_single_step` (docs/EXPERIMENTS.md): b is the quote card
-// as one step. The rest of the suite is pinned to a, the frame.
+// Experiment `lead_layout` (docs/EXPERIMENTS.md), the same key and arms as
+// aquafix's: a is kitstart's LeadCapture on one screen (`single`), b asks the
+// service first (`qualify-first`). The rest of the suite is pinned to a.
 
 type Sent = { event: string; properties: Record<string, unknown> };
 
@@ -29,47 +30,48 @@ const card = (page: Page) => page.locator("[data-band=quote-card]");
 test.describe("variant b", () => {
   test.use({ storageState: abState("b"), extraHTTPHeaders: { "x-forwarded-for": "10.9.0.1" } });
 
-  test("is one step: no Continue, no bedrooms, and the card reaches Done", async ({ page }) => {
+  test("asks the service first, then the contact, and its events carry the arm", async ({ page }) => {
     const sent = await beacons(page);
     await page.goto("/fr#devis");
     await expect(page.locator("form#quote select")).toHaveCount(0);
-    await expect(card(page).getByRole("button", { name: "Continuer →" })).toHaveCount(0);
-    await expect(page.getByRole("combobox", { name: "Chambres" })).toHaveCount(0);
-    await expect(page.getByRole("combobox", { name: "Prestation" })).toBeVisible();
-
+    await expect(page.getByRole("combobox", { name: "Prestation" })).toHaveCount(0);
     const form = page.locator("form#quote");
-    await form.locator("input[name=name]").fill("Camille Martin");
-    await form.locator("input[name=mobile]").fill("06 22 33 44 55");
+    await expect(form.locator("input[name=mobile]")).toBeHidden();
+
+    // One tap answers the service and moves on to the first empty field.
+    await card(page).getByRole("radio", { name: "Entrée / sortie" }).click();
+    await expect(form.locator("input[name=locality]")).toBeFocused();
     await form.locator("input[name=locality]").fill("69003");
+    await form.locator("input[name=mobile]").fill("06 22 33 44 55");
     await page.waitForTimeout(MIN_FILL_MS + 500);
     await card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" }).click();
-    await expect(card(page).getByRole("status")).toContainText("C’est noté, Camille");
+    await page.waitForURL("**/fr/thanks");
 
-    await expect.poll(() => ours(sent, "experiment_exposed")).toEqual([
-      expect.objectContaining({ experiment: "quote_single_step", variant: "b", forced: false, brand_id: "vifnet", location_id: "vifnet" }),
-    ]);
+    const arm = { experiment: "lead_layout", variant: "b" };
+    await expect.poll(() => ours(sent, "experiment_exposed")).toEqual([expect.objectContaining({ ...arm, forced: false, brand_id: "vifnet", location_id: "vifnet" })]);
+    expect(ours(sent, "lead_form_step")).toEqual([expect.objectContaining({ ...arm, step: "contact", layout: "qualify-first", form_id: "quote" })]);
+    expect(ours(sent, "lead_form_start")).toEqual([expect.objectContaining({ ...arm, layout: "qualify-first" })]);
   });
 
   test.describe("without JavaScript", () => {
     test.use({ javaScriptEnabled: false, extraHTTPHeaders: { "x-forwarded-for": "10.9.0.2" } });
 
-    test("posts its four fields, gets a 303 and the lead is stored", async ({ page }, testInfo) => {
+    test("shows the contact once a service is checked, posts, and the lead is stored", async ({ page }, testInfo) => {
       const mobile = `07${String(Date.now() % 1e8).padStart(8, "0")}`;
       await page.goto("/fr#devis");
       const form = page.locator("form#quote");
-      await form.locator("input[name=name]").fill("Camille Martin");
-      await form.locator("input[name=mobile]").fill(mobile);
+      await expect(form.locator("input[name=mobile]")).toBeHidden();
+      await form.getByRole("radio", { name: "Entrée / sortie" }).click();
       await form.locator("input[name=locality]").fill(`69003-${testInfo.project.name}`);
-      await form.locator("select[name=subject]").selectOption("move");
-      await expect(form.locator("select[name=bedrooms]")).toHaveCount(0);
+      await form.locator("input[name=mobile]").fill(mobile);
       await page.waitForTimeout(MIN_FILL_MS + 500);
       await form.locator("button[type=submit]").click();
       await page.waitForURL("**/fr/thanks");
 
       const db = new DatabaseSync(LEADS_DB, { readOnly: true });
       try {
-        const row = db.prepare("SELECT job, location_id, spam_verdict, extras FROM leads WHERE mobile = ?").get(mobile);
-        expect(row).toEqual({ job: "move", location_id: "vifnet", spam_verdict: null, extras: JSON.stringify({ name: "Camille Martin" }) });
+        const row = db.prepare("SELECT job, location_id, spam_verdict, channel FROM leads WHERE mobile = ?").get(normalizePhone(mobile));
+        expect(row).toEqual({ job: "move", location_id: "vifnet", spam_verdict: null, channel: "form" });
       } finally {
         db.close();
       }
@@ -81,11 +83,7 @@ test("the control's events carry the experiment and its variant", async ({ page 
   const sent = await beacons(page);
   await page.goto("/fr#devis");
   await expect(page.locator("form#quote select")).toHaveCount(0);
-  const form = page.locator("form#quote");
-  await form.locator("input[name=name]").fill("Amanda Reyes");
-  await form.locator("input[name=mobile]").fill("06 12 34 56 78");
-  await form.locator("input[name=locality]").fill("75015");
-  await card(page).getByRole("button", { name: "Continuer →" }).click();
+  await page.locator("form#quote input[name=mobile]").focus();
   await page.locator("#demande a[data-intent=form_open]").click();
   // A call tap, kept from leaving for the dialer: our listener runs in the capture phase first.
   await page.evaluate(() => {
@@ -93,13 +91,16 @@ test("the control's events carry the experiment and its variant", async ({ page 
     document.querySelector<HTMLAnchorElement>('a[href^="tel:"]')?.click();
   });
 
-  const base = { experiment: "quote_single_step", variant: "a", forced: false, brand_id: "vifnet" };
+  const base = { experiment: "lead_layout", variant: "a", forced: false, brand_id: "vifnet" };
   await expect.poll(() => ours(sent, "experiment_exposed")).toEqual([expect.objectContaining(base)]);
-  await expect.poll(() => ours(sent, "experiment_step")).toEqual([expect.objectContaining({ ...base, step: 2 })]);
   await expect
     .poll(() => ours(sent, "experiment_contact").map(p => p["channel"]))
     .toEqual(["form_open", "phone"]);
   for (const p of ours(sent, "experiment_contact")) expect(p).toMatchObject(base);
+  // kitstart's own funnel, on one schema across brands: the arm rides on it too.
+  const kit = { experiment: "lead_layout", variant: "a", layout: "single", form_id: "quote", brand_id: "vifnet" };
+  await expect.poll(() => ours(sent, "lead_form_start")).toEqual([expect.objectContaining(kit)]);
+  await expect.poll(() => ours(sent, "lead_form_view")).toEqual([expect.objectContaining(kit)]);
 });
 
 test.describe("a forced visit", () => {
@@ -107,11 +108,11 @@ test.describe("a forced visit", () => {
 
   test("renders the variant asked for, and marks the browser as QA", async ({ page, context }) => {
     const sent = await beacons(page);
-    await page.goto("/fr?ab_quote_single_step=b#devis");
-    await expect(card(page).getByRole("button", { name: "Continuer →" })).toHaveCount(0);
+    await page.goto("/fr?ab_lead_layout=b#devis");
+    await expect(page.locator("form#quote [data-need-option]")).toHaveCount(4);
     await expect.poll(() => ours(sent, "experiment_exposed")).toEqual([expect.objectContaining({ variant: "b", forced: true })]);
     const jar = Object.fromEntries((await context.cookies()).map(c => [c.name, c.value]));
-    expect(jar).toMatchObject({ ab_quote_single_step: "b", ab__qa: "1" });
+    expect(jar).toMatchObject({ ab_lead_layout: "b", ab__qa: "1" });
   });
 });
 
@@ -120,7 +121,7 @@ test.describe("a new visitor", () => {
 
   test("gets a sticky assignment on the home page, and none on a sub-page", async ({ request }) => {
     const home = await request.get("/fr", { headers: { cookie: "" } });
-    expect(home.headers()["set-cookie"] ?? "").toMatch(/ab_quote_single_step=[ab];/);
+    expect(home.headers()["set-cookie"] ?? "").toMatch(/ab_lead_layout=[ab];/);
     const sub = await request.get("/fr/prices", { headers: { cookie: "" } });
     expect(sub.headers()["set-cookie"] ?? "").not.toContain("ab_");
   });

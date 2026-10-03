@@ -1,7 +1,7 @@
 "use client";
 
 import { cookieName } from "@evinvest/experiments";
-import { ExperimentTracker, readCookie, useExperimentEvent } from "@evinvest/experiments/react";
+import { ExperimentTracker, readCookie } from "@evinvest/experiments/react";
 import type { AnalyticsTarget } from "@evinvest/kitstart";
 import { type ReactNode, useCallback, useEffect, useMemo } from "react";
 import { QA_COOKIE } from "@/shared/config/experiments";
@@ -22,7 +22,7 @@ export interface ExperimentScopeProps {
 /**
  * The experiment's client island around the server-rendered page. It sends
  * `experiment_exposed` once per page view and `experiment_contact` for every
- * call or form intent, and lends `useExperimentStep` its context. Only a
+ * call or form intent. Only a
  * browser the proxy assigned (an `ab_<key>` cookie) counts: a crawler gets the
  * same cached control page, runs its script and must not be an exposure.
  */
@@ -53,10 +53,4 @@ export function ExperimentScope({ target, placeSlug, experiment, variant, enable
       {children}
     </ExperimentTracker>
   );
-}
-
-/** Reports a multi-step form reaching `step`, in the surrounding experiment. */
-export function useExperimentStep(): (step: number) => void {
-  const track = useExperimentEvent();
-  return step => track("step", { step });
 }

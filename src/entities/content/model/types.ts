@@ -69,18 +69,14 @@ export interface Text extends CoreText<PageKey, Facts> {
     reviews: string;
     chips: readonly string[];
   };
+  /** The brand's words over kitstart's `LeadCapture`; the rest of the card is the kit's. */
   quote: {
-    placeholders: { name: string; mobile: string; locality: string };
-    /** Visually hidden: the frame draws placeholders only. */
+    /** The fields' labels, the frame's words for them. */
     labels: { name: string; mobile: string; locality: string; bedrooms: string; subject: string };
-    next: string;
-    almost: string;
+    /** Shown in the bedrooms select until one is picked. */
+    bedroomsPlaceholder: string;
     trust: readonly string[];
     bedrooms: Record<Bedrooms, string>;
-    /** `{first}`: the first word of the name. */
-    doneTitle: string;
-    /** Around the phone as typed, which is set bold. */
-    doneBody: readonly [string, string];
   };
   stats: readonly { value: string; label: string }[];
   services: { eyebrow: string; title: string; lede: string; badge: string; note: string; noteLink: string; items: Record<Subject, ServiceItem> };
