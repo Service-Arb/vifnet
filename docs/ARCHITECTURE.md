@@ -31,6 +31,12 @@ accepts the property). Each such switch stays off until the panel in
 production accepts what it adds: it refuses an unknown property, and the
 outbox would park the lead. The lead's id is kitstart's `leadRef`, the
 reference the page was answered with, so a booking joins its lead.
+The visit's analytics id goes as `properties.analytics_id`, so the panel's
+lead events join the visit in PostHog — under `PANEL_ANALYTICS_ID`, off
+until the panel v0.4.0 is in production. Under `PANEL_EXPERIMENTS` (off on
+the same terms) the same outbox carries one `experiments.declared@1` per
+start (`instrumentation.ts`): the experiments this build runs, for the
+panel's "Experiments" screen.
 
 ## A place without an address
 
@@ -84,8 +90,9 @@ place, which still names no commune and has no address to map.
 
 Place pages are ISR (`revalidate = 600`): no page reads the request, the link
 mode rides in the `[location]` param — and so does the home page's A/B
-bucket (`_vifnet~lead_layout.b`, docs/EXPERIMENTS.md), which the proxy
-writes from the visitor's `ab_<key>` cookie. The quote form is kitstart's
+bucket (`_vifnet~lead_layout.b~booking_provider.a`, docs/EXPERIMENTS.md),
+which the proxy writes from the visitor's `ab_<key>` cookies under the
+panel's weights and kill switches; the page never asks the panel. The quote form is kitstart's
 `LeadCapture` — the form every Service-Arb brand shares, drawn as the frame's
 card through its `className` and `classNames`, with the frame's placeholders
 (the labels are for assistive technology only) — and a plain POST answered
