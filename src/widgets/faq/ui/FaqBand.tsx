@@ -1,6 +1,6 @@
 import { Faq, Section } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
-import { SAMPLE_PHONE } from "@/shared/config/sample";
+import { shownPhone } from "@/shared/config/sample";
 import { TYPE } from "@/shared/ui";
 
 /**
@@ -22,6 +22,7 @@ const ITEMS = {
 /** The frame's FAQ band (13:464 / 15:865) on cream. */
 export function FaqBand({ copy, id }: { copy: Copy; id: string }) {
   const { t } = copy;
+  const phone = shownPhone(copy.f.phone);
   return (
     <Section surface="card" id={id} data-band="faq" className="py-20">
       <div className="mx-auto max-w-[736px]">
@@ -32,8 +33,8 @@ export function FaqBand({ copy, id }: { copy: Copy; id: string }) {
         <Faq items={t.faqs} id={`${id}-list`} className="mt-10" classNames={ITEMS} />
         <p className="mt-6 text-center text-sm leading-5 text-slate-400">
           {t.faqMore}
-          <a href={SAMPLE_PHONE.href} className="font-semibold text-positive underline hover:no-underline">
-            {SAMPLE_PHONE.display}
+          <a href={phone.href} className="font-semibold text-positive underline hover:no-underline">
+            {phone.display}
           </a>
         </p>
       </div>
