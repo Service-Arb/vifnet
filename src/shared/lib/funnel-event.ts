@@ -1,7 +1,14 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { channelOf, type Lead, type LeadSuspect } from "@evinvest/kitstart";
-import { panelChannel, type LeadWebhookContext, type LeadWebhookOptions, type WebhookSigning } from "@evinvest/kitstart/server";
+import {
+  panelChannel,
+  panelFlowProperties,
+  type LeadWebhookContext,
+  type LeadWebhookOptions,
+  type PanelFlowProperties,
+  type WebhookSigning,
+} from "@evinvest/kitstart/server";
 import { isSubject, PANEL_NEED } from "@/shared/config/lead";
 
 /**
@@ -21,6 +28,15 @@ export const SA_INGEST_SIGNING: WebhookSigning = {
 export const PANEL_SUSPECT = false;
 
 /**
+ * Whether a lead goes to the panel with how it was sold — `flow`, and for an
+ * estimate `quoted_cents`, `pricing_valid_from` and `estimate_inputs` (the
+ * contract of FORM-VARIANTS-SPEC.md, "Contract amendments"). Off until the
+ * panel in production accepts them: it refuses unknown properties, and the
+ * outbox would park the lead.
+ */
+export const PANEL_FLOW = false;
+
+/**
  * `lead.created@1` as protojson — `sa.v1.Event` with `LeadCreatedV1` for
  * properties (Service-Arb/panel `contracts/proto/sa/v1/events.proto`).
  */
@@ -37,7 +53,8 @@ export interface LeadCreatedEvent {
    * `suspect` only when the kit sets `ctx.suspect`, which it does only under
    * `PANEL_SUSPECT`: `rate_limited` or `too_fast`, never `honeypot`.
    */
-  properties: { channel: ReturnType<typeof panelChannel>; suspect?: LeadSuspect };
+  /** The sale's properties only when the kit sets `ctx.flow`, which it does only under `PANEL_FLOW`. */
+  properties: { channel: ReturnType<typeof panelChannel>; suspect?: LeadSuspect } & Partial<PanelFlowProperties>;
   pii?: Record<string, string>;
 }
 
@@ -134,6 +151,7 @@ export function leadCreatedBody(lead: Lead, ctx: LeadWebhookContext, sourceId: s
     properties: { channel: panelChannel(channelOf(lead)) },
   };
   if (ctx.suspect !== undefined) event.properties.suspect = ctx.suspect;
+  Object.assign(event.properties, panelFlowProperties(ctx.flow));
   const pii = piiOf(lead);
   if (Object.keys(pii).length > 0) event.pii = pii;
   return { events: [event] };
@@ -141,8 +159,12 @@ export function leadCreatedBody(lead: Lead, ctx: LeadWebhookContext, sourceId: s
 
 /**
  * The site's options for kitstart's `leadWebhook`: the panel's signing, this
- * body, and the suspect switch. `keyId` is the key the batch is signed with.
+ * body, and the suspect and sale switches. `keyId` is the key the batch is
+ * signed with; `switches` is for a test that turns one on.
  */
-export function panelWebhookOptions(keyId: string): Pick<LeadWebhookOptions, "signing" | "buildBody" | "panelSuspect"> {
-  return { signing: SA_INGEST_SIGNING, buildBody: (lead, ctx) => leadCreatedBody(lead, ctx, keyId), panelSuspect: PANEL_SUSPECT };
+export function panelWebhookOptions(
+  keyId: string,
+  switches: { panelSuspect: boolean; panelFlow: boolean } = { panelSuspect: PANEL_SUSPECT, panelFlow: PANEL_FLOW },
+): Pick<LeadWebhookOptions, "signing" | "buildBody" | "panelSuspect" | "panelFlow"> {
+  return { signing: SA_INGEST_SIGNING, buildBody: (lead, ctx) => leadCreatedBody(lead, ctx, keyId), ...switches };
 }
