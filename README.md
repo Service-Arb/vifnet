@@ -17,10 +17,11 @@ the sticky bar — and its three sub-pages, `/prices`, `/guarantee` and
 
 There is no domain and no public phone number yet, so every page is `noindex`,
 `robots.txt` disallows everything, the sitemap is empty and the quote form
-and its "call me back" are the only channels. The facts still missing are listed once, in `OWNER_TODO`
+and its "call me back" are the only channels until the panel gives the
+place a number. The facts still missing are listed once, in `OWNER_TODO`
 (`src/shared/config/site.ts`); giving the site a domain while a launch-blocking
 one is open fails the build. One of them is the design's sample content — the
-rating, the reviews, the prices, the phone number and the stock photos the
+rating, the reviews, the prices and the stock photos the
 page shows as the Figma file has them — which the owner replaces before a
 launch.
 <!-- markdownlint-disable -->
@@ -65,7 +66,7 @@ it as it is; without any of it the site runs as it does alone.
 | Variable | What it does | Unset |
 | --- | --- | --- |
 | `PORT` | the dev server's port | 59082 (`nix run .#dev`), 3000 (`npm run dev`) |
-| `LOCATIONS_API_URL` | the panel's place source, `GET <url>/locations/vifnet?locale=fr`: its phone replaces the frame's sample number on every surface, and the quote card offers the call (and WhatsApp, when given) | the baked place: the sample number, no call or WhatsApp in the card |
+| `LOCATIONS_API_URL` | the panel's place source, `GET <url>/locations/vifnet?locale=fr`: its phone shows on every surface — header, menu, FAQ, gold band, footer, sticky bar — and the quote card offers the call (and WhatsApp, when given) | the baked place: no number anywhere, no call or WhatsApp |
 | `LEAD_WEBHOOK_URL`, `LEAD_WEBHOOK_KEY_ID`, `LEAD_WEBHOOK_SECRET` | each lead to the panel as a signed `lead.created`; all three or none, and `http:` only to localhost or a `*.svc` host | off |
 | `LEADS_DB_PATH` | the SQLite leads file (and the webhook's outbox) | `~/.local/share/vifnet/leads.db` |
 | `POSTHOG_KEY` (`POSTHOG_HOST`) | analytics and the experiments' events | off |
