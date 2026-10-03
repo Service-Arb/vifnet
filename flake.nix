@@ -61,6 +61,26 @@
         };
 
 
+        # ── `nix run .#dev`: mkLanding's, but on $PORT when it is set ─────────
+        # mkLanding's dev app passes `--port ${sitePort}`, which beats the PORT
+        # `next dev` would read; a local stack starting this site beside others
+        # (the panel's `nix run .#local-stack`) must choose the port. The rest
+        # of the environment reaches `next dev` as it is (README, "Local stack").
+        runDev = pkgs.writeShellApplication {
+          name = "${pname}-dev";
+          runtimeInputs = with pkgs; [ nodejs_22 git coreutils ];
+          text = ''
+            cd "$(git rev-parse --show-toplevel)"
+            stamp="node_modules/.${pname}-lock"
+            want="$(sha256sum package-lock.json | cut -d' ' -f1)"
+            if [ "$(cat "$stamp" 2>/dev/null)" != "$want" ]; then
+              npm ci
+              echo "$want" > "$stamp"
+            fi
+            exec npm run dev -- --port "''${PORT:-${sitePort}}"
+          '';
+        };
+
         # ── bump the latest remote vX.Y.Z tag and push: `.#publish major|minor|patch [note]` ──
         # The version lives in the tag, not in a file. The tag is the release:
         # `release-container.yml` ships the image on it.
@@ -178,6 +198,7 @@
       in
       {
         apps = landing.apps // {
+          dev = { type = "app"; program = "${runDev}/bin/${pname}-dev"; };
           publish = { type = "app"; program = "${runPublish}/bin/publish"; };
           generate = { type = "app"; program = "${runGenerate}/bin/generate"; };
         };
