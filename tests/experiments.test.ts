@@ -2,23 +2,28 @@ import type { AnalyticsSink } from "@evinvest/analytics";
 import { describe, expect, it } from "vitest";
 import { experimentEvent } from "@/features/experiment/model/events";
 import { withExperimentLead, witnessedDefer } from "@/features/experiment/server";
-import { EXPERIMENTS } from "@/shared/config/experiments";
+import { BOOKING_EXPERIMENT, bookingOf } from "@evinvest/kitstart";
+import { BOOKING_ARMS, EXPERIMENTS } from "@/shared/config/experiments";
+import { site } from "@/shared/config/site";
 import { assignedBy, bucketSuffix, CONTROL, isBot, parseLocation, placeOfLocation } from "@/shared/lib/experiments";
 
 describe("the bucket in the place param", () => {
   it("is no suffix for the control, one `~key.variant` otherwise", () => {
     expect(bucketSuffix(CONTROL)).toBe("");
     expect(bucketSuffix({ ...CONTROL, lead_layout: "b" })).toBe("~lead_layout.b");
+    expect(bucketSuffix({ ...CONTROL, booking_provider: "b" })).toBe("~booking_provider.b");
+    expect(bucketSuffix({ lead_layout: "b", booking_provider: "b" })).toBe("~lead_layout.b~booking_provider.b");
   });
 
   it("round-trips, and the place is what the loader gets", () => {
-    expect(parseLocation("_vifnet~lead_layout.b")).toEqual({ place: "_vifnet", assignment: { lead_layout: "b" } });
+    expect(parseLocation("_vifnet~lead_layout.b")).toEqual({ place: "_vifnet", assignment: { ...CONTROL, lead_layout: "b" } });
+    expect(parseLocation("_vifnet~lead_layout.b~booking_provider.b")).toEqual({ place: "_vifnet", assignment: { lead_layout: "b", booking_provider: "b" } });
     expect(parseLocation("_vifnet")).toEqual({ place: "_vifnet", assignment: CONTROL });
     expect(placeOfLocation("_vifnet~lead_layout.b")).toBe("_vifnet");
   });
 
   it("refuses a suffix the proxy never writes: no second cache entry for the same page", () => {
-    for (const bad of ["_vifnet~lead_layout.a", "_vifnet~lead_layout.z", "_vifnet~nope.b", "_vifnet~lead_layout.b~lead_layout.b"]) {
+    for (const bad of ["_vifnet~lead_layout.a", "_vifnet~lead_layout.z", "_vifnet~nope.b", "_vifnet~lead_layout.b~lead_layout.b", "_vifnet~booking_provider.b~lead_layout.b"]) {
       expect(parseLocation(bad)).toBeNull();
       expect(placeOfLocation(bad)).toBe(bad);
     }
@@ -29,6 +34,31 @@ describe("the bucket in the place param", () => {
       expect(key).toMatch(/^[a-z0-9_]+$/);
       for (const v of spec.variants) expect(v).toMatch(/^[a-z0-9_]+$/);
     }
+  });
+});
+
+describe("booking_provider", () => {
+  const first = site.places[0];
+  if (!first) throw new Error("the site has no place");
+
+  it("is kitstart's key, so the arms pool across brands, and names kitstart's providers", () => {
+    expect(BOOKING_EXPERIMENT).toBe("booking_provider");
+    expect(EXPERIMENTS[BOOKING_EXPERIMENT]).toMatchObject({ variants: ["a", "b"], weights: [0.5, 0.5] });
+    expect(BOOKING_ARMS).toEqual({ a: "manual", b: "google_calendar" });
+  });
+
+  // docs/EXPERIMENTS.md: inert until the panel sets a Google schedule for the place.
+  it("offers both arms the call while the place has no Google schedule", () => {
+    expect(first.booking).toBeUndefined();
+    expect(bookingOf(first, BOOKING_ARMS.a)).toEqual({ provider: "manual" });
+    expect(bookingOf(first, BOOKING_ARMS.b)).toEqual({ provider: "manual" });
+  });
+
+  it("splits once the panel gives the place a schedule", () => {
+    const url = "https://calendar.app.google/AbCdEf123";
+    const live = { ...first, booking: { default: "manual" as const, providers: { google_calendar: { url } } } };
+    expect(bookingOf(live, BOOKING_ARMS.a)).toEqual({ provider: "manual" });
+    expect(bookingOf(live, BOOKING_ARMS.b)).toEqual({ provider: "google_calendar", url });
   });
 });
 

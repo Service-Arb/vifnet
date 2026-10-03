@@ -1,4 +1,5 @@
 import type { ExperimentConfig } from "@evinvest/experiments";
+import type { BookingProvider } from "@evinvest/kitstart";
 import type { LeadCaptureLayout } from "@evinvest/kitstart/react";
 
 /**
@@ -16,6 +17,13 @@ export const EXPERIMENTS = {
    * first, then the contact.
    */
   lead_layout: { variants: ["a", "b"], weights: [0.5, 0.5], enabled: true },
+  /**
+   * How a priced lead sets its slot: a, the call (`manual`); b, the place's
+   * Google appointment schedule. kitstart's key (`BOOKING_EXPERIMENT`), the
+   * same on every brand so the arms pool. Inert until the panel gives the
+   * place a schedule: without one, kitstart offers b the call too.
+   */
+  booking_provider: { variants: ["a", "b"], weights: [0.5, 0.5], enabled: true },
 } as const satisfies ExperimentConfig;
 
 export type ExperimentKey = keyof typeof EXPERIMENTS;
@@ -23,6 +31,9 @@ export type VariantOf<K extends ExperimentKey> = (typeof EXPERIMENTS)[K]["varian
 
 /** `lead_layout`'s arms as `LeadCapture` names them. */
 export const LEAD_LAYOUTS = { a: "single", b: "qualify-first" } as const satisfies Record<VariantOf<"lead_layout">, LeadCaptureLayout>;
+
+/** `booking_provider`'s arms as kitstart's `bookingOf` names the providers. */
+export const BOOKING_ARMS = { a: "manual", b: "google_calendar" } as const satisfies Record<VariantOf<"booking_provider">, BookingProvider>;
 
 /** `?ab_<key>=<variant>` forces a variant (QA); the same prefix as the cookie. */
 export const FORCE_PARAM = "ab_";

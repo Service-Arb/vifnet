@@ -28,6 +28,7 @@ function card(need: Subject | undefined, opts: { whatsapp?: string | null; prici
       need,
       layout: "single",
       experiment: undefined,
+      bookingVariant: null,
     }),
   );
 }

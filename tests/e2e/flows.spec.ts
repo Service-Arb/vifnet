@@ -216,3 +216,25 @@ test.describe("variant b", () => {
     await expect(card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" })).toBeVisible();
   });
 });
+
+// booking_provider b (docs/EXPERIMENTS.md): the place's Google schedule. The
+// mock panel serves the place with none, as the panel does today, so the arm
+// is inert: kitstart offers the call, exactly as in a.
+test.describe("booking_provider b, no Google schedule set", () => {
+  test.use({ storageState: abState("a", "b"), extraHTTPHeaders: { "x-forwarded-for": "10.7.0.4" } });
+
+  test("a priced lead is offered the call, not a booking page", async ({ page }) => {
+    await page.goto("/fr#devis");
+    await hydrated(page);
+    await answer(page, "Studio");
+    await answer(page, "Moins de 40 m²");
+    await answer(page, "Une fois");
+    await contact(page, freshMobile("07"));
+    await card(page).getByRole("button", { name: "Réserver" }).click();
+    const status = card(page).getByRole("status");
+    await expect(status).toContainText(/Demande enregistrée au prix de 49\s€\./);
+    await expect(status).toContainText("Nous vous rappelons pour fixer le créneau.");
+    await expect(card(page).getByRole("link", { name: "Choisir un créneau" })).toHaveCount(0);
+    await expect(page.locator('a[href*="calendar.app.google"], a[href*="calendar.google.com"]')).toHaveCount(0);
+  });
+});

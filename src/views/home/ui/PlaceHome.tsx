@@ -2,7 +2,7 @@ import { contactOf, faqPageNode, placeGraph, type AnalyticsTarget, type PlaceVie
 import { JsonLd } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { ExperimentScope } from "@/features/experiment";
-import { EXPERIMENTS, LEAD_LAYOUTS } from "@/shared/config/experiments";
+import { BOOKING_ARMS, EXPERIMENTS, LEAD_LAYOUTS } from "@/shared/config/experiments";
 import type { Locale } from "@/shared/config/i18n";
 import { ANCHORS, placeNav } from "@/shared/config/nav";
 import { site } from "@/shared/config/site";
@@ -52,6 +52,8 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
   const graph = placeGraph(site, view, "home", { placeName: f.place, title: t.pages.home.title(f), description: t.pages.home.description(f) }, now);
   const variant = experiments.assignment.lead_layout;
   const running = EXPERIMENTS.lead_layout.enabled;
+  const booking = experiments.assignment.booking_provider;
+  const bookingRunning = EXPERIMENTS.booking_provider.enabled;
   return (
     <>
       <JsonLd data={graph} />
@@ -63,34 +65,44 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
         variant={variant}
         enabled={running}
       >
-        <SiteHeader copy={copy} home={view.href("")} quoteHref={nav.quoteHref} links={nav.header} />
-        <main>
-          <Hero
-            copy={copy}
-            form={
-              <QuoteCard
-                copy={copy}
-                id={SECTION_IDS.quote}
-                place={view.place}
-                contact={contactOf(site, view.place)}
-                renderedAt={renderedAt}
-                pricing={pricing}
-                layout={LEAD_LAYOUTS[variant]}
-                experiment={running ? { name: "lead_layout", variant } : undefined}
-              />
-            }
-          />
-          <Stats copy={copy} />
-          <Services copy={copy} id={SECTION_IDS.services} quoteHref={nav.quoteHref} />
-          <Reviews copy={copy} id={SECTION_IDS.reviews} quoteHref={nav.quoteHref} />
-          <Guarantee copy={copy} />
-          <FaqBand copy={copy} id={SECTION_IDS.faq} />
-          <Closing copy={copy} id={SECTION_IDS.closing} quoteHref={nav.quoteHref} />
-        </main>
-        <SiteFooter copy={copy} year={now.getFullYear()} links={nav.footer} other={nav.other} />
-        {/* Room under the footer for the sticky bar, on the footer's colour. */}
-        <div aria-hidden="true" className="dark h-14 bg-popover" />
-        <StickyBar copy={copy} quoteHref={nav.quoteHref} />
+        {/* Its own exposures and contacts, so `npm run ab:report` reads both tests alike. */}
+        <ExperimentScope
+          target={experiments.target}
+          placeSlug={view.place.slug}
+          experiment="booking_provider"
+          variant={booking}
+          enabled={bookingRunning}
+        >
+          <SiteHeader copy={copy} home={view.href("")} quoteHref={nav.quoteHref} links={nav.header} />
+          <main>
+            <Hero
+              copy={copy}
+              form={
+                <QuoteCard
+                  copy={copy}
+                  id={SECTION_IDS.quote}
+                  place={view.place}
+                  contact={contactOf(site, view.place)}
+                  renderedAt={renderedAt}
+                  pricing={pricing}
+                  layout={LEAD_LAYOUTS[variant]}
+                  experiment={running ? { name: "lead_layout", variant } : undefined}
+                  bookingVariant={bookingRunning ? BOOKING_ARMS[booking] : null}
+                />
+              }
+            />
+            <Stats copy={copy} />
+            <Services copy={copy} id={SECTION_IDS.services} quoteHref={nav.quoteHref} />
+            <Reviews copy={copy} id={SECTION_IDS.reviews} quoteHref={nav.quoteHref} />
+            <Guarantee copy={copy} />
+            <FaqBand copy={copy} id={SECTION_IDS.faq} />
+            <Closing copy={copy} id={SECTION_IDS.closing} quoteHref={nav.quoteHref} />
+          </main>
+          <SiteFooter copy={copy} year={now.getFullYear()} links={nav.footer} other={nav.other} />
+          {/* Room under the footer for the sticky bar, on the footer's colour. */}
+          <div aria-hidden="true" className="dark h-14 bg-popover" />
+          <StickyBar copy={copy} quoteHref={nav.quoteHref} />
+        </ExperimentScope>
       </ExperimentScope>
     </>
   );

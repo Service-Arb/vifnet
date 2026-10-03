@@ -1,4 +1,4 @@
-import type { Place, PricingModel } from "@evinvest/kitstart";
+import type { BookingProvider, Place, PricingModel } from "@evinvest/kitstart";
 import type { LeadCaptureLayout } from "@evinvest/kitstart/react";
 import { leadCaptureText, type Copy } from "@/entities/content";
 import { BEDROOMS, EXTRAS, FLOWS, LEAD, PHOTO_NEEDS, SUBJECTS, type Subject } from "@/shared/config/lead";
@@ -22,6 +22,12 @@ export interface QuoteCardProps {
   layout: LeadCaptureLayout;
   /** The assignment the card's events and its post carry; none when no test runs. */
   experiment: { name: string; variant: string } | undefined;
+  /**
+   * Experiment `booking_provider`'s arm as a provider: kitstart offers it after
+   * a priced lead when the place has it, else the place's default (`bookingOf`);
+   * `null` when the test is off.
+   */
+  bookingVariant: BookingProvider | null;
 }
 
 /**
@@ -37,7 +43,7 @@ export interface QuoteCardProps {
  * an estimate (`FLOWS`): its answers as tiles, the price live, "Réserver";
  * the other jobs are quotes, with photos on WhatsApp when the place has it.
  */
-export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need, layout, experiment }: QuoteCardProps) {
+export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need, layout, experiment, bookingVariant }: QuoteCardProps) {
   const { t, locale } = copy;
   const text = leadCaptureText(t, locale);
   return (
@@ -64,6 +70,7 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
         />
       }
       experiment={experiment}
+      bookingVariant={bookingVariant}
       text={text}
       labels="hidden"
       // Folded: the frame's card has no callback, so it is one quiet line
