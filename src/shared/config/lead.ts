@@ -1,4 +1,4 @@
-import { validateLead, type LeadSchema } from "@evinvest/kitstart";
+import { validateLead, type LeadFlow, type LeadSchema } from "@evinvest/kitstart";
 
 /**
  * The jobs the quote form offers — the four service cards of the Figma frame,
@@ -25,7 +25,26 @@ export const PANEL_NEED: Readonly<Record<Subject, string>> = {
 /** The frame's featured service: the forest card on the home page, the "Most popular" row of the price table. */
 export const FEATURED: Subject = "deep";
 
-/** The size of the home: an optional question after the phone. */
+/**
+ * How each job is sold. A regular clean is priced live from four answers
+ * (`pricing.ts`); a deep clean, a move and after-works are not priced from a
+ * list — the crew needs to see the place — so they ask for a quote, and for
+ * photos (`PHOTO_NEEDS`).
+ */
+export const FLOWS: Readonly<Record<Subject, LeadFlow>> = {
+  standard: "estimate",
+  deep: "quote",
+  move: "quote",
+  "post-construction": "quote",
+};
+
+/** The quotes priced from photos: the card offers to send them on WhatsApp, when the place has it. */
+export const PHOTO_NEEDS: readonly Subject[] = SUBJECTS.filter(s => FLOWS[s] === "quote");
+
+/**
+ * The size of the home: an optional question after the phone — for a quote;
+ * an estimate asks it among its own answers, and the card hides this one.
+ */
 export const BEDROOMS = ["studio", "1", "2", "3", "4", "5+"] as const;
 export type Bedrooms = (typeof BEDROOMS)[number];
 
@@ -45,6 +64,7 @@ export const LEAD: LeadSchema<Subject> = {
   subjects: SUBJECTS,
   wire: { subject: "subject", locality: "locality", mobile: "mobile" },
   extras: [EXTRAS.name, EXTRAS.bedrooms],
+  flows: FLOWS,
   // One spelling per number (`+33612345678`), so the panel and a person
   // searching the leads file find a customer however they typed it.
   mobileFormat: "e164",

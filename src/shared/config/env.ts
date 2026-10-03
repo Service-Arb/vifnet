@@ -1,6 +1,7 @@
 import "server-only";
 import {
   createPlaceSource,
+  createPricingSource,
   createServerEnv,
   leadNotifier,
   leadWebhook,
@@ -15,6 +16,13 @@ export const serverEnv = createServerEnv(site);
 
 /** The live place data, when `LOCATIONS_API_URL` is set; baked otherwise. */
 export const places = createPlaceSource(site, { baseUrl: () => serverEnv().locationsApiUrl });
+
+/**
+ * The live price list from the same base — the panel's
+ * `/api/internal/brands/vifnet/pricing` — over `site.pricing`: unset, down,
+ * `{}` or a model that does not validate all price from the baked one.
+ */
+export const pricing = createPricingSource(site, { baseUrl: () => serverEnv().locationsApiUrl });
 
 let built: LeadNotifier | undefined;
 
