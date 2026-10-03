@@ -2,6 +2,9 @@ import { Field, FieldLabel, FormSelect, type FormSelectOption } from "@evinvest/
 import { EXTRAS } from "@/shared/config/lead";
 import { FIELD, FINE_PRINT } from "./look";
 
+// Tailwind reads `_` in a selector as a space; the escape keeps the field's name.
+const HIDDEN_BY_ESTIMATE = String.raw`group-has-[[data-lead-field=estimate\_bedrooms]]/lead:hidden`;
+
 /**
  * The size of the home, after the phone and optional: nothing chosen posts
  * nothing, and the call back asks what the form did not. Labelled like the
@@ -10,9 +13,6 @@ import { FIELD, FINE_PRINT } from "./look";
  * while its tiles are in the form this one is not shown (unanswered, it
  * posts nothing).
  */
-// Tailwind reads `_` in a selector as a space; the escape keeps the field's name.
-const HIDDEN_BY_ESTIMATE = String.raw`group-has-[[data-lead-field=estimate\_bedrooms]]/lead:hidden`;
-
 export function BedroomsField({ label, placeholder, options }: { label: string; placeholder: string; options: readonly FormSelectOption[] }) {
   return (
     <Field className={`flex flex-col gap-1.5 ${HIDDEN_BY_ESTIMATE}`}>

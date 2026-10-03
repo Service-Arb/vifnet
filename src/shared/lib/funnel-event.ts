@@ -48,12 +48,13 @@ export interface LeadCreatedEvent {
   occurredAt: string;
   source: { kind: "site"; id: string };
   subject: { brandId: string; locationId?: string; leadId: string };
-  /** The panel's closed set: a callback travels as `form` until it accepts `callback` (`panelChannel`). */
   /**
-   * `suspect` only when the kit sets `ctx.suspect`, which it does only under
-   * `PANEL_SUSPECT`: `rate_limited` or `too_fast`, never `honeypot`.
+   * `channel` is the panel's closed set: a callback travels as `form` until it
+   * accepts `callback` (`panelChannel`). `suspect` only when the kit sets
+   * `ctx.suspect`, which it does only under `PANEL_SUSPECT`: `rate_limited` or
+   * `too_fast`, never `honeypot`. The sale's properties only when the kit sets
+   * `ctx.flow`, which it does only under `PANEL_FLOW`.
    */
-  /** The sale's properties only when the kit sets `ctx.flow`, which it does only under `PANEL_FLOW`. */
   properties: { channel: ReturnType<typeof panelChannel>; suspect?: LeadSuspect } & Partial<PanelFlowProperties>;
   pii?: Record<string, string>;
 }
