@@ -47,7 +47,7 @@ test.describe("with JavaScript", () => {
     await expect(page).toHaveURL(/\/fr#devis$/);
   });
 
-  test("posts every field and thanks on the thanks page", async ({ page }, testInfo) => {
+  test("posts every field and says done in the card", async ({ page }, testInfo) => {
     const mobile = freshMobile("06");
     const locality = `75015-${testInfo.project.name}`;
     await page.goto("/fr#devis");
@@ -71,7 +71,9 @@ test.describe("with JavaScript", () => {
     // The time trap flags anything faster than a person; this is a person.
     await page.waitForTimeout(MIN_FILL_MS + 500);
     await card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" }).click();
-    await page.waitForURL("**/fr/thanks");
+    await expect(card(page).getByRole("status")).toContainText("C’est noté, Amanda\u00a0!");
+    await expect(card(page).getByRole("status")).toContainText(mobile);
+    await expect(page).toHaveURL(/\/fr#devis$/);
     expect(leadRow(mobile)).toEqual({
       job: "post-construction",
       zip: locality,
@@ -97,7 +99,7 @@ test.describe("call me back", () => {
     await form.getByRole("checkbox").check();
     await page.waitForTimeout(MIN_FILL_MS + 500);
     await form.getByRole("button", { name: "Être rappelé" }).click();
-    await page.waitForURL("**/fr/thanks");
+    await expect(card(page).getByRole("status")).toContainText("C’est noté\u00a0!");
     expect(leadRow(mobile)).toMatchObject({ location_id: "vifnet", spam_verdict: null, channel: "callback" });
   });
 });

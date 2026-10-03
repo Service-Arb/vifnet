@@ -1,9 +1,10 @@
 import { LEAD_CAPTURE_TEXT, type Place } from "@evinvest/kitstart";
-import { LeadCapture, type LeadCaptureLayout } from "@evinvest/kitstart/react";
+import type { LeadCaptureLayout } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { BEDROOMS, EXTRAS, LEAD, SUBJECTS } from "@/shared/config/lead";
 import { BedroomsField, TrustLine } from "./fields";
 import { LEAD_CAPTURE_LOOK } from "./look";
+import { QuoteCapture } from "./QuoteCapture";
 
 export interface QuoteCardProps {
   copy: Copy;
@@ -21,15 +22,14 @@ export interface QuoteCardProps {
 
 /**
  * The frame's QuoteCard (6:83): white, rounded-2xl, p-7, shadow-2xl — a light
- * island in the dark hero — around kitstart's `LeadCapture`, the form every
- * Service-Arb brand shares so an experiment's results pool across them. The
- * heading and the placeholders are the frame's (the labels name the fields
- * for assistive technology only); the fields, channels and events are the
- * kit's. A
- * service card names its service (`data-need`), so the card does not ask it
- * again. The card is kitstart's root, `#<id>` (`#devis`): its form is
- * `#devis-form`, the callback `#devis-callback`. The form posts
- * `form_id=quote`, the kit's default, so its events pool across brands.
+ * island in the dark hero — drawn on kitstart's `LeadCapture` itself, the form
+ * every Service-Arb brand shares so an experiment's results pool across them.
+ * The heading, the placeholders (labels only for assistive technology) and
+ * the Done state are the frame's; the fields, channels and events are the
+ * kit's. A service card names its service (`data-need`), so the card does not
+ * ask it again. The card is `#<id>` (`#devis`), its form `#devis-form`, the
+ * callback `#devis-callback`; the form posts `form_id=quote`, the kit's
+ * default, so its events stay comparable across brands.
  */
 export function QuoteCard({ copy, id, place, contact, renderedAt, layout, experiment }: QuoteCardProps) {
   const { t, locale } = copy;
@@ -47,7 +47,7 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, layout, experi
     honeypotLabel: t.quoteForm.honeypotLabel,
   };
   return (
-    <LeadCapture
+    <QuoteCapture
       id={id}
       className="light rounded-2xl bg-background p-7 text-ink shadow-2xl"
       place={place}
@@ -76,6 +76,7 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, layout, experi
       }
       trust={<TrustLine lines={t.quote.trust} />}
       classNames={LEAD_CAPTURE_LOOK}
+      doneText={{ title: t.quote.doneTitle, titleNoName: t.quote.doneTitleNoName, body: t.quote.doneBody }}
     />
   );
 }

@@ -45,7 +45,7 @@ test.describe("variant b", () => {
     await form.locator("input[name=mobile]").fill("06 22 33 44 55");
     await page.waitForTimeout(MIN_FILL_MS + 500);
     await card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" }).click();
-    await page.waitForURL("**/fr/thanks");
+    await expect(card(page).getByRole("status")).toBeVisible();
 
     const arm = { experiment: "lead_layout", variant: "b" };
     await expect.poll(() => ours(sent, "experiment_exposed")).toEqual([expect.objectContaining({ ...arm, forced: false, brand_id: "vifnet", location_id: "vifnet" })]);

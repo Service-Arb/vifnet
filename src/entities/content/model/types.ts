@@ -79,6 +79,12 @@ export interface Text extends CoreText<PageKey, Facts> {
     bedroomsPlaceholder: string;
     trust: readonly string[];
     bedrooms: Record<Bedrooms, string>;
+    /** The card once a lead is taken (Figma QuoteCard Done); `{first}`: the name's first word. */
+    doneTitle: string;
+    /** The same with no name given. */
+    doneTitleNoName: string;
+    /** Around the number as typed, which is set bold. */
+    doneBody: readonly [string, string];
   };
   stats: readonly { value: string; label: string }[];
   services: { eyebrow: string; title: string; lede: string; badge: string; note: string; noteLink: string; items: Record<Subject, ServiceItem> };

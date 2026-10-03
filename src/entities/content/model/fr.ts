@@ -82,6 +82,9 @@ export const FR = {
     bedroomsPlaceholder: "Nombre de chambres",
     trust: ["✓ Sans engagement", "✓ Rappel sous 15 min", "✓ Possible le jour même"],
     bedrooms: { studio: "Studio", "1": "1 chambre", "2": "2 chambres", "3": "3 chambres", "4": "4 chambres", "5+": "5 chambres et plus" },
+    doneTitle: "C’est noté, {first} !",
+    doneTitleNoName: "C’est noté !",
+    doneBody: ["Nous appelons le ", " d’ici 15 minutes avec un devis ferme."],
   },
   stats: [
     { value: "500+", label: "Logements nettoyés" },
