@@ -2,6 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { MIN_FILL_MS, normalizePhone } from "@evinvest/kitstart";
 import { expect, test } from "@playwright/test";
 import { LEADS_DB } from "./env";
+import { freshMobile } from "./support/mobile";
 
 // The funnel's floor: the form must submit before any JavaScript has loaded.
 // A regression here is invisible to every other test and costs every lead.
@@ -10,7 +11,7 @@ test.describe("without JavaScript", () => {
 
   test("the quote form posts every field, gets a 303 and the lead is stored", async ({ page }, testInfo) => {
     // A number no other test (or project) submits, so the row found is this one.
-    const mobile = `06${String(Date.now() % 1e8).padStart(8, "0")}`;
+    const mobile = freshMobile("06");
     const locality = `75015-${testInfo.project.name}`;
 
     await page.goto("/fr#devis");

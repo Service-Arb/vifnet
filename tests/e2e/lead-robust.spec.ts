@@ -2,6 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { MIN_FILL_MS, normalizePhone } from "@evinvest/kitstart";
 import { expect, test, type Page } from "@playwright/test";
 import { abState, LEADS_DB } from "./env";
+import { freshMobile } from "./support/mobile";
 
 // A lead the server refuses, or that gets no answer, is never lost and never
 // sent twice (LEAD-FORMS-REVIEW-2026-10-03 #1–#5): the card says so in the
@@ -17,9 +18,6 @@ const card = (page: Page) => page.locator("#devis");
 const form = (page: Page) => page.locator("form#devis-form");
 const hydrated = (page: Page) => expect(page.locator("form#devis-form select")).toHaveCount(0);
 const isQuote = (url: string) => new URL(url).pathname === "/quote";
-
-/** A number no other test (or project) submits, so the rows found are this one's. */
-const freshMobile = (prefix: string) => `${prefix}${String(Date.now() % 1e8).padStart(8, "0")}`;
 
 /** Every row stored for the number: a lead sent twice would be two. */
 function leadRows(mobile: string): unknown[] {

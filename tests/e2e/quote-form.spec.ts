@@ -2,6 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { MIN_FILL_MS, normalizePhone } from "@evinvest/kitstart";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { abState, LEADS_DB } from "./env";
+import { freshMobile } from "./support/mobile";
 
 // The quote card is kitstart's LeadCapture in the frame's card (experiment
 // `lead_layout`'s control, `single`, which the suite is pinned to). The selects
@@ -14,9 +15,6 @@ const SERVICE = "Prestation";
 // The card is kitstart's root (`#devis`); its form is `#devis-form`.
 const card = (page: Page) => page.locator("#devis");
 const hydrated = (page: Page) => expect(page.locator("form#devis-form select")).toHaveCount(0);
-
-/** A number no other test (or project) submits, so the row found is this one. */
-const freshMobile = (prefix: string) => `${prefix}${String(Date.now() % 1e8).padStart(8, "0")}`;
 
 function leadRow(mobile: string): unknown {
   const db = new DatabaseSync(LEADS_DB, { readOnly: true });

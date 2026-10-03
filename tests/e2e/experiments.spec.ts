@@ -59,7 +59,7 @@ test.describe("variant b", () => {
     test.use({ javaScriptEnabled: false, extraHTTPHeaders: { "x-forwarded-for": "10.9.0.2" } });
 
     test("shows the contact once a service is checked, posts, and the lead is stored", async ({ page }, testInfo) => {
-      const mobile = `07${String(Date.now() % 1e8).padStart(8, "0")}`;
+      const mobile = (await import("./support/mobile")).freshMobile("07");
       await page.goto("/fr#devis");
       const form = page.locator("form#devis-form");
       await expect(form.locator("input[name=mobile]")).toBeHidden();
