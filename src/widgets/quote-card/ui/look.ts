@@ -5,8 +5,8 @@ import type { LeadCapturePart } from "@evinvest/kitstart/react";
  * (`border-input`), rounded-xl, 16 × 14, 14/20 — placeholder slate-400, value
  * slate-700 — and a 2 px leaf ring on focus. Shared by the inputs and both
  * states of the selects, so a select is the same box before and after it
- * hydrates. The need's select takes no class from us (`LeadCapture` passes it
- * none): `app/globals.css` gives it the same box.
+ * hydrates. `LeadCapture` gives it to the need's select and the callback's
+ * phone too (`control`); the bedrooms select takes it itself.
  */
 export const FIELD =
   "h-[50px] rounded-xl bg-background py-3.5 text-sm leading-5 text-slate-700 shadow-none md:text-sm placeholder:text-slate-400 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring";

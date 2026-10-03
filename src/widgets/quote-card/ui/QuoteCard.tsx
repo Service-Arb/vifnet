@@ -25,8 +25,9 @@ export interface QuoteCardProps {
  * Service-Arb brand shares so an experiment's results pool across them. The
  * heading is the frame's; the fields, channels and events are the kit's. A
  * service card names its service (`data-need`), so the card does not ask it
- * again. The form is `#quote` and posts `form_id=quote`, the kit's defaults;
- * the callback is `#quote-callback`.
+ * again. The card is kitstart's root, `#<id>` (`#devis`): its form is
+ * `#devis-form`, the callback `#devis-callback`. The form posts
+ * `form_id=quote`, the kit's default, so its events pool across brands.
  */
 export function QuoteCard({ copy, id, place, contact, renderedAt, layout, experiment }: QuoteCardProps) {
   const { t, locale } = copy;
@@ -41,34 +42,34 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, layout, experi
     honeypotLabel: t.quoteForm.honeypotLabel,
   };
   return (
-    <div id={id} data-band="quote-card" className="light rounded-2xl bg-background p-7 text-ink shadow-2xl">
-      <LeadCapture
-        place={place}
-        contact={contact}
-        locale={locale}
-        renderedAt={renderedAt}
-        wire={LEAD.wire}
-        needs={SUBJECTS.map(s => ({ value: s, label: t.services.items[s].name }))}
-        layout={layout}
-        name={{ field: EXTRAS.name.name }}
-        extras={
-          <BedroomsField
-            label={`${t.quote.labels.bedrooms} (${kit.optional})`}
-            placeholder={t.quote.bedroomsPlaceholder}
-            options={BEDROOMS.map(b => ({ value: b, label: t.quote.bedrooms[b] }))}
-          />
-        }
-        experiment={experiment}
-        text={text}
-        head={
-          <div className="flex flex-col gap-1">
-            <h2 className="font-display text-2xl leading-8 font-bold text-brand">{t.quoteForm.title}</h2>
-            <p className="text-sm leading-5 text-ink-soft">{t.quoteForm.lede}</p>
-          </div>
-        }
-        trust={<TrustLine lines={t.quote.trust} />}
-        classNames={LEAD_CAPTURE_LOOK}
-      />
-    </div>
+    <LeadCapture
+      id={id}
+      className="light rounded-2xl bg-background p-7 text-ink shadow-2xl"
+      place={place}
+      contact={contact}
+      locale={locale}
+      renderedAt={renderedAt}
+      wire={LEAD.wire}
+      needs={SUBJECTS.map(s => ({ value: s, label: t.services.items[s].name }))}
+      layout={layout}
+      name={{ field: EXTRAS.name.name }}
+      extras={
+        <BedroomsField
+          label={`${t.quote.labels.bedrooms} (${kit.optional})`}
+          placeholder={t.quote.bedroomsPlaceholder}
+          options={BEDROOMS.map(b => ({ value: b, label: t.quote.bedrooms[b] }))}
+        />
+      }
+      experiment={experiment}
+      text={text}
+      head={
+        <div className="flex flex-col gap-1">
+          <h2 className="font-display text-2xl leading-8 font-bold text-brand">{t.quoteForm.title}</h2>
+          <p className="text-sm leading-5 text-ink-soft">{t.quoteForm.lede}</p>
+        </div>
+      }
+      trust={<TrustLine lines={t.quote.trust} />}
+      classNames={LEAD_CAPTURE_LOOK}
+    />
   );
 }

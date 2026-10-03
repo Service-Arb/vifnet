@@ -11,8 +11,8 @@ import { abState, LEADS_DB } from "./env";
 // becomes the other.
 const SERVICE = "Prestation";
 
-const card = (page: Page) => page.locator("[data-band=quote-card]");
-const hydrated = (page: Page) => expect(page.locator("form#quote select")).toHaveCount(0);
+const card = (page: Page) => page.locator("#devis");
+const hydrated = (page: Page) => expect(page.locator("form#devis-form select")).toHaveCount(0);
 
 /** A number no other test (or project) submits, so the row found is this one. */
 const freshMobile = (prefix: string) => `${prefix}${String(Date.now() % 1e8).padStart(8, "0")}`;
@@ -34,9 +34,9 @@ test.describe("with JavaScript", () => {
     await page.goto("/fr#devis");
     await hydrated(page);
     await card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" }).click();
-    await expect(page.locator("form#quote input[name=locality]")).toBeFocused();
-    await expect(page.locator("form#quote input[name=mobile]")).toHaveAttribute("required", "");
-    await expect(page.locator("form#quote input[name=name]")).not.toHaveAttribute("required", "");
+    await expect(page.locator("form#devis-form input[name=locality]")).toBeFocused();
+    await expect(page.locator("form#devis-form input[name=mobile]")).toHaveAttribute("required", "");
+    await expect(page.locator("form#devis-form input[name=name]")).not.toHaveAttribute("required", "");
     await expect(page.getByRole("combobox", { name: "Chambres (facultatif)" })).toHaveText("Nombre de chambres");
     await expect(page).toHaveURL(/\/fr#devis$/);
   });
@@ -55,7 +55,7 @@ test.describe("with JavaScript", () => {
     await expect(list).toBeHidden();
     await expect(trigger).toHaveText("Fin de chantier");
 
-    const form = page.locator("form#quote");
+    const form = page.locator("form#devis-form");
     await form.locator("input[name=locality]").fill(locality);
     await form.locator("input[name=mobile]").fill(mobile);
     await form.locator("input[name=name]").fill("Amanda Reyes");
@@ -84,9 +84,9 @@ test.describe("call me back", () => {
     const mobile = freshMobile("07");
     await page.goto("/fr#devis");
     await hydrated(page);
-    const callback = page.locator("#quote-callback");
+    const callback = page.locator("#devis-callback");
     await callback.getByText("Rappelez-moi").click();
-    const form = page.locator("form#quote-callback-form");
+    const form = page.locator("form#devis-callback-form");
     await form.locator("input[name=mobile]").fill(mobile);
     await form.getByRole("checkbox").check();
     await page.waitForTimeout(MIN_FILL_MS + 500);
@@ -123,7 +123,7 @@ test("the select is the same box before and after hydration", async ({ browser }
   await scripted.context().close();
 
   const bare = await open(false);
-  const native = bare.locator("form#quote select[name=subject]");
+  const native = bare.locator("form#devis-form select[name=subject]");
   await expect(native).toBeVisible();
   const before = await measure(native);
   await bare.context().close();

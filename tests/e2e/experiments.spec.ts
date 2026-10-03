@@ -23,7 +23,7 @@ async function beacons(page: Page): Promise<Sent[]> {
 
 const ours = (sent: Sent[], event: string) => sent.filter(s => s.event === event).map(s => s.properties);
 
-const card = (page: Page) => page.locator("[data-band=quote-card]");
+const card = (page: Page) => page.locator("#devis");
 
 // The rate limit counts 5 leads per address; the suite's other submissions
 // come from 127.0.0.1, so each test here posts from an address of its own.
@@ -33,9 +33,9 @@ test.describe("variant b", () => {
   test("asks the service first, then the contact, and its events carry the arm", async ({ page }) => {
     const sent = await beacons(page);
     await page.goto("/fr#devis");
-    await expect(page.locator("form#quote select")).toHaveCount(0);
+    await expect(page.locator("form#devis-form select")).toHaveCount(0);
     await expect(page.getByRole("combobox", { name: "Prestation" })).toHaveCount(0);
-    const form = page.locator("form#quote");
+    const form = page.locator("form#devis-form");
     await expect(form.locator("input[name=mobile]")).toBeHidden();
 
     // One tap answers the service and moves on to the first empty field.
@@ -59,7 +59,7 @@ test.describe("variant b", () => {
     test("shows the contact once a service is checked, posts, and the lead is stored", async ({ page }, testInfo) => {
       const mobile = `07${String(Date.now() % 1e8).padStart(8, "0")}`;
       await page.goto("/fr#devis");
-      const form = page.locator("form#quote");
+      const form = page.locator("form#devis-form");
       await expect(form.locator("input[name=mobile]")).toBeHidden();
       await form.getByRole("radio", { name: "Entrée / sortie" }).click();
       await form.locator("input[name=locality]").fill(`69003-${testInfo.project.name}`);
@@ -82,8 +82,8 @@ test.describe("variant b", () => {
 test("the control's events carry the experiment and its variant", async ({ page }) => {
   const sent = await beacons(page);
   await page.goto("/fr#devis");
-  await expect(page.locator("form#quote select")).toHaveCount(0);
-  await page.locator("form#quote input[name=mobile]").focus();
+  await expect(page.locator("form#devis-form select")).toHaveCount(0);
+  await page.locator("form#devis-form input[name=mobile]").focus();
   await page.locator("#demande a[data-intent=form_open]").click();
   // A call tap, kept from leaving for the dialer: our listener runs in the capture phase first.
   await page.evaluate(() => {
@@ -109,7 +109,7 @@ test.describe("a forced visit", () => {
   test("renders the variant asked for, and marks the browser as QA", async ({ page, context }) => {
     const sent = await beacons(page);
     await page.goto("/fr?ab_lead_layout=b#devis");
-    await expect(page.locator("form#quote [data-need-option]")).toHaveCount(4);
+    await expect(page.locator("form#devis-form [data-need-option]")).toHaveCount(4);
     await expect.poll(() => ours(sent, "experiment_exposed")).toEqual([expect.objectContaining({ variant: "b", forced: true })]);
     const jar = Object.fromEntries((await context.cookies()).map(c => [c.name, c.value]));
     expect(jar).toMatchObject({ ab_lead_layout: "b", ab__qa: "1" });

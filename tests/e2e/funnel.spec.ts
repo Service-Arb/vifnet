@@ -14,7 +14,7 @@ test.describe("without JavaScript", () => {
     const locality = `75015-${testInfo.project.name}`;
 
     await page.goto("/fr#devis");
-    const form = page.locator("form#quote");
+    const form = page.locator("form#devis-form");
     await form.locator("input[name=name]").fill("Amanda Reyes");
     await form.locator("input[name=mobile]").fill(mobile);
     await form.locator("input[name=locality]").fill(locality);
@@ -101,11 +101,11 @@ test.describe("before launch", () => {
 test("a service card names its service, and the form does not ask it again", async ({ page }) => {
   await page.goto("/fr#prestations");
   // Hydrated: before that the click lands on a plain link and picks nothing.
-  await expect(page.locator("form#quote select")).toHaveCount(0);
+  await expect(page.locator("form#devis-form select")).toHaveCount(0);
   await page.locator("#prestations li", { hasText: "Grand ménage" }).getByRole("link").first().click();
   await expect(page).toHaveURL(/#devis$/);
 
-  const form = page.locator("form#quote");
+  const form = page.locator("form#devis-form");
   await expect(page.getByRole("combobox", { name: "Prestation" })).toHaveCount(0);
   await expect(form).toContainText("Grand ménage");
   await expect(form.locator("input[name=subject]")).toHaveValue("deep");
