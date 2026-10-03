@@ -68,6 +68,9 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, layout, experi
       experiment={experiment}
       text={text}
       labels="hidden"
+      // Folded: the frame's card has no callback, so it is one quiet line
+      // until asked for — even when the place is closed and it would lead.
+      callbackOpen={false}
       head={
         <div className="flex flex-col gap-1">
           <h2 className="font-display text-2xl leading-8 font-bold text-brand">{t.quoteForm.title}</h2>

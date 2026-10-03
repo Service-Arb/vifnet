@@ -18,6 +18,15 @@ export const WIDE_BUTTON = "w-full py-4 leading-6 font-bold shadow-sm hover:bg-a
 export const FINE_PRINT = "text-center text-[11px] leading-[16.5px] text-slate-400";
 
 /**
+ * "Call me back" folded to one quiet text line under the form: the frame's
+ * card has no callback, and a full-width outline button under the gold one
+ * would be a second call to action. Open, its form wears the card's Field
+ * and gold button.
+ */
+const CALLBACK_LINK =
+  "h-auto min-h-0 justify-center border-0 bg-transparent p-0 text-sm leading-5 font-semibold text-brand underline underline-offset-4 shadow-none hover:bg-transparent hover:no-underline";
+
+/**
  * `LeadCapture`'s parts in the frame's QuoteCard: its 20 px between the head
  * and the form and 12 px between fields, the Field box, the gold submit at the
  * frame's Button lg (`size="xl"`'s padding and text, which `touch` lacks).
@@ -36,6 +45,14 @@ export const LEAD_CAPTURE_LOOK: Readonly<Partial<Record<LeadCapturePart, string>
   summary: "text-sm leading-5",
   submit: `${WIDE_BUTTON} px-(--control-px) text-(length:--control-text)`,
   privacy: FINE_PRINT,
-  others: "gap-2",
+  // "Ou contactez-nous · Rappelez-moi" on one line; open, the callback takes
+  // a line of its own (`open:basis-full`).
+  others: "flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-3 text-center",
   channel: "rounded-xl font-semibold",
+  callback: "w-auto open:basis-full",
+  callbackSummary: CALLBACK_LINK,
+  callbackForm: "mt-3 gap-3 text-left",
+  callbackLede: "text-sm leading-5",
+  callbackSubmit: `${WIDE_BUTTON} px-(--control-px) text-(length:--control-text)`,
+  consent: "text-sm leading-5",
 };

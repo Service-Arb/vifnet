@@ -11,6 +11,7 @@ import { abState, LEADS_DB } from "./env";
 // becomes the other.
 const SERVICE = "Prestation";
 
+// The card is kitstart's root (`#devis`); its form is `#devis-form`.
 const card = (page: Page) => page.locator("#devis");
 const hydrated = (page: Page) => expect(page.locator("form#devis-form select")).toHaveCount(0);
 
@@ -93,6 +94,7 @@ test.describe("call me back", () => {
     await page.goto("/fr#devis");
     await hydrated(page);
     const callback = page.locator("#devis-callback");
+    await expect(callback).not.toHaveAttribute("open", "");
     await callback.getByText("Rappelez-moi").click();
     const form = page.locator("form#devis-callback-form");
     await form.locator("input[name=mobile]").fill(mobile);
