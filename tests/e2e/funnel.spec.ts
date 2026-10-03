@@ -19,7 +19,10 @@ test.describe("without JavaScript", () => {
     await form.locator("input[name=mobile]").fill(mobile);
     await form.locator("input[name=locality]").fill(locality);
     // Without a script the selects are the platform's own, which post as they are.
-    await form.locator("select[name=bedrooms]").selectOption("2");
+    // The page renders the first job, a regular clean, whose estimate asks
+    // the bedrooms itself — so without a script the optional select is not
+    // shown; a deep clean posted from here is a quote with the contact only.
+    await expect(form.locator("select[name=bedrooms]")).toBeHidden();
     await form.locator("select[name=subject]").selectOption("deep");
     // The time trap flags anything faster than a person; this is a person.
     await page.waitForTimeout(MIN_FILL_MS + 500);
@@ -39,7 +42,7 @@ test.describe("without JavaScript", () => {
         zip: locality,
         location_id: "vifnet",
         spam_verdict: null,
-        extras: JSON.stringify({ name: "Amanda Reyes", bedrooms: "2" }),
+        extras: JSON.stringify({ name: "Amanda Reyes" }),
       });
     } finally {
       db.close();

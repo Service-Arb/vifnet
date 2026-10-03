@@ -1,7 +1,7 @@
-import { LEAD_CAPTURE_TEXT, type Place } from "@evinvest/kitstart";
+import { LEAD_CAPTURE_TEXT, type Place, type PricingModel } from "@evinvest/kitstart";
 import type { LeadCaptureLayout } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
-import { BEDROOMS, EXTRAS, LEAD, SUBJECTS } from "@/shared/config/lead";
+import { BEDROOMS, EXTRAS, FLOWS, LEAD, PHOTO_NEEDS, SUBJECTS, type Subject } from "@/shared/config/lead";
 import { BedroomsField, TrustLine } from "./fields";
 import { LEAD_CAPTURE_LOOK } from "./look";
 import { QuoteCapture } from "./QuoteCapture";
@@ -14,6 +14,10 @@ export interface QuoteCardProps {
   /** `contactOf(site, place)`: a `null` number is a channel the card does not offer. */
   contact: { phone: string | null; whatsapp: string | null };
   renderedAt: number;
+  /** The price list an estimate is priced from live (the server prices it again); `null`: every job is a quote. */
+  pricing: PricingModel | null;
+  /** The job the page already knows, not asked again; `?need=` and a service card's `data-need` set it too. */
+  need?: Subject | undefined;
   /** Experiment `lead_layout`'s switch: the need on the same screen, or first. */
   layout: LeadCaptureLayout;
   /** The assignment the card's events and its post carry; none when no test runs. */
@@ -29,9 +33,11 @@ export interface QuoteCardProps {
  * kit's. A service card names its service (`data-need`), so the card does not
  * ask it again. The card is `#<id>` (`#devis`), its form `#devis-form`, the
  * callback `#devis-callback`; the form posts `form_id=quote`, the kit's
- * default, so its events stay comparable across brands.
+ * default, so its events stay comparable across brands. A regular clean is
+ * an estimate (`FLOWS`): its answers as tiles, the price live, "Réserver";
+ * the other jobs are quotes, with photos on WhatsApp when the place has it.
  */
-export function QuoteCard({ copy, id, place, contact, renderedAt, layout, experiment }: QuoteCardProps) {
+export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need, layout, experiment }: QuoteCardProps) {
   const { t, locale } = copy;
   const kit = LEAD_CAPTURE_TEXT[locale];
   const text = {
@@ -56,6 +62,10 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, layout, experi
       renderedAt={renderedAt}
       wire={LEAD.wire}
       needs={SUBJECTS.map(s => ({ value: s, label: t.services.items[s].name }))}
+      flows={FLOWS}
+      pricing={pricing}
+      photos={PHOTO_NEEDS}
+      need={need}
       layout={layout}
       name={{ field: EXTRAS.name.name }}
       extras={
