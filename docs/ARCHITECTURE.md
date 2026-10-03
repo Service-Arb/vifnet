@@ -102,3 +102,27 @@ only closes it after a link or on Esc. The selects are kitstart's
 `FormSelect`: a native `<select>` without a script, the kit's list once the
 page hydrates — never a bare `NativeSelect`, whose popup is the platform's
 menu.
+
+## How a job is sold
+
+Each job is sold one way (`FLOWS` in `shared/config/lead.ts`, kitstart's
+form variants). A regular clean is an `estimate`: the card asks its answers
+as tiles — bedrooms, surface band, frequency; the zone too once the place
+names more than one commune — and shows the price live, "Réserver" under
+it. `/quote` prices the posted answers again with the same `priceOf` and
+stores its own number (`flow`, `quoted_cents`, `pricing_valid_from`,
+`estimate_inputs`); a posted amount is never read. The card then confirms
+that price and promises a call to set the slot — no booking provider yet.
+A deep clean, a move and after-works are quotes: the crew has to see the
+place, so the card offers to send photos on WhatsApp (once the place has a
+number) and the callback.
+
+The price list is `shared/config/pricing.ts`, placeholder amounts until the
+owner sets them (OWNER_TODO, blocks a launch). The panel's
+`/api/internal/brands/vifnet/pricing`, on the place source's base
+(`LOCATIONS_API_URL`), overrides it whole; unset, down, `{}` or a model that
+does not validate, the page and the route price from the baked one. The
+estimate asks the bedrooms itself, so while its tiles are in the form the
+card's optional bedrooms question is not shown.
+`PANEL_FLOW` (`shared/lib/funnel-event.ts`) keeps the sale out of
+`lead.created` until the panel in production accepts those properties.

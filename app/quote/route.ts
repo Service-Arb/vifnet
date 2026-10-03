@@ -2,7 +2,7 @@ import { quoteRoute } from "@evinvest/kitstart/next";
 import { after } from "next/server";
 import { TEXT } from "@/entities/content";
 import { experimentSink, withExperimentLead, witnessedDefer } from "@/features/experiment/server";
-import { notifier, serverEnv, webhook } from "@/shared/config/env";
+import { notifier, pricing, serverEnv, webhook } from "@/shared/config/env";
 import { ANCHORS } from "@/shared/config/nav";
 import { site } from "@/shared/config/site";
 
@@ -13,6 +13,8 @@ const route = quoteRoute(site, {
   env: serverEnv,
   notifier,
   webhook,
+  // The server prices an estimate itself, from the posted answers: a posted amount is never read.
+  pricing,
   defer: witnessedDefer(after),
   // A refusal lands back on the card. LeadCapture posts its id (`card`) too;
   // this covers a post without it — a page cached before kitstart 0.9.0.

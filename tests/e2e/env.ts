@@ -8,6 +8,10 @@ import { join } from "node:path";
  */
 export const PORT = Number(process.env["E2E_PORT"] ?? 59089);
 
+/** The panel stand-in (`mock-panel.mjs`), and the base the server under test reads it at. */
+export const MOCK_PORT = Number(process.env["E2E_MOCK_PORT"] ?? PORT + 1);
+export const LOCATIONS_API_URL = `http://127.0.0.1:${MOCK_PORT}/api/internal/brands/vifnet`;
+
 /** Emptied when the server starts: an earlier run's rows must not satisfy this one. */
 export const LEADS_DB = join(tmpdir(), `vifnet-e2e-${PORT}`, "leads.db");
 

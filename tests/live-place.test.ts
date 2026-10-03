@@ -1,6 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { site } from "@/shared/config/site";
 import { CONTROL } from "@/shared/lib/experiments";
 import { PlaceHome } from "@/views/home";
 import { loadPlace } from "@/views/place/server";
@@ -35,7 +36,7 @@ const target = { key: null, host: "https://us.i.posthog.com", brandId: "vifnet" 
 
 async function homeHtml() {
   const { view, copy, renderedAt } = await loadPlace(params);
-  return renderToStaticMarkup(createElement(PlaceHome, { view, copy, renderedAt, experiments: { assignment: CONTROL, target } }));
+  return renderToStaticMarkup(createElement(PlaceHome, { view, copy, renderedAt, pricing: site.pricing ?? null, experiments: { assignment: CONTROL, target } }));
 }
 
 describe("a phone from the panel", () => {

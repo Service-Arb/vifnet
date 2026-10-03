@@ -12,7 +12,7 @@ const text = { title: TEXT.fr.quote.doneTitle, titleNoName: TEXT.fr.quote.doneTi
 
 /** The title as a visitor reads it: the first paragraph's text, entities decoded. */
 function title(name: string | null): string {
-  const html = renderToStaticMarkup(createElement(QuoteDone, { text, name, phone: "06 12 34 56 78" }));
+  const html = renderToStaticMarkup(createElement(QuoteDone, { text, name, phone: "06 12 34 56 78", priced: false }));
   const inner = /<p[^>]*>(.*?)<\/p>/.exec(html)?.[1] ?? "";
   return inner.replaceAll("&#x27;", "'").replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&quot;", '"');
 }
@@ -31,5 +31,14 @@ describe("the card's Done state", () => {
   // are the text after and before the match, `$&` the match itself.
   it.each(["$'", "$`", "$&", "$$", "$1"])("prints a name typed as %s as it was typed", name => {
     expect(title(`${name} Jean`)).toBe(`C’est noté, ${name}${NBSP}!`);
+  });
+
+  // An estimate's price is confirmed under it by the kit: a "firm quote" to come would contradict it.
+  it("promises no quote to a priced lead, and still greets it", () => {
+    const quoted = renderToStaticMarkup(createElement(QuoteDone, { text, name: "Jean", phone: "06 12 34 56 78", priced: false }));
+    const priced = renderToStaticMarkup(createElement(QuoteDone, { text, name: "Jean", phone: "06 12 34 56 78", priced: true }));
+    expect(quoted).toContain("devis ferme");
+    expect(priced).not.toContain("devis ferme");
+    expect(priced).toContain("Jean");
   });
 });
