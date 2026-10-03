@@ -3,6 +3,7 @@ import { after } from "next/server";
 import { TEXT } from "@/entities/content";
 import { experimentSink, withExperimentLead, witnessedDefer } from "@/features/experiment/server";
 import { notifier, serverEnv, webhook } from "@/shared/config/env";
+import { ANCHORS } from "@/shared/config/nav";
 import { site } from "@/shared/config/site";
 
 /** The no-JS path: a plain form POST answered with a 303. */
@@ -13,6 +14,9 @@ const route = quoteRoute(site, {
   notifier,
   webhook,
   defer: witnessedDefer(after),
+  // A refusal lands back on the card. LeadCapture posts its id (`card`) too;
+  // this covers a post without it — a page cached before kitstart 0.9.0.
+  anchor: ANCHORS.quote,
   unavailable: locale => {
     const t = TEXT[locale];
     const f = { place: site.brand.name, phone: site.brand.phone };

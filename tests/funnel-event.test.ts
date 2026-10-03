@@ -5,8 +5,10 @@ import { join } from "node:path";
 import type { Lead } from "@evinvest/kitstart";
 import { leadWebhook, parseServerEnv, type LeadWebhookContext } from "@evinvest/kitstart/server";
 import { afterEach, describe, expect, it } from "vitest";
+import { TEXT } from "@/entities/content";
+import { PANEL_NEED, SUBJECTS } from "@/shared/config/lead";
 import { site } from "@/shared/config/site";
-import { isOpaqueId, leadCreatedBody, panelLeadId, SA_INGEST_SIGNING, uuidV7 } from "@/shared/lib/funnel-event";
+import { isOpaqueId, leadCreatedBody, PANEL_SUSPECT, panelLeadId, panelWebhookOptions, SA_INGEST_SIGNING, uuidV7 } from "@/shared/lib/funnel-event";
 
 const lead: Lead = {
   subject: "deep",
@@ -63,7 +65,7 @@ describe("lead.created for the panel", () => {
           source: { kind: "site", id: "vifnet-site" },
           subject: { brandId: "vifnet", locationId: "vifnet", leadId: LEAD_ID },
           properties: { channel: "form" },
-          pii: { name: "Jane Doe", bedrooms: "3", phone: "(212) 555-0147", need: "deep", locality: "10001" },
+          pii: { name: "Jane Doe", bedrooms: "3", phone: "(212) 555-0147", need: "Grand ménage", locality: "10001" },
         },
       ],
     });
@@ -99,7 +101,7 @@ describe("lead.created for the panel", () => {
   it("keeps what the customer typed out of properties, and NUL out of everything", () => {
     const [event] = leadCreatedBody({ ...lead, mobile: "212\u0000555", subject: "move", locality: "", extras: { name: "Jane\u0000" } }, ctx, "vifnet-site").events;
     expect(event.properties).toEqual({ channel: "form" });
-    expect(event.pii).toEqual({ name: "Jane", phone: "212555", need: "move" });
+    expect(event.pii).toEqual({ name: "Jane", phone: "212555", need: "Entrée / sortie" });
     expect(JSON.stringify(event)).not.toContain("\\u0000");
   });
 
@@ -108,6 +110,29 @@ describe("lead.created for the panel", () => {
     const [event] = leadCreatedBody({ ...lead, channel: "callback", consent }, ctx, "vifnet-site").events;
     expect(event.properties).toEqual({ channel: "form" });
     expect(JSON.stringify(event)).not.toContain(consent.text);
+  });
+
+  // LEAD-FORMS-REVIEW-2026-10-03 #13: the operator read `deep`, `standard`.
+  it("names the job in the operator's words: the French service card's name", () => {
+    for (const subject of SUBJECTS) {
+      expect(PANEL_NEED[subject], subject).toBe(TEXT.fr.services.items[subject].name);
+      const [event] = leadCreatedBody({ ...lead, subject }, ctx, "vifnet-site").events;
+      expect(event.pii?.["need"], subject).toBe(TEXT.fr.services.items[subject].name);
+    }
+  });
+
+  it("keeps a job that is none of ours as it was posted", () => {
+    const [event] = leadCreatedBody({ ...lead, subject: "windows" }, ctx, "vifnet-site").events;
+    expect(event.pii?.["need"]).toBe("windows");
+  });
+
+  it("marks a suspect lead only when the kit says it is one", () => {
+    const [clean] = leadCreatedBody(lead, ctx, "vifnet-site").events;
+    expect(clean.properties).toEqual({ channel: "form" });
+    for (const suspect of ["rate_limited", "too_fast"] as const) {
+      const [event] = leadCreatedBody(lead, { ...ctx, suspect }, "vifnet-site").events;
+      expect(event.properties).toEqual({ channel: "form", suspect });
+    }
   });
 
   it("leaves the location out for a lead from no point", () => {
@@ -141,6 +166,60 @@ describe("the lead webhook, wired as the site wires it", () => {
   afterEach(() => {
     if (dir) rmSync(dir, { recursive: true, force: true });
     dir = undefined;
+  });
+
+  /** What the panel would receive for each lead, through kitstart's webhook built with `options`. */
+  async function delivered(options: ReturnType<typeof panelWebhookOptions>, leads: readonly Lead[]): Promise<{ panelSuspect: boolean; bodies: unknown[] }> {
+    dir = mkdtempSync(join(tmpdir(), "vifnet-hook-"));
+    const env = parseServerEnv(site, {
+      LEADS_DB_PATH: join(dir, "leads.db"),
+      LEAD_WEBHOOK_URL: "http://127.0.0.1:59120/api/ingest/v1/events",
+      LEAD_WEBHOOK_KEY_ID: "vifnet-site",
+      LEAD_WEBHOOK_SECRET: "test-secret",
+    });
+    const bodies: unknown[] = [];
+    const hook = leadWebhook(site, env, {
+      ...options,
+      fetch: async (input, init) => {
+        bodies.push(JSON.parse(await new Request(input, init).text()));
+        return new Response(JSON.stringify({ results: [{ index: 0, status: "accepted" }] }), { status: 207 });
+      },
+      log: { info: () => {}, warn: () => {}, error: () => {} },
+    });
+    if (!hook) throw new Error("the webhook should be on");
+    try {
+      leads.forEach((l, i) => hook.enqueue(l, i + 1, { locale: "fr", formId: "quote" }));
+      await hook.tick();
+      return { panelSuspect: hook.panelSuspect, bodies };
+    } finally {
+      hook.close();
+    }
+  }
+
+  /** One event whose properties are exactly these: a `suspect` key that should not be there fails it. */
+  const withProperties = (properties: Record<string, string>) => ({ events: [expect.objectContaining({ properties })] });
+  const fast: Lead = { ...lead, spamVerdict: "too-fast" };
+  const limited: Lead = { ...lead, spamVerdict: "rate-limited" };
+  const trapped: Lead = { ...lead, spamVerdict: "honeypot" };
+
+  // LEAD-FORMS-REVIEW-2026-10-03 #18. Off: the panel refuses a property it
+  // does not know, and the outbox would park every suspect lead.
+  it("sends no suspect marker while the panel cannot take it", async () => {
+    expect(PANEL_SUSPECT).toBe(false);
+    const { panelSuspect, bodies } = await delivered(panelWebhookOptions("vifnet-site"), [fast, limited, trapped]);
+    expect(panelSuspect).toBe(false);
+    expect(bodies).toEqual([fast, limited, trapped].map(() => withProperties({ channel: "form" })));
+  });
+
+  it("switched on, says why a lead is suspect — never for the honeypot", async () => {
+    const { panelSuspect, bodies } = await delivered({ ...panelWebhookOptions("vifnet-site"), panelSuspect: true }, [lead, fast, limited, trapped]);
+    expect(panelSuspect).toBe(true);
+    expect(bodies).toEqual([
+      withProperties({ channel: "form" }),
+      withProperties({ channel: "form", suspect: "too_fast" }),
+      withProperties({ channel: "form", suspect: "rate_limited" }),
+      withProperties({ channel: "form" }),
+    ]);
   });
 
   it("is off without LEAD_WEBHOOK_URL", () => {

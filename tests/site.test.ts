@@ -108,8 +108,10 @@ describe("the lead", () => {
     expect(LEAD.validate?.(lead({}))).toBeNull();
   });
 
-  it("refuses bedrooms off the list, and a short number", () => {
-    expect(LEAD.validate?.(lead({ name: "Amanda", bedrooms: "12" }))).not.toBeNull();
-    expect(LEAD.validate?.({ ...lead({ name: "Amanda" }), mobile: "0612" })).not.toBeNull();
+  it("refuses bedrooms off the list, and a number we cannot call, naming the field", () => {
+    expect(LEAD.validate?.(lead({ name: "Amanda", bedrooms: "12" }))).toMatchObject({ field: "bedrooms" });
+    expect(LEAD.validate?.({ ...lead({ name: "Amanda" }), mobile: "0612" })).toMatchObject({ field: "phone" });
+    // The phone is judged first: one refusal at a time, the one the form shows.
+    expect(LEAD.validate?.({ ...lead({ bedrooms: "9" }), mobile: "06 12 34 56 7" })).toMatchObject({ field: "phone" });
   });
 });

@@ -7,7 +7,7 @@ import {
   type LeadNotifier,
   type LeadWebhook,
 } from "@evinvest/kitstart/server";
-import { leadCreatedBody, SA_INGEST_SIGNING } from "@/shared/lib/funnel-event";
+import { panelWebhookOptions } from "@/shared/lib/funnel-event";
 import { site } from "./site";
 
 /** Parsed once, lazily: `next build` imports this and must need no secrets. */
@@ -39,9 +39,6 @@ export function webhook(): LeadWebhook | null {
   hook =
     target === null
       ? null
-      : leadWebhook(site, env, {
-          signing: SA_INGEST_SIGNING,
-          buildBody: (lead, ctx) => leadCreatedBody(lead, ctx, target.keyId),
-        });
+      : leadWebhook(site, env, panelWebhookOptions(target.keyId));
   return hook;
 }

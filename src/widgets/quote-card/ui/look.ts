@@ -38,7 +38,11 @@ export const LEAD_CAPTURE_LOOK: Readonly<Partial<Record<LeadCapturePart, string>
   form: "gap-3",
   contact: "gap-3",
   trust: "gap-3",
-  field: "gap-1.5",
+  // The kit's gap: since 0.9.0 each field ends in an always-present live
+  // region that, empty, takes the gap back with `-mt-2` — under `gap-1.5`
+  // every field came out 2 px short. The label is `sr-only`, so the gap is
+  // only ever between the box and its message.
+  field: "gap-2",
   control: `${FIELD} px-4`,
   // qualify-first's tiles: the Field's box and type, so both arms read alike.
   need: "rounded-xl py-3.5 text-sm leading-5 text-slate-700",

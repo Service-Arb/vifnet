@@ -23,6 +23,11 @@ leads file before the visitor is thanked, signed, and retried from there.
 `LEAD_WEBHOOK_URL`, `LEAD_WEBHOOK_KEY_ID` and `LEAD_WEBHOOK_SECRET` come from
 the container's Secret, all three or none; without the URL the webhook is off,
 which is why it is not in `deploy/config.nix`.
+The event's `pii.need` is the job in the operator's words — the French name
+of its service card (`PANEL_NEED`), not the posted id. Why a lead is suspect
+(`rate_limited`, `too_fast`) is wired into the body as `properties.suspect`,
+but `PANEL_SUSPECT` keeps it off until the panel's `lead.created` accepts the
+property: it refuses an unknown one, and the outbox would park the lead.
 
 ## A place without an address
 
@@ -80,7 +85,11 @@ writes from the visitor's `ab_<key>` cookie. The quote form is kitstart's
 card through its `className` and `classNames`, with the frame's placeholders
 (the labels are for assistive technology only) — and a plain POST answered
 with a 303, so it submits before any script loads; with one, it says done in
-the card (Figma QuoteCard Done). It is the hero's card, the one place every
+the card (Figma QuoteCard Done). The server refuses only what the form itself
+blocks — kitstart's phone rule (`validateLead`) — plus a bedrooms value off
+the list; a refusal lands back on `#devis` with the error at its field, and
+a post that gets no answer (offline, a hung server) says so in the card and
+resends the same lead, which the server stores once. It is the hero's card, the one place every
 CTA points at (`#devis`), with its "call me back" (`#devis-callback`) folded
 to one line under it.
 A service card's link names its service (`data-need`), so the card does not

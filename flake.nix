@@ -8,7 +8,7 @@
     v_flakes.url = "github:valeratrades/v_flakes?ref=v1.6";
     # The lib flake at the tag of the @evinvest/kitstart version in
     # package-lock.json — mkLanding refuses a mismatch.
-    ev.url = "github:EV-invest/lib?ref=@evinvest/kitstart-v0.7.0";
+    ev.url = "github:EV-invest/lib?ref=@evinvest/kitstart-v0.9.0";
     ev.inputs.v_flakes.follows = "v_flakes";
   };
 
@@ -56,7 +56,7 @@
           smoke = {
             page = "/fr";
             og = "/og?l=vifnet";
-            quote = { location = "vifnet"; subject = "deep"; locality = "83702"; mobile = "2085550192"; name = "Smoke Test"; bedrooms = "3"; };
+            quote = { location = "vifnet"; subject = "deep"; locality = "83702"; mobile = "+12085550192"; name = "Smoke Test"; bedrooms = "3"; };
           };
         };
 
