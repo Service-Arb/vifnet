@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { TEXT } from "@/entities/content";
 import { PANEL_NEED, SUBJECTS } from "@/shared/config/lead";
 import { site } from "@/shared/config/site";
-import { isOpaqueId, leadCreatedBody, PANEL_FLOW, PANEL_SUSPECT, panelLeadId, panelWebhookOptions, SA_INGEST_SIGNING, uuidV7 } from "@/shared/lib/funnel-event";
+import { isOpaqueId, leadCreatedBody, PANEL_ANALYTICS_ID, PANEL_FLOW, PANEL_SUSPECT, panelLeadId, panelWebhookOptions, SA_INGEST_SIGNING, uuidV7 } from "@/shared/lib/funnel-event";
 
 const lead: Lead = {
   subject: "deep",
@@ -91,6 +91,19 @@ describe("lead.created for the panel", () => {
     const [full] = leadCreatedBody(lead, { ...ctx, suspect: "too_fast", flow }, "vifnet-site").events;
     expect(Object.keys(full.properties)).toEqual(["channel", "suspect", "flow", "quoted_cents", "pricing_valid_from", "estimate_inputs"]);
     keysWithin(full.properties, "LeadCreatedV1");
+    // And the visit's analytics id, under its switch (panel v0.4.0).
+    const [joined] = leadCreatedBody(lead, { ...ctx, analyticsId: "0b5c1f0e-7d1a-4e8b-9c2d-3f4a5b6c7d8e" }, "vifnet-site", true).events;
+    expect(joined.properties).toEqual({ channel: "form", analytics_id: "0b5c1f0e-7d1a-4e8b-9c2d-3f4a5b6c7d8e" });
+    keysWithin(joined.properties, "LeadCreatedV1");
+  });
+
+  // Off until the panel in production takes `analytics_id`: it refuses an unknown property.
+  it("sends the visit's analytics id only under its switch, and never an empty one", () => {
+    expect(PANEL_ANALYTICS_ID).toBe(false);
+    const visited = { ...ctx, analyticsId: "a1.b2:c3-d4" };
+    expect(leadCreatedBody(lead, visited, "vifnet-site").events[0].properties).toEqual({ channel: "form" });
+    expect(leadCreatedBody(lead, visited, "vifnet-site", true).events[0].properties).toEqual({ channel: "form", analytics_id: "a1.b2:c3-d4" });
+    expect(leadCreatedBody(lead, ctx, "vifnet-site", true).events[0].properties).toEqual({ channel: "form" });
   });
 
   it("meets the panel's checks on the envelope", () => {
@@ -187,7 +200,11 @@ describe("the lead webhook, wired as the site wires it", () => {
   });
 
   /** What the panel would receive for each lead, through kitstart's webhook built with `options`. */
-  async function delivered(options: ReturnType<typeof panelWebhookOptions>, leads: readonly Lead[]): Promise<{ panelSuspect: boolean; bodies: unknown[] }> {
+  async function delivered(
+    options: ReturnType<typeof panelWebhookOptions>,
+    leads: readonly Lead[],
+    meta: { analyticsId?: string } = {},
+  ): Promise<{ panelSuspect: boolean; bodies: unknown[] }> {
     dir = mkdtempSync(join(tmpdir(), "vifnet-hook-"));
     const env = parseServerEnv(site, {
       LEADS_DB_PATH: join(dir, "leads.db"),
@@ -206,7 +223,7 @@ describe("the lead webhook, wired as the site wires it", () => {
     });
     if (!hook) throw new Error("the webhook should be on");
     try {
-      leads.forEach((l, i) => hook.enqueue(l, i + 1, { locale: "fr", formId: "quote" }));
+      leads.forEach((l, i) => hook.enqueue(l, i + 1, { locale: "fr", formId: "quote", ...meta }));
       await hook.tick();
       return { panelSuspect: hook.panelSuspect, bodies };
     } finally {
@@ -265,6 +282,15 @@ describe("the lead webhook, wired as the site wires it", () => {
       withProperties({ channel: "form", flow: "quote" }),
       withProperties({ channel: "form" }),
     ]);
+  });
+
+  // The id the page posted reaches the body through the kit's queue, only when switched on.
+  it("carries the posted analytics id through the outbox under its switch", async () => {
+    const meta = { analyticsId: "0b5c1f0e-7d1a-4e8b-9c2d-3f4a5b6c7d8e" };
+    const on = await delivered(panelWebhookOptions("vifnet-site", { panelAnalyticsId: true }), [lead], meta);
+    expect(on.bodies).toEqual([withProperties({ channel: "form", analytics_id: meta.analyticsId })]);
+    const off = await delivered(panelWebhookOptions("vifnet-site"), [lead], meta);
+    expect(off.bodies).toEqual([withProperties({ channel: "form" })]);
   });
 
   it("switched off, sends no sale", async () => {
