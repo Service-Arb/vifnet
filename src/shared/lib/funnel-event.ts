@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import { channelOf, type Lead } from "@evinvest/kitstart";
-import { panelChannel, type LeadWebhookContext, type WebhookSigning } from "@evinvest/kitstart/server";
+import { channelOf, type Lead, type LeadSuspect } from "@evinvest/kitstart";
+import { panelChannel, type LeadWebhookContext, type LeadWebhookOptions, type WebhookSigning } from "@evinvest/kitstart/server";
 import { isSubject, PANEL_NEED } from "@/shared/config/lead";
 
 /**
@@ -12,6 +12,13 @@ export const SA_INGEST_SIGNING: WebhookSigning = {
   prefix: "sa-ingest/v1.",
   headers: { keyId: "x-sa-key-id", timestamp: "x-sa-timestamp", signature: "x-sa-signature" },
 };
+
+/**
+ * Whether a suspect lead goes to the panel marked (`suspect`) — and a
+ * rate-limited one goes at all. Off until the panel's `lead.created` accepts
+ * the property: it refuses an unknown one, and the outbox would park the lead.
+ */
+export const PANEL_SUSPECT = false;
 
 /**
  * `lead.created@1` as protojson — `sa.v1.Event` with `LeadCreatedV1` for
@@ -26,7 +33,11 @@ export interface LeadCreatedEvent {
   source: { kind: "site"; id: string };
   subject: { brandId: string; locationId?: string; leadId: string };
   /** The panel's closed set: a callback travels as `form` until it accepts `callback` (`panelChannel`). */
-  properties: { channel: ReturnType<typeof panelChannel> };
+  /**
+   * `suspect` only when the kit sets `ctx.suspect`, which it does only under
+   * `PANEL_SUSPECT`: `rate_limited` or `too_fast`, never `honeypot`.
+   */
+  properties: { channel: ReturnType<typeof panelChannel>; suspect?: LeadSuspect };
   pii?: Record<string, string>;
 }
 
@@ -122,8 +133,16 @@ export function leadCreatedBody(lead: Lead, ctx: LeadWebhookContext, sourceId: s
     subject,
     properties: { channel: panelChannel(channelOf(lead)) },
   };
+  if (ctx.suspect !== undefined) event.properties.suspect = ctx.suspect;
   const pii = piiOf(lead);
   if (Object.keys(pii).length > 0) event.pii = pii;
   return { events: [event] };
 }
 
+/**
+ * The site's options for kitstart's `leadWebhook`: the panel's signing, this
+ * body, and the suspect switch. `keyId` is the key the batch is signed with.
+ */
+export function panelWebhookOptions(keyId: string): Pick<LeadWebhookOptions, "signing" | "buildBody" | "panelSuspect"> {
+  return { signing: SA_INGEST_SIGNING, buildBody: (lead, ctx) => leadCreatedBody(lead, ctx, keyId), panelSuspect: PANEL_SUSPECT };
+}
