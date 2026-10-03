@@ -81,13 +81,8 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
       // Folded: the frame's card has no callback, so it is one quiet line
       // until asked for — even when the place is closed and it would lead.
       callbackOpen={false}
-      // Keyed: built here, on the server, and handed to the kit's client
-      // island as a prop, this element alone set off React's dev warning
-      // "Each child in a list should have a unique key… render method of
-      // LeadCapture" (found by taking the slots out one at a time); the
-      // extras and the trust line, server components, do not.
       head={
-        <div key="head" className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1">
           <h2 className="font-display text-2xl leading-8 font-bold text-brand">{t.quoteForm.title}</h2>
           <p className="text-sm leading-5 text-ink-soft">{t.quoteForm.lede}</p>
         </div>
