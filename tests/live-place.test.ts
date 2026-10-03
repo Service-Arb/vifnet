@@ -36,7 +36,7 @@ const target = { key: null, host: "https://us.i.posthog.com", brandId: "vifnet" 
 
 async function homeHtml() {
   const { view, copy, renderedAt } = await loadPlace(params);
-  return renderToStaticMarkup(createElement(PlaceHome, { view, copy, renderedAt, pricing: site.pricing ?? null, experiments: { assignment: CONTROL, target } }));
+  return renderToStaticMarkup(createElement(PlaceHome, { view, copy, renderedAt, pricing: site.pricing ?? null, experiments: { bucket: CONTROL, target } }));
 }
 
 describe("a phone from the panel", () => {

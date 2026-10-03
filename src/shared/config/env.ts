@@ -1,5 +1,7 @@
 import "server-only";
+import { applyOverrides } from "@evinvest/experiments";
 import {
+  createExperimentsSource,
   createPlaceSource,
   createPricingSource,
   createServerEnv,
@@ -9,6 +11,7 @@ import {
   type LeadWebhook,
 } from "@evinvest/kitstart/server";
 import { panelWebhookOptions } from "@/shared/lib/funnel-event";
+import { EXPERIMENTS, type LiveExperiments } from "./experiments";
 import { site } from "./site";
 
 /** Parsed once, lazily: `next build` imports this and must need no secrets. */
@@ -23,6 +26,22 @@ export const places = createPlaceSource(site, { baseUrl: () => serverEnv().locat
  * `{}` or a model that does not validate all price from the baked one.
  */
 export const pricing = createPricingSource(site, { baseUrl: () => serverEnv().locationsApiUrl });
+
+/**
+ * The operator's weights and kill switches from the same base — the panel's
+ * `/api/internal/brands/vifnet/experiments`. Answered from memory (30 s TTL,
+ * stale-while-revalidate); unset, down or never answered is `{}`, the code's.
+ */
+export const experimentOverrides = createExperimentsSource({ baseUrl: () => serverEnv().locationsApiUrl });
+
+/**
+ * {@link EXPERIMENTS} as it runs now: wherever a variant is read off a cookie
+ * (the proxy, `/quote`), it is read under this, so a cookie of an experiment
+ * the panel switched off counts as the control.
+ */
+export async function liveExperiments(): Promise<LiveExperiments> {
+  return applyOverrides(EXPERIMENTS, await experimentOverrides.overrides());
+}
 
 let built: LeadNotifier | undefined;
 

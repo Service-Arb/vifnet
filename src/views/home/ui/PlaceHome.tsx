@@ -2,11 +2,11 @@ import { contactOf, faqPageNode, placeGraph, type AnalyticsTarget, type PlaceVie
 import { JsonLd } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { ExperimentScope } from "@/features/experiment";
-import { BOOKING_ARMS, EXPERIMENTS, LEAD_LAYOUTS } from "@/shared/config/experiments";
+import { BOOKING_ARMS, LEAD_LAYOUTS } from "@/shared/config/experiments";
 import type { Locale } from "@/shared/config/i18n";
 import { ANCHORS, placeNav } from "@/shared/config/nav";
 import { site } from "@/shared/config/site";
-import type { Assignment } from "@/shared/lib/experiments";
+import { type Bucket, variantsOf } from "@/shared/lib/experiments";
 import { fromPrices } from "@/shared/lib/from-price";
 import { Closing } from "@/widgets/closing";
 import { FaqBand } from "@/widgets/faq";
@@ -37,8 +37,12 @@ export interface PlaceHomeProps {
   renderedAt: number;
   /** The price list the quote card prices estimates from, and the service cards start theirs at: the panel's, else the baked one. */
   pricing: PricingModel | null;
-  /** The bucket this render is (the path's, never the request's) and where its events go. */
-  experiments: { assignment: Assignment; target: AnalyticsTarget };
+  /**
+   * The bucket this render is (the path's, never the request's): the tests
+   * that run on this page and their arms. An absent one renders its control
+   * and counts nothing. And where the events go.
+   */
+  experiments: { bucket: Bucket; target: AnalyticsTarget };
 }
 
 /**
@@ -51,10 +55,9 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
   const now = new Date(renderedAt);
   const nav = placeNav(view, t.nav, site.pages.home);
   const graph = placeGraph(site, view, "home", { placeName: f.place, title: t.pages.home.title(f), description: t.pages.home.description(f) }, now);
-  const variant = experiments.assignment.lead_layout;
-  const running = EXPERIMENTS.lead_layout.enabled;
-  const booking = experiments.assignment.booking_provider;
-  const bookingRunning = EXPERIMENTS.booking_provider.enabled;
+  const { lead_layout: variant, booking_provider: booking } = variantsOf(experiments.bucket);
+  const running = experiments.bucket.lead_layout !== undefined;
+  const bookingRunning = experiments.bucket.booking_provider !== undefined;
   return (
     <>
       <JsonLd data={graph} />
@@ -66,7 +69,7 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
         variant={variant}
         enabled={running}
       >
-        {/* Its own exposures and contacts, so `npm run ab:report` reads both tests alike. */}
+        {/* Its own exposures and contacts, so PostHog's funnel reads both tests alike. */}
         <ExperimentScope
           target={experiments.target}
           placeSlug={view.place.slug}

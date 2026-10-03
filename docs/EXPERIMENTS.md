@@ -1,24 +1,56 @@
 # Experiments
 
-A/B tests on the home page, measured in PostHog (Cloud US, project 614067,
-filtered by `brand_id = vifnet`). aquafix runs the same machinery with the same
-event names and the same `npm run ab:report`, so the two reports read alike.
+A/B tests on the home page. Three places, each with one job:
+
+- **The code** declares an experiment — its variants and their rendering,
+  and the default weights and `enabled`. A new arm is always a deploy.
+- **The Service-Arb panel** ("Experiments" screen) sets the weights, the kill
+  switch and a holdout over the code's, live, without a deploy.
+- **PostHog** (Cloud US, project 614067, `brand_id = vifnet`) holds the
+  statistics; the panel counts nothing. aquafix runs the same machinery with
+  the same event names, so the two sites' funnels read alike.
 
 ## How it works
 
 - **Config**: `src/shared/config/experiments.ts` — each experiment's variants
-  (`variants[0]` is the control), weights (50/50) and `enabled`.
+  (`variants[0]` is the control), weights (50/50), `enabled` and a one-line
+  hypothesis (`EXPERIMENT_SUMMARIES`).
+- **Declaration**: at every start (`instrumentation.ts`) the server tells the
+  panel which experiments this build runs, with their variants, weights and
+  hypotheses — `experiments.declared@1` through the lead webhook's outbox,
+  under `PANEL_EXPERIMENTS` (off until the panel v0.4.0 is in production).
+  An experiment missing from the latest declaration is retired in the panel.
+- **Overrides**: `GET <LOCATIONS_API_URL>/experiments`, the operator's
+  `enabled`, `weights` and `holdout` per key (`experimentOverrides` in
+  `shared/config/env.ts`, kitstart's `createExperimentsSource`). Answered
+  from memory — the first request waits up to 1.5 s, then 30 s fresh and
+  stale-while-revalidate — and a panel that is down or answers garbage keeps
+  the last good answer, or the code's config if there was none.
+  `applyOverrides` from `@evinvest/experiments` lays them over the code
+  (`liveExperiments`), field by field: weights of another length than the
+  code's variants, a negative or all-zero weight, a holdout outside `[0, 1)`
+  or an unknown key are dropped. Variants never come from the panel.
+  **Every place a variant is read off a cookie reads it under the live
+  config**: the proxy (assignment, the bucket, a forced variant) and `/quote`
+  (`experiment_lead`). The page, its events and the place loader read the
+  bucket off the path, which the proxy wrote under the same config.
 - **Assignment**: `proxy.ts` runs kitstart's routing, then, on a place's home
-  page only, `abProxy` from `@evinvest/experiments/next`: a weighted random
+  page only, `abProxy` from `@evinvest/experiments/next` over the live config:
+  a weighted random
   variant in a sticky `ab_<key>` cookie (30 days, `SameSite=Lax`). Crawlers
   and link previews (`isBot` in `src/shared/lib/experiments.ts`: Googlebot,
   bingbot, AdsBot, anything saying bot/crawler/spider/preview, and no user
   agent at all) get the control and no cookie.
-- **Rendering stays ISR.** A visitor off the control is rewritten to the
-  bucket's own path, `/fr/_vifnet~lead_layout.b`; the page reads its
-  variant from the `[location]` param, never from the request, so each bucket
-  is its own cache entry and the control's entry is the page as it always
-  was. There is no per-request rendering cost.
+- **Rendering stays ISR.** An assigned visitor is rewritten to the
+  bucket's own path, `/fr/_vifnet~lead_layout.b~booking_provider.a`: every
+  experiment that runs for them, the control spelt out. The page reads its
+  variants — and whether each test runs at all — from the `[location]` param,
+  never from the request or the panel, so each bucket is its own cache entry.
+  A test switched off is left out of the path, so its page renders the
+  control and counts nothing, cookie or not; a cached page of a running test
+  is never served once it stops (the proxy strips the test from a bucket path
+  it is asked for). No suffix — bots, or no test running — is the page as it
+  always was. There is no per-request rendering cost.
 - **Events** go through a site-local cookieless beacon sink
   (`features/experiment`), with kitstart's key and host, server-rendered into
   props:
@@ -27,7 +59,7 @@ event names and the same `npm run ab:report`, so the two reports read alike.
   | --- | --- | --- |
   | `experiment_exposed` | experiment, variant, forced | once per page view |
   | `experiment_contact` | experiment, variant, channel, forced | a `tel:`/WhatsApp tap, or a `data-intent` of `form_open`/`booking` |
-  | `experiment_step` | experiment, variant, step, forced | nothing since `quote_single_step` ended (its two-step card sent it); the report keeps the column for that history |
+  | `experiment_step` | experiment, variant, step, forced | nothing since `quote_single_step` ended (its two-step card sent it); kept for that history |
   | `experiment_lead` | experiment, variant, forced | server side, in `/quote`, after kitstart accepted the lead |
 
   Every event also carries `brand_id`; the client ones carry `location_id`.
@@ -45,28 +77,26 @@ event names and the same `npm run ab:report`, so the two reports read alike.
   `layout`; `contact_intent_click {channel}`; and, server side,
   `lead_form_submit` with the posted assignment. They go through kitstart's
   sink, not ours: they are not gated on the cookie and carry no `forced`, so
-  they are the funnel's diagnostics, not the report's primary metric.
+  they are the funnel's diagnostics, not the primary metric.
 - **No person is joined.** The sink is cookieless and its `distinct_id` is
   random per page, so exposure and lead are compared as aggregates per
-  variant, not per visitor.
+  variant, not per visitor. (A lead's later life — contacted, won, paid —
+  reaches PostHog from the panel, as `sa_*` events, under the visit's
+  analytics id once `lead.created` carries it: `PANEL_ANALYTICS_ID`.)
 
 ## Reading the result
 
-```sh
-POSTHOG_PERSONAL_API_KEY=phx_… npm run ab:report
-```
-
-A personal API key with `query:read`. Optional: `POSTHOG_PROJECT_ID`
-(614067), `POSTHOG_API_HOST` (`https://us.posthog.com`), `AB_BRAND` (vifnet),
-`AB_DAYS` (90). Forced traffic is left out. Per experiment × variant it prints
-exposures, leads, calls, form opens, steps, the lead rate (leads / exposures)
-and the contact rate ((leads + calls) / exposures), then P(b > a) from
-Beta(1, 1)-Binomial posteriors by Monte Carlo, the expected loss of shipping
-each arm, the days running and a verdict.
+In PostHog, not here and not in the panel. The panel's "Experiments" screen
+opens each experiment's funnel as a PostHog Insight:
+`experiment_exposed` → `experiment_lead`, filtered on `experiment = <key>`,
+`brand_id = vifnet` and `forced` not `true`, broken down by `variant`, from
+the day its weights last changed (or it was first declared). The guardrail's
+calls are `experiment_contact` with `channel = phone`, the same filters.
 
 ## Stop rule
 
-Decide only when **all** hold:
+Read off PostHog's funnel per arm (exposures, leads, calls). Decide only when
+**all** hold:
 
 1. at least **14 days** running (two full weekly cycles), **and**
 2. at least **~100 exposures in each arm**, **and**
@@ -80,14 +110,15 @@ stop early on a lucky day — the thresholds assume the minimums above.
 
 `/fr?ab_lead_layout=b` renders b and stores it in the cookie. A forced
 visit also sets `ab__qa=1` for 30 days: every event from that browser says
-`forced: true` and the report leaves it out. Clear the site's cookies to be a
+`forced: true` and the funnel's `forced` filter leaves it out. Clear the site's cookies to be a
 normal visitor again.
 
 ## Ending an experiment
 
-1. Set `enabled: false` in `src/shared/config/experiments.ts` and deploy:
-   everyone gets the control on the next render, cookies are ignored and no
-   event is sent.
+1. Switch it off in the panel's "Experiments" screen — no deploy: within
+   30 s every request gets the control, cookies are ignored and no event is
+   sent. (`enabled: false` in `src/shared/config/experiments.ts` does the same
+   with a deploy, and is what the next declaration says.)
 2. If b won, make b the page (the Figma frame follows, or the owner signs the
    departure off), then delete the experiment, its variant code and its row
    here.
@@ -159,7 +190,7 @@ the arms pool; aquafix is to run it with the same arms.
 - **Both arms**: only a priced lead (the regular clean, an estimate) books;
   a quote's slot is set on the call. The page view counts an exposure and
   the taps a contact under `booking_provider`, as for `lead_layout`, so
-  `npm run ab:report` lists it; its lead rate is a guardrail here (the arm
+  its PostHog funnel reads like `lead_layout`'s; its lead rate is a guardrail here (the arm
   shows only after the lead), not the result.
 - **Primary metric**: slots booked per lead, by arm. A Google schedule
   opens in a new tab and never tells the page a slot was taken, so the
@@ -183,7 +214,6 @@ the arms pool; aquafix is to run it with the same arms.
   `LeadCapture`, the lead form every Service-Arb brand now shares, so neither
   arm exists any more. It was removed outright (step 3 above) before reaching
   the stop rule — no verdict. Its events stay in PostHog under
-  `experiment = quote_single_step`; `npm run ab:report` still prints them
-  while they are inside `AB_DAYS`.
+  `experiment = quote_single_step`.
 - **Successor**: `lead_layout`, which asks the same question — how much of
   the form a visitor faces at once — on the shared component.

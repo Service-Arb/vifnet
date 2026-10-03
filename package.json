@@ -10,7 +10,6 @@
   "scripts": {
     "palette": "evinvest-palette --brand vifnet --out app/brand.css assets/brand.toml",
     "photos": "node --experimental-strip-types scripts/photos.ts",
-    "ab:report": "node --experimental-strip-types scripts/ab-report.ts",
     "dev": "npm run palette && next dev",
     "build": "npm run palette && next build",
     "postbuild": "rm -rf .next/standalone/.next/static && cp -R .next/static .next/standalone/.next/static",
@@ -22,9 +21,9 @@
   },
   "dependencies": {
     "@evinvest/analytics": "^0.3.0",
-    "@evinvest/experiments": "^0.2.0",
+    "@evinvest/experiments": "^0.3.0",
     "@evinvest/i18n": "^0.9.0",
-    "@evinvest/kitstart": "^0.11.0",
+    "@evinvest/kitstart": "^0.12.0",
     "@evinvest/marketing": "^0.3.0",
     "@evinvest/uikit": "^0.24.0",
     "next": "16.3.6",

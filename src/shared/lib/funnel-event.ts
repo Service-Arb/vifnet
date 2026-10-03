@@ -46,6 +46,24 @@ export const PANEL_FLOW = true;
 export const PANEL_BOOKING = false;
 
 /**
+ * Whether `lead.created` carries the visit's analytics id (`analytics_id`,
+ * panel contract A), so the panel's lead events join the visit in PostHog.
+ * Off until the panel in production accepts the property (v0.4.0): it
+ * refuses an unknown one, and the outbox would park the lead itself.
+ */
+export const PANEL_ANALYTICS_ID = false;
+
+/**
+ * Whether the server declares its experiments to the panel at start
+ * (`experiments.declared@1`, `instrumentation.ts`). Off until the panel in
+ * production accepts the event type (v0.4.0): until then the outbox would
+ * park every start's declaration. The weights and kill switch the proxy reads
+ * need no switch — a panel without the endpoint answers 404, which leaves
+ * the config in code.
+ */
+export const PANEL_EXPERIMENTS = false;
+
+/**
  * `lead.created@1` as protojson — `sa.v1.Event` with `LeadCreatedV1` for
  * properties (Service-Arb/panel `contracts/proto/sa/v1/events.proto`).
  */
@@ -62,9 +80,11 @@ export interface LeadCreatedEvent {
    * accepts `callback` (`panelChannel`). `suspect` only when the kit sets
    * `ctx.suspect`, which it does only under `PANEL_SUSPECT`: `rate_limited` or
    * `too_fast`, never `honeypot`. The sale's properties only when the kit sets
-   * `ctx.flow`, which it does only under `PANEL_FLOW`.
+   * `ctx.flow`, which it does only under `PANEL_FLOW`. `analytics_id` only
+   * under `PANEL_ANALYTICS_ID`: the visit's analytics `distinct_id` as the
+   * form posted it (kitstart checks its charset), no PII.
    */
-  properties: { channel: ReturnType<typeof panelChannel>; suspect?: LeadSuspect } & Partial<PanelFlowProperties>;
+  properties: { channel: ReturnType<typeof panelChannel>; suspect?: LeadSuspect; analytics_id?: string } & Partial<PanelFlowProperties>;
   pii?: Record<string, string>;
 }
 
@@ -162,9 +182,10 @@ export function panelLeadId(ctx: Pick<LeadWebhookContext, "leadId" | "idempotenc
  * The webhook body for one lead. `sourceId` is the key id the batch is signed
  * with — the panel rejects an event whose `source.id` is anything else.
  * `locationId` is the point the form was posted from (its slug, which is its
- * subdomain); a lead from no point carries none.
+ * subdomain); a lead from no point carries none. `analyticsId` is the
+ * `PANEL_ANALYTICS_ID` switch.
  */
-export function leadCreatedBody(lead: Lead, ctx: LeadWebhookContext, sourceId: string): IngestBody {
+export function leadCreatedBody(lead: Lead, ctx: LeadWebhookContext, sourceId: string, analyticsId = PANEL_ANALYTICS_ID): IngestBody {
   const subject: LeadCreatedEvent["subject"] = { brandId: ctx.brandId, leadId: panelLeadId(ctx) };
   if (lead.placeSlug !== null && isOpaqueId(lead.placeSlug)) subject.locationId = lead.placeSlug;
   const event: LeadCreatedEvent = {
@@ -178,6 +199,7 @@ export function leadCreatedBody(lead: Lead, ctx: LeadWebhookContext, sourceId: s
     properties: { channel: panelChannel(channelOf(lead)) },
   };
   if (ctx.suspect !== undefined) event.properties.suspect = ctx.suspect;
+  if (analyticsId && ctx.analyticsId) event.properties.analytics_id = ctx.analyticsId;
   Object.assign(event.properties, panelFlowProperties(ctx.flow));
   const pii = piiOf(lead);
   if (Object.keys(pii).length > 0) event.pii = pii;
@@ -207,9 +229,15 @@ export interface PanelSwitches {
   panelSuspect: boolean;
   panelFlow: boolean;
   panelBooking: boolean;
+  panelAnalyticsId: boolean;
 }
 
-export const PANEL_SWITCHES: PanelSwitches = { panelSuspect: PANEL_SUSPECT, panelFlow: PANEL_FLOW, panelBooking: PANEL_BOOKING };
+export const PANEL_SWITCHES: PanelSwitches = {
+  panelSuspect: PANEL_SUSPECT,
+  panelFlow: PANEL_FLOW,
+  panelBooking: PANEL_BOOKING,
+  panelAnalyticsId: PANEL_ANALYTICS_ID,
+};
 
 /**
  * The site's options for kitstart's `leadWebhook`: the panel's signing, the
@@ -221,11 +249,11 @@ export function panelWebhookOptions(
   keyId: string,
   switches: Partial<PanelSwitches> = {},
 ): Pick<LeadWebhookOptions, "signing" | "buildBody" | "buildBookingBody" | "panelSuspect" | "panelFlow" | "panelBooking"> {
+  const { panelAnalyticsId, ...kit } = { ...PANEL_SWITCHES, ...switches };
   return {
     signing: SA_INGEST_SIGNING,
-    buildBody: (lead, ctx) => leadCreatedBody(lead, ctx, keyId),
+    buildBody: (lead, ctx) => leadCreatedBody(lead, ctx, keyId, panelAnalyticsId),
     buildBookingBody: (request, ctx) => bookingRequestedBody(request, ctx, keyId),
-    ...PANEL_SWITCHES,
-    ...switches,
+    ...kit,
   };
 }
