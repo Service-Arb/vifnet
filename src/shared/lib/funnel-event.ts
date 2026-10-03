@@ -23,19 +23,19 @@ export const SA_INGEST_SIGNING: WebhookSigning = {
 
 /**
  * Whether a suspect lead goes to the panel marked (`suspect`) — and a
- * rate-limited one goes at all. Off until the panel's `lead.created` accepts
- * the property: it refuses an unknown one, and the outbox would park the lead.
+ * rate-limited one goes at all. On since the panel's `lead.created` accepts
+ * the property (panel v0.3.0): off, the panel would never see a lead the
+ * antispam doubted, which may still be a person.
  */
-export const PANEL_SUSPECT = false;
+export const PANEL_SUSPECT = true;
 
 /**
  * Whether a lead goes to the panel with how it was sold — `flow`, and for an
  * estimate `quoted_cents`, `pricing_valid_from` and `estimate_inputs` (the
- * contract of FORM-VARIANTS-SPEC.md, "Contract amendments"). Off until the
- * panel in production accepts them: it refuses unknown properties, and the
- * outbox would park the lead.
+ * contract of FORM-VARIANTS-SPEC.md, "Contract amendments"). On since the
+ * panel accepts them (v0.3.0, `LeadCreatedV1` fields 4–7).
  */
-export const PANEL_FLOW = false;
+export const PANEL_FLOW = true;
 
 /**
  * Whether a priced lead's booking request goes to the panel as
@@ -202,7 +202,7 @@ export function bookingRequestedBody(request: BookingRequest, ctx: BookingWebhoo
   };
 }
 
-/** The panel's switches, each off until the panel in production accepts what it adds. */
+/** The panel's switches: each stays off until the panel in production accepts what it adds — it refuses the unknown. */
 export interface PanelSwitches {
   panelSuspect: boolean;
   panelFlow: boolean;

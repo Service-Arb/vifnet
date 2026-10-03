@@ -25,9 +25,12 @@ the container's Secret, all three or none; without the URL the webhook is off,
 which is why it is not in `deploy/config.nix`.
 The event's `pii.need` is the job in the operator's words — the French name
 of its service card (`PANEL_NEED`), not the posted id. Why a lead is suspect
-(`rate_limited`, `too_fast`) is wired into the body as `properties.suspect`,
-but `PANEL_SUSPECT` keeps it off until the panel's `lead.created` accepts the
-property: it refuses an unknown one, and the outbox would park the lead.
+(`rate_limited`, `too_fast`) goes as `properties.suspect`, and a
+rate-limited lead goes at all (`PANEL_SUSPECT`, on since the panel v0.3.0
+accepts the property). Each such switch stays off until the panel in
+production accepts what it adds: it refuses an unknown property, and the
+outbox would park the lead. The lead's id is kitstart's `leadRef`, the
+reference the page was answered with, so a booking joins its lead.
 
 ## A place without an address
 
@@ -126,5 +129,6 @@ owner sets them (OWNER_TODO, blocks a launch). The panel's
 does not validate, the page and the route price from the baked one. The
 estimate asks the bedrooms itself, so while its tiles are in the form the
 card's optional bedrooms question is not shown.
-`PANEL_FLOW` (`shared/lib/funnel-event.ts`) keeps the sale out of
-`lead.created` until the panel in production accepts those properties.
+`lead.created` carries the sale (`flow`, `quoted_cents`, `pricing_valid_from`,
+`estimate_inputs`) under `PANEL_FLOW` (`shared/lib/funnel-event.ts`), on since
+the panel v0.3.0 accepts those properties.

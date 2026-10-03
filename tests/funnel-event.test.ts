@@ -32,14 +32,19 @@ const ctx: LeadWebhookContext = {
 // The kit's reference for the lead, the one its page was answered with.
 const LEAD_ID = "lead-42-9f8e7d6c";
 
-/** The proto3 JSON names of each message's fields, read from the panel's contract. */
+/**
+ * The proto3 JSON names of each message's fields, read from the panel's
+ * contract: the lowerCamelCase name and the field's own snake_case one, which
+ * protojson accepts too (the kit writes the sale's properties that way).
+ */
 function protoFields(): Map<string, Set<string>> {
   const proto = readFileSync(new URL("./support/sa-events.proto", import.meta.url), "utf8");
   const messages = new Map<string, Set<string>>();
   for (const [, name, body] of proto.matchAll(/^message (\w+) \{([^}]*)\}/gm)) {
     const fields = new Set<string>();
-    for (const [, field] of (body ?? "").matchAll(/^\s*(?:optional |repeated )?[\w.]+ (\w+) = \d+;/gm)) {
-      fields.add((field ?? "").replace(/_([a-z])/g, (_, c: string) => c.toUpperCase()));
+    for (const [, field = ""] of (body ?? "").matchAll(/^\s*(?:optional |repeated )?(?:map<[\w.]+, ?[\w.]+>|[\w.]+) (\w+) = \d+;/gm)) {
+      fields.add(field.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase()));
+      fields.add(field);
     }
     messages.set(name ?? "", fields);
   }
@@ -81,6 +86,11 @@ describe("lead.created for the panel", () => {
     keysWithin(event.subject, "Subject");
     // The panel checks registered properties strictly: an unknown field rejects the event.
     keysWithin(event.properties, "LeadCreatedV1");
+    // With every switch's property set: the suspect mark and the sale (panel v0.3.0).
+    const flow = { flow: "estimate" as const, quotedCents: 7700, pricingValidFrom: "2026-10-03", estimateInputs: { bedrooms: "2" } };
+    const [full] = leadCreatedBody(lead, { ...ctx, suspect: "too_fast", flow }, "vifnet-site").events;
+    expect(Object.keys(full.properties)).toEqual(["channel", "suspect", "flow", "quoted_cents", "pricing_valid_from", "estimate_inputs"]);
+    keysWithin(full.properties, "LeadCreatedV1");
   });
 
   it("meets the panel's checks on the envelope", () => {
@@ -210,17 +220,10 @@ describe("the lead webhook, wired as the site wires it", () => {
   const limited: Lead = { ...lead, spamVerdict: "rate-limited" };
   const trapped: Lead = { ...lead, spamVerdict: "honeypot" };
 
-  // LEAD-FORMS-REVIEW-2026-10-03 #18. Off: the panel refuses a property it
-  // does not know, and the outbox would park every suspect lead.
-  it("sends no suspect marker while the panel cannot take it", async () => {
-    expect(PANEL_SUSPECT).toBe(false);
-    const { panelSuspect, bodies } = await delivered(panelWebhookOptions("vifnet-site"), [fast, limited, trapped]);
-    expect(panelSuspect).toBe(false);
-    expect(bodies).toEqual([fast, limited, trapped].map(() => withProperties({ channel: "form" })));
-  });
-
-  it("switched on, says why a lead is suspect — never for the honeypot", async () => {
-    const { panelSuspect, bodies } = await delivered(panelWebhookOptions("vifnet-site", { panelSuspect: true }), [lead, fast, limited, trapped]);
+  // LEAD-FORMS-REVIEW-2026-10-03 #18; on since panel v0.3.0 accepts `suspect`.
+  it("says why a lead is suspect — never for the honeypot", async () => {
+    expect(PANEL_SUSPECT).toBe(true);
+    const { panelSuspect, bodies } = await delivered(panelWebhookOptions("vifnet-site"), [lead, fast, limited, trapped]);
     expect(panelSuspect).toBe(true);
     expect(bodies).toEqual([
       withProperties({ channel: "form" }),
@@ -239,16 +242,17 @@ describe("the lead webhook, wired as the site wires it", () => {
   };
   const quoted: Lead = { ...lead, flow: "quote" };
 
-  // FORM-VARIANTS-SPEC.md, "Contract amendments" 1. Off: the panel in
-  // production refuses properties it does not know yet.
-  it("sends no sale while the panel cannot take it", async () => {
-    expect(PANEL_FLOW).toBe(false);
-    const { bodies } = await delivered(panelWebhookOptions("vifnet-site"), [estimated, quoted]);
-    expect(bodies).toEqual([withProperties({ channel: "form" }), withProperties({ channel: "form" })]);
+  // The switch, for a panel that cannot take the property: nothing of it is sent.
+  it("switched off, sends no suspect marker", async () => {
+    const { panelSuspect, bodies } = await delivered(panelWebhookOptions("vifnet-site", { panelSuspect: false }), [fast, limited, trapped]);
+    expect(panelSuspect).toBe(false);
+    expect(bodies).toEqual([fast, limited, trapped].map(() => withProperties({ channel: "form" })));
   });
 
-  it("switched on, sends the flow, the server's price, the model's date and the answers", async () => {
-    const { bodies } = await delivered(panelWebhookOptions("vifnet-site", { panelFlow: true }), [estimated, quoted, { ...lead, channel: "callback" }]);
+  // FORM-VARIANTS-SPEC.md, "Contract amendments" 1; on since panel v0.3.0.
+  it("sends the flow, the server's price, the model's date and the answers", async () => {
+    expect(PANEL_FLOW).toBe(true);
+    const { bodies } = await delivered(panelWebhookOptions("vifnet-site"), [estimated, quoted, { ...lead, channel: "callback" }]);
     expect(bodies).toEqual([
       withProperties({
         channel: "form",
@@ -261,6 +265,11 @@ describe("the lead webhook, wired as the site wires it", () => {
       withProperties({ channel: "form", flow: "quote" }),
       withProperties({ channel: "form" }),
     ]);
+  });
+
+  it("switched off, sends no sale", async () => {
+    const { bodies } = await delivered(panelWebhookOptions("vifnet-site", { panelFlow: false }), [estimated, quoted]);
+    expect(bodies).toEqual([withProperties({ channel: "form" }), withProperties({ channel: "form" })]);
   });
 
   it("is off without LEAD_WEBHOOK_URL", () => {
