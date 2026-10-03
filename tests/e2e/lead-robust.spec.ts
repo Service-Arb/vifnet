@@ -10,7 +10,7 @@ import { abState, LEADS_DB } from "./env";
 
 const SUBMIT = "Recevoir mon devis gratuit →";
 const INVALID = "Ce numéro n’est pas valide. Exemple : 06 12 34 56 78 ou +33 6 12 34 56 78.";
-const NO_NETWORK = "Pas de connexion : votre demande n’est pas partie. Vérifiez le réseau et réessayez.";
+const NO_NETWORK = "Pas de réponse du serveur. Vérifiez votre connexion et réessayez : votre demande ne sera pas envoyée deux fois.";
 const NO_ANSWER = "Le serveur ne répond pas. Réessayez : votre demande ne sera pas envoyée deux fois.";
 
 const card = (page: Page) => page.locator("#devis");
@@ -73,7 +73,8 @@ test.describe("a refused lead, at 390", () => {
     const answered = noScript.waitForResponse(r => r.request().method() === "POST" && isQuote(r.url()));
     await form(noScript).locator("button[type=submit]").click();
     expect((await answered).status()).toBe(303);
-    await expect(noScript).toHaveURL(/\/fr\?lead_error=phone(&need=[a-z-]+)?#devis$/);
+    // `lead_card` names the card for a server that reads the query: the fragment never reaches it.
+    await expect(noScript).toHaveURL(/\/fr\?lead_error=phone(&need=[a-z-]+)?&lead_card=devis#devis$/);
     await expect(card(noScript).getByRole("heading", { name: "Votre devis gratuit" })).toBeInViewport();
     const landing = noScript.url();
     await bare.close();
