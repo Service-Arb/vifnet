@@ -78,7 +78,7 @@ describe("the copy", () => {
   });
 
   it.each(i18n.locales)("writes no phone number by hand (%s)", locale => {
-    // The frame's sample number lives in `shared/config/sample`, not in the copy.
+    // The number is the place's own (`copy.f.phone`), never written into the copy.
     const numbers = copyOf(locale).filter(([, s]) => /(\+33|\b0[1-9])[\d\s.]{8,}|\(\d{3}\)\s?\d{3}-\d{4}/.test(s));
     expect(numbers).toEqual([]);
   });

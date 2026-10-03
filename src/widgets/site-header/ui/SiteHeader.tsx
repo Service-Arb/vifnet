@@ -1,6 +1,6 @@
 import { Button } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
-import { shownPhone } from "@/shared/config/sample";
+import { phoneLink } from "@/shared/lib/phone";
 import { Icon, Logo, Stars } from "@/shared/ui";
 import { type HeaderLink, MobileMenu } from "./MobileMenu";
 
@@ -20,7 +20,7 @@ const QUIET = "text-sm leading-5 font-medium text-white/70";
 /**
  * The frame's NavBar (8:143): sticky, forest at 95 % over a blur. From a
  * tablet up: the logo, the band links, the rating (from `sm`), the phone
- * (from `lg`) and the gold "Book Now". On a phone: the logo, "Book Now" and
+ * (from `lg`, when the place has one) and the gold "Book Now". On a phone: the logo, "Book Now" and
  * the burger, whose menu opens over the page under the bar.
  *
  * The forest and its blur are a layer under the content, not the header's
@@ -31,7 +31,7 @@ const QUIET = "text-sm leading-5 font-medium text-white/70";
  */
 export function SiteHeader({ copy, home, quoteHref, links }: SiteHeaderProps) {
   const { t } = copy;
-  const phone = shownPhone(copy.f.phone);
+  const phone = phoneLink(copy.f.phone);
   return (
     <header className="dark sticky top-0 z-40 border-b border-transparent text-ink before:absolute before:inset-x-0 before:top-0 before:-bottom-px before:-z-10 before:border-b before:border-white/5 before:bg-background/95 before:backdrop-blur-sm before:content-['']">
       <div className="flex h-16 items-center justify-between px-[var(--page-px)]">
@@ -53,10 +53,12 @@ export function SiteHeader({ copy, home, quoteHref, links }: SiteHeaderProps) {
               <span className="text-white/40">{t.rating.count}</span>
             </span>
           </p>
-          <a href={phone.href} className={`hidden items-center gap-1.5 border-l border-white/10 pl-3 lg:flex ${QUIET} hover:text-white`}>
-            <Icon name="phone" className="size-[13px]" />
-            {phone.display}
-          </a>
+          {phone && (
+            <a href={phone.href} className={`hidden items-center gap-1.5 border-l border-white/10 pl-3 lg:flex ${QUIET} hover:text-white`}>
+              <Icon name="phone" className="size-[13px]" />
+              {phone.display}
+            </a>
+          )}
           <Button href={quoteHref} data-intent="form_open" className="h-auto rounded-lg px-4 py-2 text-sm leading-5 font-bold hover:bg-amber-400">
             {t.nav.book}
           </Button>

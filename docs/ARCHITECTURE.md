@@ -43,13 +43,14 @@ is open fails the build.
 
 The home page is the Figma frame (`1wXlPmnmOdKYPDWz6N5EB8`, Desktop 1440 /
 Mobile 390) verbatim, its sample content included: the rating, the stats, six
-named reviews, US prices, a fictional phone number. That content lives in the
+named reviews, US prices. That content lives in the
 copy (`src/entities/content`) and `shared/config/sample.ts`, never in `site`
 or `assets/card.toml`, so no JSON-LD, OG card or notification carries it
-(`tests/site.test.ts`). The number gives way to the place's own as soon as
-the panel's place source (`LOCATIONS_API_URL`) gives one: every surface reads
-`shownPhone(copy.f.phone)`, and the card offers the call
-(`tests/live-place.test.ts`). OWNER_TODO "design sample content" blocks a launch
+(`tests/site.test.ts`). The frame's sample phone number is the exception: it
+is not shown at all. The number is the place's own, from the panel's place
+source (`LOCATIONS_API_URL`): every surface reads `phoneLink(copy.f.phone)`
+and renders its number only when there is one, and the card offers the call
+(`tests/live-place.test.ts`); without one, no `tel:` link appears anywhere. OWNER_TODO "design sample content" blocks a launch
 until the owner replaces it. The terms an earlier design proposed and the
 frame does not state are still `copy:` lines, and a test fails if one
 appears in the copy.

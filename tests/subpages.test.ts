@@ -4,7 +4,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { copyFor } from "@/entities/content";
 import type { Locale } from "@/shared/config/i18n";
-import { SAMPLE_PHONE } from "@/shared/config/sample";
 import { site, type Subpage } from "@/shared/config/site";
 import { PlaceSubpage } from "@/views/subpage";
 
@@ -70,8 +69,11 @@ describe("the sub-pages", () => {
     const html = render(locale, page);
     const ld = jsonLd(html);
     expect(ld).not.toBe("[]");
-    expect(ld).not.toMatch(/aggregateRating|"review"|telephone|555-0192|Boise|Meridian|hasMap|GeoCoordinates|PostalAddress/);
-    expect(html).toContain(`href="${SAMPLE_PHONE.href}"`);
+    expect(ld).not.toMatch(/aggregateRating|"review"|telephone|Boise|Meridian|hasMap|GeoCoordinates|PostalAddress/);
+  });
+
+  it.each(LOCALES.flatMap(l => SUBPAGES.map(p => [l, p] as const)))("show no number while the place has none (%s %s)", (locale, page) => {
+    expect(render(locale, page)).not.toMatch(/href="tel:|wa\.me|whatsapp/i);
   });
 });
 

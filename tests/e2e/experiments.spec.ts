@@ -86,9 +86,14 @@ test("the control's events carry the experiment and its variant", async ({ page 
   await page.locator("form#devis-form input[name=mobile]").focus();
   await page.locator("#demande a[data-intent=form_open]").click();
   // A call tap, kept from leaving for the dialer: our listener runs in the capture phase first.
+  // The server under test has no panel, so the place shows no number; the
+  // link is the one a live place's header would carry, and the listener is
+  // on the document, so it is the same tap.
   await page.evaluate(() => {
     document.addEventListener("click", e => e.preventDefault());
-    document.querySelector<HTMLAnchorElement>('a[href^="tel:"]')?.click();
+    const call = Object.assign(document.createElement("a"), { href: "tel:+33612345678" });
+    document.body.append(call);
+    call.click();
   });
 
   const base = { experiment: "lead_layout", variant: "a", forced: false, brand_id: "vifnet" };

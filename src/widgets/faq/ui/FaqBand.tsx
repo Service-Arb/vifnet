@@ -1,6 +1,6 @@
 import { Faq, Section } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
-import { shownPhone } from "@/shared/config/sample";
+import { phoneLink } from "@/shared/lib/phone";
 import { TYPE } from "@/shared/ui";
 
 /**
@@ -19,10 +19,13 @@ const ITEMS = {
   answer: "border-t border-slate-50 px-6 pt-3 pb-4 text-sm leading-[22.75px] text-ink-soft md:px-6 md:pb-4",
 } as const;
 
-/** The frame's FAQ band (13:464 / 15:865) on cream. */
+/**
+ * The frame's FAQ band (13:464 / 15:865) on cream. The "still have a
+ * question?" line points at the place's number, so it goes with it.
+ */
 export function FaqBand({ copy, id }: { copy: Copy; id: string }) {
   const { t } = copy;
-  const phone = shownPhone(copy.f.phone);
+  const phone = phoneLink(copy.f.phone);
   return (
     <Section surface="card" id={id} data-band="faq" className="py-20">
       <div className="mx-auto max-w-[736px]">
@@ -31,12 +34,14 @@ export function FaqBand({ copy, id }: { copy: Copy; id: string }) {
           <h2 className={`${TYPE.h2Faq} mt-3 text-brand`}>{t.faqTitle}</h2>
         </div>
         <Faq items={t.faqs} id={`${id}-list`} className="mt-10" classNames={ITEMS} />
-        <p className="mt-6 text-center text-sm leading-5 text-slate-400">
-          {t.faqMore}
-          <a href={phone.href} className="font-semibold text-positive underline hover:no-underline">
-            {phone.display}
-          </a>
-        </p>
+        {phone && (
+          <p className="mt-6 text-center text-sm leading-5 text-slate-400">
+            {t.faqMore}
+            <a href={phone.href} className="font-semibold text-positive underline hover:no-underline">
+              {phone.display}
+            </a>
+          </p>
+        )}
       </div>
     </Section>
   );
