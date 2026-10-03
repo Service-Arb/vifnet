@@ -122,8 +122,9 @@ The same key, arms and weights as aquafix's, so the two sites' results pool
   arms.
 - **Both arms**: the name is optional (the lead schema no longer requires
   it), bedrooms is an optional select after the phone, and "Rappelez-moi"
-  (kitstart's callback: the phone and a consent) sits under the form — with
-  no public number yet, it and the form are the only channels.
+  (kitstart's callback: the phone and a consent) sits under the form as one
+  text line. The fields show the frame's placeholders and a taken lead says
+  done in the card (kitstart 0.7.0, from 2026-10-03, in both arms alike).
 - **Primary metric**: lead rate, `experiment_lead / experiment_exposed`.
 - **Guardrail**: contact rate, (leads + calls) / exposures.
 - **Diagnostic**: kitstart's `lead_form_start`, `lead_form_step` and

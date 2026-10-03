@@ -46,7 +46,10 @@ Mobile 390) verbatim, its sample content included: the rating, the stats, six
 named reviews, US prices, a fictional phone number. That content lives in the
 copy (`src/entities/content`) and `shared/config/sample.ts`, never in `site`
 or `assets/card.toml`, so no JSON-LD, OG card or notification carries it
-(`tests/site.test.ts`). OWNER_TODO "design sample content" blocks a launch
+(`tests/site.test.ts`). The number gives way to the place's own as soon as
+the panel's place source (`LOCATIONS_API_URL`) gives one: every surface reads
+`shownPhone(copy.f.phone)`, and the card offers the call
+(`tests/live-place.test.ts`). OWNER_TODO "design sample content" blocks a launch
 until the owner replaces it. The terms an earlier design proposed and the
 frame does not state are still `copy:` lines, and a test fails if one
 appears in the copy.
@@ -72,10 +75,13 @@ Place pages are ISR (`revalidate = 600`): no page reads the request, the link
 mode rides in the `[location]` param — and so does the home page's A/B
 bucket (`_vifnet~lead_layout.b`, docs/EXPERIMENTS.md), which the proxy
 writes from the visitor's `ab_<key>` cookie. The quote form is kitstart's
-`LeadCapture` — the form every Service-Arb brand shares, in the frame's card
-through its `classNames` — and a plain POST answered with a 303, so it
-submits before any script loads; it sits on the hero's card, the one place
-every CTA points at (`#devis`), beside its "call me back" (`#quote-callback`).
+`LeadCapture` — the form every Service-Arb brand shares, drawn as the frame's
+card through its `className` and `classNames`, with the frame's placeholders
+(the labels are for assistive technology only) — and a plain POST answered
+with a 303, so it submits before any script loads; with one, it says done in
+the card (Figma QuoteCard Done). It is the hero's card, the one place every
+CTA points at (`#devis`), with its "call me back" (`#devis-callback`) folded
+to one line under it.
 A service card's link names its service (`data-need`), so the card does not
 ask it again. The quote card, the sticky bar's reveal, the phone menu's
 closer and, on the About page, kitstart's map facade are the only client

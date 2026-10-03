@@ -4,6 +4,20 @@ Start the site:
 nix run .#dev            # http://localhost:59082/fr
 ```
 
+#### Local stack
+
+The Service-Arb panel's `nix run .#local-stack` starts this site with
+`nix run .#dev` (or `npm run dev`) and the environment below. `next dev` reads
+it as it is; without any of it the site runs as it does alone.
+
+| Variable | What it does | Unset |
+| --- | --- | --- |
+| `PORT` | the dev server's port | 59082 (`nix run .#dev`), 3000 (`npm run dev`) |
+| `LOCATIONS_API_URL` | the panel's place source, `GET <url>/locations/vifnet?locale=fr`: its phone replaces the frame's sample number on every surface, and the quote card offers the call (and WhatsApp, when given) | the baked place: the sample number, no call or WhatsApp in the card |
+| `LEAD_WEBHOOK_URL`, `LEAD_WEBHOOK_KEY_ID`, `LEAD_WEBHOOK_SECRET` | each lead to the panel as a signed `lead.created`; all three or none, and `http:` only to localhost or a `*.svc` host | off |
+| `LEADS_DB_PATH` | the SQLite leads file (and the webhook's outbox) | `~/.local/share/vifnet/leads.db` |
+| `POSTHOG_KEY` (`POSTHOG_HOST`) | analytics and the experiments' events | off |
+
 Run the checks:
 
 ```sh
