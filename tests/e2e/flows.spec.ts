@@ -2,6 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { MIN_FILL_MS, normalizePhone } from "@evinvest/kitstart";
 import { expect, test, type Page } from "@playwright/test";
 import { abState, LEADS_DB } from "./env";
+import { freshMobile } from "./support/mobile";
 
 // The form variants (FORM-VARIANTS-SPEC.md): a regular clean is an estimate,
 // priced live from its answers and stored at the server's own price; a deep
@@ -17,9 +18,6 @@ const hydrated = (page: Page) => expect(page.locator("form#devis-form select")).
 const price = (page: Page) => form(page).locator("[data-price-cents]");
 const answer = (page: Page, label: string) => form(page).getByRole("radio", { name: label, exact: true }).check();
 const isQuote = (url: string) => new URL(url).pathname === "/quote";
-
-/** A number no other test (or project) submits, so the row found is this one. */
-const freshMobile = (prefix: string) => `${prefix}${String(Date.now() % 1e8).padStart(8, "0")}`;
 
 async function contact(page: Page, mobile: string, name = "Amanda Reyes"): Promise<void> {
   await form(page).locator("input[name=locality]").fill("75011");
