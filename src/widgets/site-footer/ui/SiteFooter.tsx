@@ -1,6 +1,6 @@
 import { withLang } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
-import { shownPhone } from "@/shared/config/sample";
+import { phoneLink } from "@/shared/lib/phone";
 import { Logo } from "@/shared/ui";
 
 export interface SiteFooterProps {
@@ -19,12 +19,12 @@ const LINK = "hover:text-white/70 focus-visible:outline-2 focus-visible:outline-
  * line, and the row of links — a row from `md`, a centred stack below whose
  * links wrap onto a second line. The pages come first; Privacy
  * and Terms are text as the frame draws them: there are no such pages to link
- * to yet. The language switch is one more item of that row, in its style: the
+ * to yet; the place's number follows when it has one. The language switch is one more item of that row, in its style: the
  * other language's name, through the kit's `?lang=` link (`withLang`).
  */
 export function SiteFooter({ copy, year, links, other }: SiteFooterProps) {
   const { t } = copy;
-  const phone = shownPhone(copy.f.phone);
+  const phone = phoneLink(copy.f.phone);
   return (
     <footer id="footer" className="dark bg-popover px-[var(--page-px)] py-8 text-ink">
       <div className="flex flex-col items-center gap-3 text-sm leading-5 text-white/40 md:flex-row md:justify-between">
@@ -38,9 +38,11 @@ export function SiteFooter({ copy, year, links, other }: SiteFooterProps) {
           ))}
           <span>{t.footer.privacy}</span>
           <span>{t.footer.terms}</span>
-          <a href={phone.href} className={LINK}>
-            {phone.display}
-          </a>
+          {phone && (
+            <a href={phone.href} className={LINK}>
+              {phone.display}
+            </a>
+          )}
           <a href={withLang(other.href, other.locale)} hrefLang={other.locale} lang={other.locale} className={LINK}>
             {other.label}
           </a>

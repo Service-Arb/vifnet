@@ -1,11 +1,11 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { SAMPLE_PHONE } from "@/shared/config/sample";
 import { CONTROL } from "@/shared/lib/experiments";
 import { PlaceHome } from "@/views/home";
 import { loadPlace } from "@/views/place/server";
 import { PlaceSubpage } from "@/views/subpage";
+import { SURFACES, surfaces } from "./support/surfaces";
 
 // The panel's place source (`nix run .#local-stack` in the panel repo, or
 // LOCATIONS_API_URL in a deploy): what it says about vifnet/vifnet is merged
@@ -28,6 +28,8 @@ function answer(body: unknown) {
   return fetch;
 }
 
+const DIAL = 'href="tel:+33612345678"';
+
 const params = Promise.resolve({ locale: "fr", location: "vifnet" });
 const target = { key: null, host: "https://us.i.posthog.com", brandId: "vifnet" };
 
@@ -45,15 +47,14 @@ describe("a phone from the panel", () => {
     expect(copy.f.phone).toBe(LIVE);
   });
 
-  it("replaces the frame's sample everywhere the page shows a number", async () => {
+  it("is on all six surfaces, and is the only number dialled", async () => {
     answer({ phone: LIVE });
     const html = await homeHtml();
-    expect(html).not.toContain(SAMPLE_PHONE.href);
-    expect(html).not.toContain(SAMPLE_PHONE.display);
-    // The header, the phone menu, the FAQ, the gold band, the footer, the
-    // sticky bar — and the card's call button.
-    expect(html.match(/href="tel:\+33612345678"/g)?.length).toBeGreaterThanOrEqual(7);
-    expect(html.match(/>\+33 6 12 34 56 78</g)?.length).toBeGreaterThanOrEqual(5);
+    const shown = surfaces(html);
+    for (const name of SURFACES) expect(shown[name], name).toContain(DIAL);
+    // The sticky bar says "Call"; the five others print the number.
+    for (const name of SURFACES.filter(s => s !== "sticky")) expect(shown[name], name).toContain(LIVE);
+    expect(html).not.toMatch(/href="tel:(?!\+33612345678")/);
   });
 
   it("brings WhatsApp to the card when the panel gives it", async () => {
@@ -64,25 +65,22 @@ describe("a phone from the panel", () => {
   it("is on the sub-pages too", async () => {
     answer({ phone: LIVE });
     const { view, copy, renderedAt } = await loadPlace(params);
-    const html = renderToStaticMarkup(createElement(PlaceSubpage, { view, copy, page: "prices", renderedAt }));
-    expect(html).not.toContain(SAMPLE_PHONE.href);
-    expect(html).toContain('href="tel:+33612345678"');
+    // Prices is the sub-page with the FAQ, so all six surfaces.
+    const shown = surfaces(renderToStaticMarkup(createElement(PlaceSubpage, { view, copy, page: "prices", renderedAt })));
+    for (const name of SURFACES) expect(shown[name], name).toContain(DIAL);
   });
 });
 
 describe("no phone from the panel", () => {
-  it("keeps the frame's sample, and offers no call or WhatsApp in the card", async () => {
+  it("shows no number, and offers no call or WhatsApp anywhere", async () => {
     answer({});
     const html = await homeHtml();
-    expect(html).toContain(`href="${SAMPLE_PHONE.href}"`);
-    expect(html).not.toMatch(/wa\.me|whatsapp/i);
-    // Every number dialled is the sample: the card adds none of its own.
-    expect(html).not.toMatch(/href="tel:(?!\+12085550192")/);
+    expect(html).not.toMatch(/href="tel:|wa\.me|whatsapp/i);
   });
 
-  it("keeps it when the source is down", async () => {
+  it("shows none when the source is down either", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 503 })));
     vi.spyOn(console, "error").mockImplementation(() => undefined);
-    expect(await homeHtml()).toContain(`href="${SAMPLE_PHONE.href}"`);
+    expect(await homeHtml()).not.toMatch(/href="tel:|wa\.me/);
   });
 });

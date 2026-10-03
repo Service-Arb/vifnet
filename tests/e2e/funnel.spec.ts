@@ -46,13 +46,16 @@ test.describe("without JavaScript", () => {
     }
   });
 
-  test("the phone links call the frame's sample number, and there is no WhatsApp", async ({ page }) => {
-    await page.goto("/fr");
-    await expect(page.locator('a[href*="wa.me"]')).toHaveCount(0);
-    const phones = page.locator('a[href^="tel:"]');
-    await expect(phones.first()).toBeAttached();
-    for (const href of await phones.evaluateAll(links => links.map(a => a.getAttribute("href")))) expect(href).toBe("tel:+12085550192");
-  });
+  // The server under test has no panel (LOCATIONS_API_URL), so the place has
+  // no number: no page may offer a call or WhatsApp, not even a stand-in.
+  for (const path of ["/fr", "/en", "/fr/prices", "/fr/guarantee", "/fr/about"]) {
+    test(`${path} offers no phone and no WhatsApp`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page.locator("[data-band=sticky]")).toBeAttached();
+      await expect(page.locator('a[href^="tel:"]')).toHaveCount(0);
+      await expect(page.locator('a[href*="wa.me"]')).toHaveCount(0);
+    });
+  }
 
   test("the phone menu opens and closes without a script", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "the burger is the phone's");
@@ -121,4 +124,6 @@ test("the sticky bar slides in after the hero", async ({ page }) => {
   await page.mouse.wheel(0, 1500);
   await expect(bar).toHaveAttribute("data-shown", "true");
   await expect(bar.getByRole("link", { name: "Réserver" })).toBeVisible();
+  // No number for the place, so no Call beside it.
+  await expect(bar.getByRole("link", { name: "Appeler" })).toHaveCount(0);
 });

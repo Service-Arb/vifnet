@@ -3,13 +3,13 @@ import { testLead } from "@evinvest/kitstart/testing";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { copyFor } from "@/entities/content";
+import { copyFor, TEXT } from "@/entities/content";
 import type { Locale } from "@/shared/config/i18n";
 import { LEAD, SUBJECTS } from "@/shared/config/lead";
-import { SAMPLE_PHONE } from "@/shared/config/sample";
 import { site } from "@/shared/config/site";
 import { CONTROL } from "@/shared/lib/experiments";
 import { PlaceHome, SECTION_IDS } from "@/views/home";
+import { surfaces } from "./support/surfaces";
 
 const place = site.places[0];
 if (!place) throw new Error("the site has no place");
@@ -70,16 +70,21 @@ describe("the home page", () => {
     for (const gone of ["avant-apres", "etapes", "zone", "tarifs"]) expect(html).not.toContain(`id="${gone}"`);
   });
 
-  it("calls the frame's sample number, and offers no WhatsApp", () => {
-    const html = home("fr");
-    expect(html).toContain(`href="${SAMPLE_PHONE.href}"`);
-    expect(html).not.toMatch(/wa\.me|whatsapp/i);
+  it.each(["fr", "en"] as const)("shows no number while the place has none, and offers no call or WhatsApp (%s)", locale => {
+    const html = home(locale);
+    expect(html).not.toMatch(/href="tel:|wa\.me|whatsapp/i);
+    const shown = surfaces(html);
+    // The FAQ's "still have a question?" line points at the number, so it goes with it.
+    expect(shown.faq).not.toContain(TEXT[locale].faqMore.trim());
+    // The sticky bar keeps Book Now alone.
+    expect(shown.sticky).not.toContain(`>${TEXT[locale].sticky.call}<`);
+    expect(shown.sticky).toContain(TEXT[locale].sticky.book);
   });
 
   it.each(["fr", "en"] as const)("keeps the frame's sample facts out of the structured data (%s)", locale => {
     const ld = JSON.stringify(jsonLd(home(locale)));
     expect(ld).not.toBe("[]");
-    expect(ld).not.toMatch(/aggregateRating|"review"|telephone|555-0192|Boise/);
+    expect(ld).not.toMatch(/aggregateRating|"review"|telephone|Boise/);
   });
 
   it("links to the other language from the footer", () => {
