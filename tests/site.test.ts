@@ -51,18 +51,20 @@ describe("Vifnet before launch", () => {
 describe("the home page", () => {
   it.each(["fr", "en"] as const)("posts the quote form and its callback, on the hero's card, with every field (%s)", locale => {
     const html = home(locale);
-    expect(html).toMatch(/<form id="quote"[^>]*action="\/quote"[^>]*method="post"/);
+    expect(html).toMatch(/<form id="devis-form"[^>]*action="\/quote"[^>]*method="post"/);
     for (const name of [LEAD.wire.subject, LEAD.wire.locality, LEAD.wire.mobile, "name", "bedrooms"]) expect(html).toContain(`name="${name}"`);
     // No number to call yet: the form and "call me back" are the two ways in.
-    expect(html.match(/<form id="[^"]+"/g)).toEqual(['<form id="quote"', '<form id="quote-callback-form"']);
-    expect(html).toMatch(new RegExp(`id="${SECTION_IDS.quote}"[^]*<form id="quote"`));
+    expect(html.match(/<form id="[^"]+"/g)).toEqual(['<form id="devis-form"', '<form id="devis-callback-form"']);
+    // The anchor is the card itself, head included, not a wrapper around it.
+    expect(html).toMatch(new RegExp(`<div id="${SECTION_IDS.quote}" class="[^"]*rounded-2xl[^"]*"[^>]*>[^]*<form id="devis-form"`));
     expect(html).toContain(`href="/${locale}#${SECTION_IDS.quote}"`);
   });
 
   it.each(["fr", "en"] as const)("renders the frame's bands, in its order, and no other (%s)", locale => {
     const html = home(locale);
-    const bands = ["quote-card", "stats", "services", "reviews", "guarantee", "faq", "cta", "sticky"];
-    const at = bands.map(b => html.indexOf(`data-band="${b}"`));
+    const bands = ["stats", "services", "reviews", "guarantee", "faq", "cta", "sticky"];
+    // The quote card is kitstart's root, so its mark is its id.
+    const at = [html.indexOf(`id="${SECTION_IDS.quote}"`), ...bands.map(b => html.indexOf(`data-band="${b}"`))];
     expect(at.every(i => i >= 0)).toBe(true);
     expect(at).toEqual([...at].sort((a, b) => a - b));
     for (const gone of ["avant-apres", "etapes", "zone", "tarifs"]) expect(html).not.toContain(`id="${gone}"`);

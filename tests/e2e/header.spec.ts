@@ -82,7 +82,10 @@ test.describe("the phone's menu", () => {
   test("closes on a press on the scrim, without acting on the page beneath", async ({ page }) => {
     // A point where, with the menu closed, a control of the page lies (the
     // hero's form), below where the open panel reaches: the scrim is all that
-    // stands between the press and it.
+    // stands between the press and it. Once hydrated: the card's labels are
+    // `sr-only`, so the first control there is its select, which hydration
+    // replaces — and the mark with it.
+    await expect(page.locator("form#devis-form select")).toHaveCount(0);
     const spot = await page.evaluate(() => {
       const control = "a[href], button, input, select, textarea, summary, label";
       for (let y = 420; y < 820; y += 10)

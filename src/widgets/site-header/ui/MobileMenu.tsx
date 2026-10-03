@@ -1,4 +1,4 @@
-import { SAMPLE_PHONE } from "@/shared/config/sample";
+import type { PhoneLink } from "@/shared/config/sample";
 import { DetailsDismiss, Icon } from "@/shared/ui";
 
 export interface HeaderLink {
@@ -17,7 +17,7 @@ const LINK = `block py-3 text-sm leading-5 ${FOCUS}`;
  * move; `app/globals.css` locks the page's scroll while it is open, and the
  * scrim over the page closes it. Hidden from `md`, where the row shows the nav.
  */
-export function MobileMenu({ label, links }: { label: string; links: readonly HeaderLink[] }) {
+export function MobileMenu({ label, links, phone }: { label: string; links: readonly HeaderLink[]; phone: PhoneLink }) {
   return (
     <details data-nav-menu className="group/menu md:hidden">
       <summary
@@ -40,8 +40,8 @@ export function MobileMenu({ label, links }: { label: string; links: readonly He
             {link.label}
           </a>
         ))}
-        <a href={SAMPLE_PHONE.href} className={`${LINK} self-start font-semibold text-primary`}>
-          {SAMPLE_PHONE.display}
+        <a href={phone.href} className={`${LINK} self-start font-semibold text-primary`}>
+          {phone.display}
         </a>
       </nav>
       {/* Tailwind's `md`, as `md:hidden` above and the scroll lock in app/globals.css. */}

@@ -52,7 +52,7 @@ test("the proof card's action opens the home page's form", async ({ page }, test
   await page.goto("/fr/guarantee");
   await page.locator("[data-band=proof]").getByRole("link").click();
   await expect(page).toHaveURL("/fr#devis");
-  await expect(page.locator("form#quote")).toBeVisible();
+  await expect(page.locator("form#devis-form")).toBeVisible();
 });
 
 test("the proof card and the map are not on a phone", async ({ page }, testInfo) => {

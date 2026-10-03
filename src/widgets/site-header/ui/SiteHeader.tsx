@@ -1,6 +1,6 @@
 import { Button } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
-import { SAMPLE_PHONE } from "@/shared/config/sample";
+import { shownPhone } from "@/shared/config/sample";
 import { Icon, Logo, Stars } from "@/shared/ui";
 import { type HeaderLink, MobileMenu } from "./MobileMenu";
 
@@ -31,6 +31,7 @@ const QUIET = "text-sm leading-5 font-medium text-white/70";
  */
 export function SiteHeader({ copy, home, quoteHref, links }: SiteHeaderProps) {
   const { t } = copy;
+  const phone = shownPhone(copy.f.phone);
   return (
     <header className="dark sticky top-0 z-40 border-b border-transparent text-ink before:absolute before:inset-x-0 before:top-0 before:-bottom-px before:-z-10 before:border-b before:border-white/5 before:bg-background/95 before:backdrop-blur-sm before:content-['']">
       <div className="flex h-16 items-center justify-between px-[var(--page-px)]">
@@ -52,14 +53,14 @@ export function SiteHeader({ copy, home, quoteHref, links }: SiteHeaderProps) {
               <span className="text-white/40">{t.rating.count}</span>
             </span>
           </p>
-          <a href={SAMPLE_PHONE.href} className={`hidden items-center gap-1.5 border-l border-white/10 pl-3 lg:flex ${QUIET} hover:text-white`}>
+          <a href={phone.href} className={`hidden items-center gap-1.5 border-l border-white/10 pl-3 lg:flex ${QUIET} hover:text-white`}>
             <Icon name="phone" className="size-[13px]" />
-            {SAMPLE_PHONE.display}
+            {phone.display}
           </a>
           <Button href={quoteHref} data-intent="form_open" className="h-auto rounded-lg px-4 py-2 text-sm leading-5 font-bold hover:bg-amber-400">
             {t.nav.book}
           </Button>
-          <MobileMenu label={t.nav.menu} links={links} />
+          <MobileMenu label={t.nav.menu} links={links} phone={phone} />
         </div>
       </div>
     </header>

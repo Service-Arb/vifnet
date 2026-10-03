@@ -9,15 +9,6 @@
 @source "../node_modules/@evinvest/uikit/dist";
 @source "../node_modules/@evinvest/kitstart/dist";
 
-/* The frame's Field (6:26, `FIELD` in src/widgets/quote-card/ui/look.ts) on
-   the quote card's selects, in both states — the platform's before hydration,
-   the kit's trigger after. The need's select is drawn by kitstart's
-   `LeadCapture`, which takes no class for it; the bedrooms select has the same
-   classes of its own. */
-[data-band="quote-card"] :is([data-slot="select-trigger"], [data-slot="native-select"]) {
-  @apply h-[50px] rounded-xl bg-background py-3.5 text-sm leading-5 text-slate-700 shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring;
-}
-
 /* Geometry of the Figma file 1wXlPmnmOdKYPDWz6N5EB8, whose names are
    Tailwind's: `--radius` 8 makes the kit's `rounded-md/lg/xl/2xl` 6/8/12/16 as
    the frame draws them; a control (field, large button) is `rounded-xl`, and

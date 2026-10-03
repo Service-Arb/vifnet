@@ -1,6 +1,6 @@
 import { withLang } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
-import { SAMPLE_PHONE } from "@/shared/config/sample";
+import { shownPhone } from "@/shared/config/sample";
 import { Logo } from "@/shared/ui";
 
 export interface SiteFooterProps {
@@ -24,6 +24,7 @@ const LINK = "hover:text-white/70 focus-visible:outline-2 focus-visible:outline-
  */
 export function SiteFooter({ copy, year, links, other }: SiteFooterProps) {
   const { t } = copy;
+  const phone = shownPhone(copy.f.phone);
   return (
     <footer id="footer" className="dark bg-popover px-[var(--page-px)] py-8 text-ink">
       <div className="flex flex-col items-center gap-3 text-sm leading-5 text-white/40 md:flex-row md:justify-between">
@@ -37,8 +38,8 @@ export function SiteFooter({ copy, year, links, other }: SiteFooterProps) {
           ))}
           <span>{t.footer.privacy}</span>
           <span>{t.footer.terms}</span>
-          <a href={SAMPLE_PHONE.href} className={LINK}>
-            {SAMPLE_PHONE.display}
+          <a href={phone.href} className={LINK}>
+            {phone.display}
           </a>
           <a href={withLang(other.href, other.locale)} hrefLang={other.locale} lang={other.locale} className={LINK}>
             {other.label}

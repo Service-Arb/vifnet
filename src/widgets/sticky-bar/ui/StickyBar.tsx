@@ -1,6 +1,6 @@
 import { Button } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
-import { SAMPLE_PHONE } from "@/shared/config/sample";
+import { shownPhone } from "@/shared/config/sample";
 import { Icon } from "@/shared/ui";
 import { Reveal } from "./Reveal";
 
@@ -14,6 +14,7 @@ const BUTTON = "h-auto rounded-lg py-2.5 text-sm leading-5";
  */
 export function StickyBar({ copy, quoteHref }: { copy: Copy; quoteHref: string }) {
   const t = copy.t.sticky;
+  const phone = shownPhone(copy.f.phone);
   return (
     <Reveal className="dark fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 bg-background px-4 py-3 shadow-2xl motion-safe:transition-transform motion-safe:duration-300">
       <div className="hidden flex-col whitespace-nowrap sm:flex">
@@ -21,7 +22,7 @@ export function StickyBar({ copy, quoteHref }: { copy: Copy; quoteHref: string }
         <p className="text-xs leading-4 text-white/50">{t.lede}</p>
       </div>
       <div className="flex min-w-0 flex-1 gap-2 sm:flex-none">
-        <Button href={SAMPLE_PHONE.href} className={`${BUTTON} flex-1 gap-1.5 bg-white/10 px-4 font-medium text-white hover:bg-white/20 sm:flex-none`}>
+        <Button href={phone.href} className={`${BUTTON} flex-1 gap-1.5 bg-white/10 px-4 font-medium text-white hover:bg-white/20 sm:flex-none`}>
           <Icon name="phone" className="size-[13px]" />
           {t.call}
         </Button>

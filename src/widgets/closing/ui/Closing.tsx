@@ -1,6 +1,6 @@
 import { Button, Section } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
-import { SAMPLE_PHONE } from "@/shared/config/sample";
+import { shownPhone } from "@/shared/config/sample";
 import { Icon, TYPE } from "@/shared/ui";
 
 export interface ClosingProps {
@@ -17,6 +17,7 @@ export interface ClosingProps {
  */
 export function Closing({ copy, id, quoteHref }: ClosingProps) {
   const { t } = copy;
+  const phone = shownPhone(copy.f.phone);
   return (
     <Section id={id} surface="primary" data-band="cta" className="py-12">
       <div className="mx-auto flex max-w-[736px] flex-col items-center text-center">
@@ -27,13 +28,13 @@ export function Closing({ copy, id, quoteHref }: ClosingProps) {
             {t.closing.cta}
           </Button>
           <Button
-            href={SAMPLE_PHONE.href}
+            href={phone.href}
             variant="outline"
             size="xl"
             className="border-brand/15 bg-white/30 leading-6 font-bold text-brand shadow-none hover:bg-white/50 hover:text-brand"
           >
             <Icon name="phone" className="size-[15px]" />
-            {SAMPLE_PHONE.display}
+            {phone.display}
           </Button>
         </div>
       </div>
