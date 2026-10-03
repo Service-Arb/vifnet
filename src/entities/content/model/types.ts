@@ -71,8 +71,10 @@ export interface Text extends CoreText<PageKey, Facts> {
   };
   /** The brand's words over kitstart's `LeadCapture`; the rest of the card is the kit's. */
   quote: {
-    /** The fields' labels, the frame's words for them. */
+    /** The fields' names: visually hidden, still each field's accessible name. */
     labels: { name: string; mobile: string; locality: string; bedrooms: string; subject: string };
+    /** What the frame draws in the empty fields instead of a label. */
+    placeholders: { name: string; mobile: string; locality: string };
     /** Shown in the bedrooms select until one is picked. */
     bedroomsPlaceholder: string;
     trust: readonly string[];

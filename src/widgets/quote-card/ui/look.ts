@@ -14,12 +14,6 @@ export const FIELD =
 /** The frame's full-width gold buttons: Button lg at 16 px padding, with shadow-sm. */
 export const WIDE_BUTTON = "w-full py-4 leading-6 font-bold shadow-sm hover:bg-amber-400";
 
-/**
- * A field's name above it. The frame draws placeholders only; `LeadCapture`
- * labels its fields instead, so the label is set small and quiet.
- */
-export const LABEL = "text-xs leading-4 font-semibold text-ink-soft";
-
 /** The frame's 11 px grey under the submit: the trust line and the privacy note. */
 export const FINE_PRINT = "text-center text-[11px] leading-[16.5px] text-slate-400";
 
@@ -27,6 +21,8 @@ export const FINE_PRINT = "text-center text-[11px] leading-[16.5px] text-slate-4
  * `LeadCapture`'s parts in the frame's QuoteCard: its 20 px between the head
  * and the form and 12 px between fields, the Field box, the gold submit at the
  * frame's Button lg (`size="xl"`'s padding and text, which `touch` lacks).
+ * The labels are the kit's, `sr-only` under `labels="hidden"`: the frame
+ * draws placeholders.
  */
 export const LEAD_CAPTURE_LOOK: Readonly<Partial<Record<LeadCapturePart, string>>> = {
   root: "gap-5",
@@ -34,7 +30,6 @@ export const LEAD_CAPTURE_LOOK: Readonly<Partial<Record<LeadCapturePart, string>
   contact: "gap-3",
   trust: "gap-3",
   field: "gap-1.5",
-  label: LABEL,
   control: `${FIELD} px-4`,
   // qualify-first's tiles: the Field's box and type, so both arms read alike.
   need: "rounded-xl py-3.5 text-sm leading-5 text-slate-700",

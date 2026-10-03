@@ -78,6 +78,7 @@ export const FR = {
   },
   quote: {
     labels: { name: "Nom", mobile: "Téléphone", locality: "Code postal", bedrooms: "Chambres", subject: "Prestation" },
+    placeholders: { name: "Votre nom complet", mobile: "Numéro de téléphone", locality: "Code postal" },
     bedroomsPlaceholder: "Nombre de chambres",
     trust: ["✓ Sans engagement", "✓ Rappel sous 15 min", "✓ Possible le jour même"],
     bedrooms: { studio: "Studio", "1": "1 chambre", "2": "2 chambres", "3": "3 chambres", "4": "4 chambres", "5+": "5 chambres et plus" },

@@ -23,7 +23,9 @@ export interface QuoteCardProps {
  * The frame's QuoteCard (6:83): white, rounded-2xl, p-7, shadow-2xl — a light
  * island in the dark hero — around kitstart's `LeadCapture`, the form every
  * Service-Arb brand shares so an experiment's results pool across them. The
- * heading is the frame's; the fields, channels and events are the kit's. A
+ * heading and the placeholders are the frame's (the labels name the fields
+ * for assistive technology only); the fields, channels and events are the
+ * kit's. A
  * service card names its service (`data-need`), so the card does not ask it
  * again. The card is kitstart's root, `#<id>` (`#devis`): its form is
  * `#devis-form`, the callback `#devis-callback`. The form posts
@@ -38,6 +40,9 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, layout, experi
     localityLabel: t.quote.labels.locality,
     phoneLabel: t.quote.labels.mobile,
     nameLabel: t.quote.labels.name,
+    localityPlaceholder: t.quote.placeholders.locality,
+    phonePlaceholder: t.quote.placeholders.mobile,
+    namePlaceholder: t.quote.placeholders.name,
     submit: t.quoteForm.submit,
     honeypotLabel: t.quoteForm.honeypotLabel,
   };
@@ -62,6 +67,7 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, layout, experi
       }
       experiment={experiment}
       text={text}
+      labels="hidden"
       head={
         <div className="flex flex-col gap-1">
           <h2 className="font-display text-2xl leading-8 font-bold text-brand">{t.quoteForm.title}</h2>

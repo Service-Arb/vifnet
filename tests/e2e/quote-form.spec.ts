@@ -30,13 +30,19 @@ function leadRow(mobile: string): unknown {
 test.describe("with JavaScript", () => {
   test.use({ extraHTTPHeaders: { "x-forwarded-for": "10.8.0.1" } });
 
-  test("asks only the postcode and the phone; the name and bedrooms are optional", async ({ page }) => {
+  test("asks only the postcode and the phone, by placeholder; the name and bedrooms are optional", async ({ page }) => {
     await page.goto("/fr#devis");
     await hydrated(page);
     await card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" }).click();
-    await expect(page.locator("form#devis-form input[name=locality]")).toBeFocused();
-    await expect(page.locator("form#devis-form input[name=mobile]")).toHaveAttribute("required", "");
-    await expect(page.locator("form#devis-form input[name=name]")).not.toHaveAttribute("required", "");
+    const form = page.locator("form#devis-form");
+    await expect(form.locator("input[name=locality]")).toBeFocused();
+    await expect(form.locator("input[name=mobile]")).toHaveAttribute("required", "");
+    await expect(form.locator("input[name=name]")).not.toHaveAttribute("required", "");
+    // The frame draws placeholders; the labels still name the fields, unseen.
+    await expect(page.getByRole("textbox", { name: "Code postal" })).toHaveAttribute("placeholder", "Code postal");
+    await expect(page.getByRole("textbox", { name: "Téléphone" })).toHaveAttribute("placeholder", "Numéro de téléphone");
+    await expect(page.getByRole("textbox", { name: "Nom (facultatif)" })).toHaveAttribute("placeholder", "Votre nom complet");
+    await expect(form.locator("label", { hasText: "Téléphone" })).toHaveClass(/sr-only/);
     await expect(page.getByRole("combobox", { name: "Chambres (facultatif)" })).toHaveText("Nombre de chambres");
     await expect(page).toHaveURL(/\/fr#devis$/);
   });
