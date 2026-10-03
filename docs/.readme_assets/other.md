@@ -2,7 +2,8 @@
 
 ```text
 app/             Next routes, each a few lines over a kitstart factory: pages under
-                 [locale]/[location], /quote, /og, /health, robots, sitemap, the global 404
+                 [locale]/[location], /quote (and its /booking, /confirm), /og, /health,
+                 robots, sitemap, the global 404
 src/             the site in Feature-Sliced layers (shared → entities → features → widgets → views);
                  widgets/ are named after the Figma frames (hero, before-after, services, …)
 assets/          brand.toml (the palette), card.toml (contact facts), the mark and lock-up,

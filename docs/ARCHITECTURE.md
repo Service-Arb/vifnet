@@ -117,10 +117,20 @@ names more than one commune — and shows the price live, "Réserver" under
 it. `/quote` prices the posted answers again with the same `priceOf` and
 stores its own number (`flow`, `quoted_cents`, `pricing_valid_from`,
 `estimate_inputs`); a posted amount is never read. The card then confirms
-that price and promises a call to set the slot — no booking provider yet.
+that price and offers the place's booking (below).
 A deep clean, a move and after-works are quotes: the crew has to see the
 place, so the card offers to send photos on WhatsApp (once the place has a
 number) and the callback.
+
+A priced lead sets its slot through kitstart's booking: the place's
+`booking` (from the panel's place settings; none baked) names its booking
+pages, and experiment `booking_provider` (docs/EXPERIMENTS.md) picks between
+the call (`manual`) and a Google schedule. Without a schedule the card
+promises the call and offers an optional preference, which it posts to
+`/quote/booking`; that queues `booking.requested@1` on the lead webhook's
+outbox only under `PANEL_BOOKING`, off until the panel accepts the event. A
+plain post whose price changed under the page lands on `/quote/confirm`,
+never cached, which asks again at the fresh price.
 
 The price list is `shared/config/pricing.ts`, placeholder amounts until the
 owner sets them (OWNER_TODO, blocks a launch). The panel's
