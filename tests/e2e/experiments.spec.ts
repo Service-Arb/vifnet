@@ -133,7 +133,8 @@ test.describe("a new visitor", () => {
   test("gets a sticky assignment on the home page, and none on a sub-page", async ({ request }) => {
     const home = await request.get("/fr", { headers: { cookie: "" } });
     expect(home.headers()["set-cookie"] ?? "").toMatch(/ab_lead_layout=[ab];/);
-    expect(home.headers()["set-cookie"] ?? "").toMatch(/ab_booking_provider=[ab];/);
+    // The panel's weights (mock-panel.mjs: booking_provider all on b), not the code's 50/50.
+    expect(home.headers()["set-cookie"] ?? "").toMatch(/ab_booking_provider=b;/);
     const sub = await request.get("/fr/prices", { headers: { cookie: "" } });
     expect(sub.headers()["set-cookie"] ?? "").not.toContain("ab_");
   });

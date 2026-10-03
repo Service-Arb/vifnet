@@ -23,7 +23,7 @@ const home = (locale: Locale) => {
       copy,
       renderedAt: Date.UTC(2026, 8, 24),
       pricing: site.pricing ?? null,
-      experiments: { assignment: CONTROL, target: { key: null, host: "https://us.i.posthog.com", brandId: site.brand.id } },
+      experiments: { bucket: CONTROL, target: { key: null, host: "https://us.i.posthog.com", brandId: site.brand.id } },
     }),
   );
 };

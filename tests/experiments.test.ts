@@ -1,29 +1,40 @@
 import type { AnalyticsSink } from "@evinvest/analytics";
+import { applyOverrides } from "@evinvest/experiments";
+import { declarationProblem } from "@evinvest/kitstart/server";
 import { describe, expect, it } from "vitest";
 import { experimentEvent } from "@/features/experiment/model/events";
 import { withExperimentLead, witnessedDefer } from "@/features/experiment/server";
 import { BOOKING_EXPERIMENT, bookingOf } from "@evinvest/kitstart";
-import { BOOKING_ARMS, EXPERIMENTS } from "@/shared/config/experiments";
+import { BOOKING_ARMS, EXPERIMENT_SUMMARIES, EXPERIMENTS } from "@/shared/config/experiments";
 import { site } from "@/shared/config/site";
-import { assignedBy, bucketSuffix, CONTROL, isBot, parseLocation, placeOfLocation } from "@/shared/lib/experiments";
+import { assignedBy, bucketSuffix, CONTROL, isBot, parseLocation, placeOfLocation, runningOf, variantsOf } from "@/shared/lib/experiments";
+
+/** The config as the panel serves it: none of its overrides, or lead_layout switched off. */
+const AS_CODED = applyOverrides(EXPERIMENTS, {});
+const LAYOUT_OFF = applyOverrides(EXPERIMENTS, { lead_layout: { enabled: false } });
 
 describe("the bucket in the place param", () => {
-  it("is no suffix for the control, one `~key.variant` otherwise", () => {
-    expect(bucketSuffix(CONTROL)).toBe("");
-    expect(bucketSuffix({ ...CONTROL, lead_layout: "b" })).toBe("~lead_layout.b");
-    expect(bucketSuffix({ ...CONTROL, booking_provider: "b" })).toBe("~booking_provider.b");
-    expect(bucketSuffix({ lead_layout: "b", booking_provider: "b" })).toBe("~lead_layout.b~booking_provider.b");
+  it("spells out every running test, the control too; no test running is no suffix", () => {
+    expect(bucketSuffix({})).toBe("");
+    expect(bucketSuffix(CONTROL)).toBe("~lead_layout.a~booking_provider.a");
+    expect(bucketSuffix({ ...CONTROL, lead_layout: "b" })).toBe("~lead_layout.b~booking_provider.a");
+    expect(bucketSuffix({ booking_provider: "b" })).toBe("~booking_provider.b");
   });
 
   it("round-trips, and the place is what the loader gets", () => {
-    expect(parseLocation("_vifnet~lead_layout.b")).toEqual({ place: "_vifnet", assignment: { ...CONTROL, lead_layout: "b" } });
-    expect(parseLocation("_vifnet~lead_layout.b~booking_provider.b")).toEqual({ place: "_vifnet", assignment: { lead_layout: "b", booking_provider: "b" } });
-    expect(parseLocation("_vifnet")).toEqual({ place: "_vifnet", assignment: CONTROL });
-    expect(placeOfLocation("_vifnet~lead_layout.b")).toBe("_vifnet");
+    expect(parseLocation("_vifnet~lead_layout.b~booking_provider.a")).toEqual({ place: "_vifnet", bucket: { lead_layout: "b", booking_provider: "a" } });
+    expect(parseLocation("_vifnet~lead_layout.a")).toEqual({ place: "_vifnet", bucket: { lead_layout: "a" } });
+    expect(parseLocation("_vifnet")).toEqual({ place: "_vifnet", bucket: {} });
+    expect(placeOfLocation("_vifnet~lead_layout.b~booking_provider.b")).toBe("_vifnet");
+  });
+
+  it("renders a test that is not in the path as its control, and counts it as not running", () => {
+    expect(variantsOf({ booking_provider: "b" })).toEqual({ lead_layout: "a", booking_provider: "b" });
+    expect(variantsOf({})).toEqual(CONTROL);
   });
 
   it("refuses a suffix the proxy never writes: no second cache entry for the same page", () => {
-    for (const bad of ["_vifnet~lead_layout.a", "_vifnet~lead_layout.z", "_vifnet~nope.b", "_vifnet~lead_layout.b~lead_layout.b", "_vifnet~booking_provider.b~lead_layout.b"]) {
+    for (const bad of ["_vifnet~lead_layout", "_vifnet~lead_layout.z", "_vifnet~nope.b", "_vifnet~lead_layout.b~lead_layout.b", "_vifnet~booking_provider.b~lead_layout.b"]) {
       expect(parseLocation(bad)).toBeNull();
       expect(placeOfLocation(bad)).toBe(bad);
     }
@@ -65,9 +76,16 @@ describe("booking_provider", () => {
 describe("who is in the experiment", () => {
   it("is whoever carries an ab_ cookie; the QA cookie marks it forced", () => {
     const jar: Record<string, string> = { ab_lead_layout: "b", ab__qa: "1" };
-    expect(assignedBy(n => jar[n])).toEqual({ assigned: { lead_layout: "b" }, forced: true });
-    expect(assignedBy(() => undefined)).toEqual({ assigned: {}, forced: false });
-    expect(assignedBy(n => (n === "ab_lead_layout" ? "garbage" : undefined)).assigned).toEqual({ lead_layout: "a" });
+    expect(assignedBy(AS_CODED, n => jar[n])).toEqual({ assigned: { lead_layout: "b" }, forced: true });
+    expect(assignedBy(AS_CODED, () => undefined)).toEqual({ assigned: {}, forced: false });
+    expect(assignedBy(AS_CODED, n => (n === "ab_lead_layout" ? "garbage" : undefined)).assigned).toEqual({ lead_layout: "a" });
+  });
+
+  it("is nobody for a test the panel switched off, whatever the cookie says", () => {
+    const jar: Record<string, string> = { ab_lead_layout: "b", ab_booking_provider: "b" };
+    expect(assignedBy(LAYOUT_OFF, n => jar[n]).assigned).toEqual({ booking_provider: "b" });
+    expect(runningOf(LAYOUT_OFF, { lead_layout: "b", booking_provider: "a" })).toEqual({ booking_provider: "a" });
+    expect(runningOf(AS_CODED, { lead_layout: "b" })).toEqual({ lead_layout: "b" });
   });
 
   it("never counts crawlers and previews", () => {
@@ -103,7 +121,7 @@ describe("event names", () => {
 });
 
 describe("experiment_lead on /quote", () => {
-  const setup = (accepts: boolean) => {
+  const setup = (accepts: boolean, live = AS_CODED) => {
     const captured: [string, Record<string, unknown> | undefined][] = [];
     const tasks: (() => unknown)[] = [];
     const defer = (task: () => unknown) => void tasks.push(task);
@@ -114,7 +132,7 @@ describe("experiment_lead on /quote", () => {
       if (accepts) deferInRoute(() => undefined);
       return new Response(null, { status: 303 });
     };
-    const post = withExperimentLead(route, { sink: () => sink, defer });
+    const post = withExperimentLead(route, { sink: () => sink, defer, experiments: async () => live });
     const run = async (cookie?: string) => {
       await post(new Request("http://x/quote", { method: "POST", headers: cookie ? { cookie } : {} }));
       for (const task of tasks.splice(0)) task();
@@ -131,5 +149,22 @@ describe("experiment_lead on /quote", () => {
   it("is not sent for a rejected or suspected submission, nor without a cookie", async () => {
     expect(await setup(false)("ab_lead_layout=b")).toEqual([]);
     expect(await setup(true)()).toEqual([]);
+  });
+
+  it("is not sent for a test the panel switched off, even with its cookie", async () => {
+    expect(await setup(true, LAYOUT_OFF)("ab_lead_layout=b; ab_booking_provider=a")).toEqual([
+      ["experiment_lead", { experiment: "booking_provider", variant: "a", forced: false }],
+    ]);
+  });
+});
+
+describe("the declaration to the panel", () => {
+  it("has a one-line hypothesis for every test, and the panel would take each", () => {
+    for (const [key, spec] of Object.entries(EXPERIMENTS)) {
+      const summary = EXPERIMENT_SUMMARIES[key as keyof typeof EXPERIMENTS];
+      expect(summary.length, key).toBeLessThanOrEqual(200);
+      expect(summary, key).not.toContain("\n");
+      expect(declarationProblem(key, spec, summary), key).toBeNull();
+    }
   });
 });

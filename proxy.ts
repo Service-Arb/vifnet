@@ -3,9 +3,10 @@ import { abProxy } from "@evinvest/experiments/next";
 import { createRouting, parsePlaceParam } from "@evinvest/kitstart";
 import { createProxy, GONE_HEADER, LANG_COOKIE } from "@evinvest/kitstart/proxy";
 import { NextResponse, type NextRequest } from "next/server";
+import { liveExperiments } from "@/shared/config/env";
 import { EXPERIMENTS, type ExperimentKey, FORCE_PARAM, QA_COOKIE } from "@/shared/config/experiments";
 import { site } from "@/shared/config/site";
-import { assignedBy, bucketSuffix, CONTROL, isBot, parseLocation } from "@/shared/lib/experiments";
+import { assignedBy, bucketSuffix, isBot, parseLocation, runningOf } from "@/shared/lib/experiments";
 
 const kitstart = createProxy(site);
 const routing = createRouting(site);
@@ -26,20 +27,27 @@ function withoutGoneHeader(request: NextRequest): Headers {
 }
 
 /**
- * kitstart's routing, then the home page's experiments: `abProxy` assigns the
- * sticky `ab_<key>` cookies (bots skipped), and a visitor off the control is
- * rewritten to the bucket's own path — `/fr/_vifnet~lead_layout.b` —
- * so every bucket is an ISR entry and no page reads the request.
+ * kitstart's routing, then the home page's experiments under the panel's
+ * overrides (`liveExperiments`): `abProxy` assigns the sticky `ab_<key>`
+ * cookies (bots skipped), and the visitor is rewritten to the bucket's own
+ * path — `/fr/_vifnet~lead_layout.b~booking_provider.a`, every experiment
+ * that runs spelt out — so every bucket is an ISR entry and no page reads the
+ * request or the panel.
  */
-export function proxy(request: NextRequest): NextResponse {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
   const url = request.nextUrl;
   const home = homeOf(url.pathname);
 
   // A bucket's path, as this proxy wrote it (Next may run the proxy again on
-  // a rewrite target): served as it is. kitstart would call it a dead path.
+  // a rewrite target): served as it is, unless it names an experiment the
+  // panel has since switched off — that one is dropped, so a cached page of
+  // a stopped test is never served again. kitstart would call it a dead path.
   const internal = home?.param.includes("~") ? parseLocation(home.param) : null;
-  if (internal && site.placeSlugs.includes(parsePlaceParam(internal.place).slug)) {
-    return NextResponse.next({ request: { headers: withoutGoneHeader(request) } });
+  if (home && internal && site.placeSlugs.includes(parsePlaceParam(internal.place).slug)) {
+    const headers = withoutGoneHeader(request);
+    const suffix = bucketSuffix(runningOf(await liveExperiments(), internal.bucket));
+    if (`${internal.place}${suffix}` === home.param) return NextResponse.next({ request: { headers } });
+    return NextResponse.rewrite(new URL(`/${home.locale}/${internal.place}${suffix}${url.search}`, url), { request: { headers } });
   }
 
   const routed = kitstart(request);
@@ -52,14 +60,15 @@ export function proxy(request: NextRequest): NextResponse {
   });
   if (decision.kind !== "serve" || !homeOf(decision.pathname) || isBot(request.headers.get("user-agent"))) return routed;
 
+  const live = await liveExperiments();
   // Writes new assignments into `request.cookies` and its response's Set-Cookie.
-  const assigned = abProxy(EXPERIMENTS, request, { forceParam: FORCE_PARAM });
-  const { assigned: variants } = assignedBy(name => request.cookies.get(name)?.value);
-  const suffix = bucketSuffix({ ...CONTROL, ...variants });
+  const assigned = abProxy(live, request, { forceParam: FORCE_PARAM });
+  const { assigned: bucket } = assignedBy(live, name => request.cookies.get(name)?.value);
+  const suffix = bucketSuffix(bucket);
   const response = suffix ? NextResponse.rewrite(new URL(`${decision.pathname}${suffix}${url.search}`, url), { request: { headers: withoutGoneHeader(request) } }) : routed;
 
   for (const cookie of assigned.cookies.getAll()) response.cookies.set(cookie);
-  if (KEYS.some(k => forcedVariant(EXPERIMENTS, k, url.searchParams.get(`${FORCE_PARAM}${k}`)) !== undefined)) {
+  if (KEYS.some(k => forcedVariant(live, k, url.searchParams.get(`${FORCE_PARAM}${k}`)) !== undefined)) {
     response.cookies.set(QA_COOKIE, "1", { path: "/", maxAge: ASSIGNMENT_MAX_AGE, sameSite: "lax" });
   }
   return response;

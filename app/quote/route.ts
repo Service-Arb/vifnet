@@ -2,7 +2,7 @@ import { quoteRoute } from "@evinvest/kitstart/next";
 import { after } from "next/server";
 import { TEXT } from "@/entities/content";
 import { experimentSink, withExperimentLead, witnessedDefer } from "@/features/experiment/server";
-import { notifier, pricing, serverEnv, webhook } from "@/shared/config/env";
+import { liveExperiments, notifier, pricing, serverEnv, webhook } from "@/shared/config/env";
 import { ANCHORS } from "@/shared/config/nav";
 import { site } from "@/shared/config/site";
 
@@ -28,6 +28,7 @@ const route = quoteRoute(site, {
 
 export const POST = withExperimentLead(route, {
   defer: after,
+  experiments: liveExperiments,
   sink: () => {
     const env = serverEnv();
     return experimentSink({ key: env.posthogKey, host: env.posthogHost, brandId: site.brand.id }, null);
