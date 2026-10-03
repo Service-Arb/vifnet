@@ -15,6 +15,8 @@ export {
   type Text,
 } from "./model/types";
 
+export { leadCaptureText } from "./lib/lead-capture";
+
 export const TEXT: Readonly<Record<Locale, Text>> = { fr: FR, en: EN };
 
 export function copyFor(locale: Locale, f: Facts): Copy {

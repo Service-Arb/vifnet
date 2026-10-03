@@ -1,9 +1,10 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import { channelOf, leadRef, type Lead, type LeadSuspect } from "@evinvest/kitstart";
+import { bookingRequestedProperties, channelOf, leadRef, type BookingRequest, type BookingRequestedProperties, type Lead, type LeadSuspect } from "@evinvest/kitstart";
 import {
   panelChannel,
   panelFlowProperties,
+  type BookingWebhookContext,
   type LeadWebhookContext,
   type LeadWebhookOptions,
   type PanelFlowProperties,
@@ -37,6 +38,14 @@ export const PANEL_SUSPECT = false;
 export const PANEL_FLOW = false;
 
 /**
+ * Whether a priced lead's booking request goes to the panel as
+ * `booking.requested@1` (`/quote/booking`, after the lead's `lead.created`).
+ * Off until the panel accepts the event type: it refuses an unknown one, and
+ * the outbox would park the request. Off, the route answers and drops it.
+ */
+export const PANEL_BOOKING = false;
+
+/**
  * `lead.created@1` as protojson — `sa.v1.Event` with `LeadCreatedV1` for
  * properties (Service-Arb/panel `contracts/proto/sa/v1/events.proto`).
  */
@@ -59,9 +68,26 @@ export interface LeadCreatedEvent {
   pii?: Record<string, string>;
 }
 
-/** `sa.v1.IngestRequest`. */
-export interface IngestBody {
-  events: [LeadCreatedEvent];
+/**
+ * `booking.requested@1` (FORM-VARIANTS-SPEC, "Booking amendments" 3): the
+ * site's word that a priced lead asked for a slot. `subject.leadId` is the
+ * lead's `leadRef`, the id its `lead.created` carried, so the two join. No
+ * `pii`: the properties are slugs and a date, nothing a person typed.
+ */
+export interface BookingRequestedEvent {
+  id: string;
+  schema: "sa.funnel.v1";
+  type: "booking.requested";
+  typeVersion: 1;
+  occurredAt: string;
+  source: { kind: "site"; id: string };
+  subject: { brandId: string; leadId: string };
+  properties: BookingRequestedProperties;
+}
+
+/** `sa.v1.IngestRequest`: one event per body, as the outbox sends one row at a time. */
+export interface IngestBody<E = LeadCreatedEvent> {
+  events: [E];
 }
 
 /**
@@ -158,14 +184,48 @@ export function leadCreatedBody(lead: Lead, ctx: LeadWebhookContext, sourceId: s
   return { events: [event] };
 }
 
+/** The webhook body for one booking request, signed like a lead's (`sourceId`). */
+export function bookingRequestedBody(request: BookingRequest, ctx: BookingWebhookContext, sourceId: string): IngestBody<BookingRequestedEvent> {
+  return {
+    events: [
+      {
+        id: uuidV7(ctx.at, ctx.idempotencyKey),
+        schema: "sa.funnel.v1",
+        type: "booking.requested",
+        typeVersion: 1,
+        occurredAt: ctx.at.toISOString(),
+        source: { kind: "site", id: sourceId },
+        subject: { brandId: ctx.brandId, leadId: request.leadRef },
+        properties: bookingRequestedProperties(request),
+      },
+    ],
+  };
+}
+
+/** The panel's switches, each off until the panel in production accepts what it adds. */
+export interface PanelSwitches {
+  panelSuspect: boolean;
+  panelFlow: boolean;
+  panelBooking: boolean;
+}
+
+export const PANEL_SWITCHES: PanelSwitches = { panelSuspect: PANEL_SUSPECT, panelFlow: PANEL_FLOW, panelBooking: PANEL_BOOKING };
+
 /**
- * The site's options for kitstart's `leadWebhook`: the panel's signing, this
- * body, and the suspect and sale switches. `keyId` is the key the batch is
- * signed with; `switches` is for a test that turns one on.
+ * The site's options for kitstart's `leadWebhook`: the panel's signing, the
+ * two bodies, and the switches. The booking body is always wired, so turning
+ * `PANEL_BOOKING` on is the one change. `keyId` is the key the batch is signed
+ * with; `switches` is for a test that turns one on.
  */
 export function panelWebhookOptions(
   keyId: string,
-  switches: { panelSuspect: boolean; panelFlow: boolean } = { panelSuspect: PANEL_SUSPECT, panelFlow: PANEL_FLOW },
-): Pick<LeadWebhookOptions, "signing" | "buildBody" | "panelSuspect" | "panelFlow"> {
-  return { signing: SA_INGEST_SIGNING, buildBody: (lead, ctx) => leadCreatedBody(lead, ctx, keyId), ...switches };
+  switches: Partial<PanelSwitches> = {},
+): Pick<LeadWebhookOptions, "signing" | "buildBody" | "buildBookingBody" | "panelSuspect" | "panelFlow" | "panelBooking"> {
+  return {
+    signing: SA_INGEST_SIGNING,
+    buildBody: (lead, ctx) => leadCreatedBody(lead, ctx, keyId),
+    buildBookingBody: (request, ctx) => bookingRequestedBody(request, ctx, keyId),
+    ...PANEL_SWITCHES,
+    ...switches,
+  };
 }

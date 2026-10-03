@@ -1,6 +1,6 @@
-import { LEAD_CAPTURE_TEXT, type Place, type PricingModel } from "@evinvest/kitstart";
+import type { Place, PricingModel } from "@evinvest/kitstart";
 import type { LeadCaptureLayout } from "@evinvest/kitstart/react";
-import type { Copy } from "@/entities/content";
+import { leadCaptureText, type Copy } from "@/entities/content";
 import { BEDROOMS, EXTRAS, FLOWS, LEAD, PHOTO_NEEDS, SUBJECTS, type Subject } from "@/shared/config/lead";
 import { BedroomsField, TrustLine } from "./fields";
 import { LEAD_CAPTURE_LOOK } from "./look";
@@ -39,19 +39,7 @@ export interface QuoteCardProps {
  */
 export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need, layout, experiment }: QuoteCardProps) {
   const { t, locale } = copy;
-  const kit = LEAD_CAPTURE_TEXT[locale];
-  const text = {
-    ...kit,
-    needLabel: t.quote.labels.subject,
-    localityLabel: t.quote.labels.locality,
-    phoneLabel: t.quote.labels.mobile,
-    nameLabel: t.quote.labels.name,
-    localityPlaceholder: t.quote.placeholders.locality,
-    phonePlaceholder: t.quote.placeholders.mobile,
-    namePlaceholder: t.quote.placeholders.name,
-    submit: t.quoteForm.submit,
-    honeypotLabel: t.quoteForm.honeypotLabel,
-  };
+  const text = leadCaptureText(t, locale);
   return (
     <QuoteCapture
       id={id}
@@ -70,7 +58,7 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
       name={{ field: EXTRAS.name.name }}
       extras={
         <BedroomsField
-          label={`${t.quote.labels.bedrooms} (${kit.optional})`}
+          label={`${t.quote.labels.bedrooms} (${text.optional})`}
           placeholder={t.quote.bedroomsPlaceholder}
           options={BEDROOMS.map(b => ({ value: b, label: t.quote.bedrooms[b] }))}
         />

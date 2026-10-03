@@ -220,7 +220,7 @@ describe("the lead webhook, wired as the site wires it", () => {
   });
 
   it("switched on, says why a lead is suspect — never for the honeypot", async () => {
-    const { panelSuspect, bodies } = await delivered({ ...panelWebhookOptions("vifnet-site"), panelSuspect: true }, [lead, fast, limited, trapped]);
+    const { panelSuspect, bodies } = await delivered(panelWebhookOptions("vifnet-site", { panelSuspect: true }), [lead, fast, limited, trapped]);
     expect(panelSuspect).toBe(true);
     expect(bodies).toEqual([
       withProperties({ channel: "form" }),
@@ -248,7 +248,7 @@ describe("the lead webhook, wired as the site wires it", () => {
   });
 
   it("switched on, sends the flow, the server's price, the model's date and the answers", async () => {
-    const { bodies } = await delivered(panelWebhookOptions("vifnet-site", { panelSuspect: false, panelFlow: true }), [estimated, quoted, { ...lead, channel: "callback" }]);
+    const { bodies } = await delivered(panelWebhookOptions("vifnet-site", { panelFlow: true }), [estimated, quoted, { ...lead, channel: "callback" }]);
     expect(bodies).toEqual([
       withProperties({
         channel: "form",
