@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import { channelOf, type Lead, type LeadSuspect } from "@evinvest/kitstart";
+import { channelOf, leadRef, type Lead, type LeadSuspect } from "@evinvest/kitstart";
 import {
   panelChannel,
   panelFlowProperties,
@@ -121,15 +121,15 @@ function piiOf(lead: Lead): Record<string, string> {
 }
 
 /**
- * The lead's id for the panel: the row id, for a person matching it to the
- * mail, plus 8 hex of the kit's per-lead key — row ids start over if the
- * leads file is ever recreated, and the panel counts only the first
- * `lead.created` of a lead id. The letter prefix keeps it from looking like a
- * phone number to the panel.
+ * The lead's id for the panel: kitstart's `leadRef` (`lead-<row>-<8 hex>`),
+ * the reference the page was answered with. A booking names its lead by it
+ * (`booking.requested`'s `lead_ref`, a booking page's `ref`), so `lead.created`
+ * must carry the same one or the two never join. The kit sets it on every
+ * lead it queues; a context built by hand has none, and gets the kit's own
+ * derivation from the row and the per-lead key — the same shape, no join.
  */
-export function panelLeadId(ctx: Pick<LeadWebhookContext, "leadId" | "idempotencyKey">): string {
-  const tag = createHash("sha256").update(ctx.idempotencyKey).digest("hex").slice(0, 8);
-  return `lead-${ctx.leadId}-${tag}`;
+export function panelLeadId(ctx: Pick<LeadWebhookContext, "leadId" | "idempotencyKey" | "leadRef">): string {
+  return ctx.leadRef ?? leadRef(ctx.leadId, ctx.idempotencyKey);
 }
 
 /**

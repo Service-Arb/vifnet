@@ -2,7 +2,7 @@ import { createHmac } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Lead } from "@evinvest/kitstart";
+import { isLeadRef, leadRef, type Lead } from "@evinvest/kitstart";
 import { leadWebhook, parseServerEnv, type LeadWebhookContext } from "@evinvest/kitstart/server";
 import { afterEach, describe, expect, it } from "vitest";
 import { TEXT } from "@/entities/content";
@@ -26,10 +26,11 @@ const ctx: LeadWebhookContext = {
   formId: "quote",
   at: new Date("2026-10-01T09:30:00.123Z"),
   idempotencyKey: "0b5c1f0e-7d1a-4e8b-9c2d-3f4a5b6c7d8e",
+  leadRef: "lead-42-9f8e7d6c",
 };
 
-// The row id for a person, a tag from the key for uniqueness past a recreated leads file.
-const LEAD_ID = panelLeadId(ctx);
+// The kit's reference for the lead, the one its page was answered with.
+const LEAD_ID = "lead-42-9f8e7d6c";
 
 /** The proto3 JSON names of each message's fields, read from the panel's contract. */
 function protoFields(): Map<string, Set<string>> {
@@ -140,12 +141,19 @@ describe("lead.created for the panel", () => {
     expect(event.subject).toEqual({ brandId: "vifnet", leadId: LEAD_ID });
   });
 
-  it("makes a lead id unique past a recreated leads file, and stable for one lead", () => {
-    expect(LEAD_ID).toMatch(/^lead-42-[0-9a-f]{8}$/);
+  // FORM-VARIANTS-SPEC "Booking providers contract": a booking names its lead by kitstart's leadRef.
+  it("sends kitstart's leadRef as the panel's lead id, not one of its own", () => {
+    expect(panelLeadId(ctx)).toBe(ctx.leadRef);
+    expect(leadCreatedBody(lead, ctx, "vifnet-site").events[0].subject.leadId).toBe(ctx.leadRef);
+    expect(isLeadRef(LEAD_ID)).toBe(true);
     expect(isOpaqueId(LEAD_ID)).toBe(true);
-    expect(panelLeadId(ctx)).toBe(LEAD_ID);
-    // The same row id from a fresh file carries a fresh key, so another id.
-    expect(panelLeadId({ ...ctx, idempotencyKey: "5e7a2c10-1b3d-4f6e-8a9b-0c1d2e3f4a5b" })).not.toBe(LEAD_ID);
+  });
+
+  it("derives the kit's shape of reference for a context built by hand", () => {
+    const bare: LeadWebhookContext = { ...ctx };
+    delete bare.leadRef;
+    expect(panelLeadId(bare)).toBe(leadRef(ctx.leadId, ctx.idempotencyKey));
+    expect(panelLeadId(bare)).toMatch(/^lead-42-[0-9a-f]{8}$/);
     expect(isOpaqueId(panelLeadId({ leadId: 12345678, idempotencyKey: ctx.idempotencyKey }))).toBe(true);
   });
 
