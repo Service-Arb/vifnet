@@ -1,4 +1,4 @@
-import type { LeadSchema } from "@evinvest/kitstart";
+import { validateLead, type LeadSchema } from "@evinvest/kitstart";
 
 /**
  * The jobs the quote form offers — the four service cards of the Figma frame,
@@ -19,11 +19,12 @@ export const EXTRAS = { name: { name: "name", max: 100 }, bedrooms: { name: "bed
 
 /**
  * What the quote form posts — service, ZIP (the locality) and phone, then an
- * optional name and bedrooms — and the one rule worth enforcing: a lead with
- * no way to reach the customer is not a lead. The name is not one: the call
- * back asks it, and nothing downstream needs it (the panel and the mail take
- * a lead without one), while every required field costs leads. The reason is
- * for the log only.
+ * optional name and bedrooms — and what is refused: a number we cannot call
+ * (kitstart's `validateLead`, the rule the form itself blocks on, so the
+ * server never refuses what the form let through) and a bedrooms value the
+ * form never offers. The name is not checked: the call back asks it, and
+ * nothing downstream needs it, while every required field costs leads. The
+ * refused field goes back to the card; `why` is for the log only.
  */
 export const LEAD: LeadSchema<Subject> = {
   subjects: SUBJECTS,
@@ -33,9 +34,12 @@ export const LEAD: LeadSchema<Subject> = {
   // searching the leads file find a customer however they typed it.
   mobileFormat: "e164",
   validate: lead => {
-    if (lead.mobile.replace(/\D/g, "").length < 10) return "a mobile number";
+    const phone = validateLead(lead);
+    if (phone) return phone;
     const bedrooms = lead.extras[EXTRAS.bedrooms.name];
-    if (bedrooms !== undefined && bedrooms !== "" && !(BEDROOMS as readonly string[]).includes(bedrooms)) return "bedrooms out of range";
+    if (bedrooms !== undefined && bedrooms !== "" && !(BEDROOMS as readonly string[]).includes(bedrooms)) {
+      return { field: EXTRAS.bedrooms.name, why: "bedrooms out of range" };
+    }
     return null;
   },
 };
