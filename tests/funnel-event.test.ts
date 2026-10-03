@@ -5,6 +5,8 @@ import { join } from "node:path";
 import type { Lead } from "@evinvest/kitstart";
 import { leadWebhook, parseServerEnv, type LeadWebhookContext } from "@evinvest/kitstart/server";
 import { afterEach, describe, expect, it } from "vitest";
+import { TEXT } from "@/entities/content";
+import { PANEL_NEED, SUBJECTS } from "@/shared/config/lead";
 import { site } from "@/shared/config/site";
 import { isOpaqueId, leadCreatedBody, panelLeadId, SA_INGEST_SIGNING, uuidV7 } from "@/shared/lib/funnel-event";
 
@@ -63,7 +65,7 @@ describe("lead.created for the panel", () => {
           source: { kind: "site", id: "vifnet-site" },
           subject: { brandId: "vifnet", locationId: "vifnet", leadId: LEAD_ID },
           properties: { channel: "form" },
-          pii: { name: "Jane Doe", bedrooms: "3", phone: "(212) 555-0147", need: "deep", locality: "10001" },
+          pii: { name: "Jane Doe", bedrooms: "3", phone: "(212) 555-0147", need: "Grand ménage", locality: "10001" },
         },
       ],
     });
@@ -99,7 +101,7 @@ describe("lead.created for the panel", () => {
   it("keeps what the customer typed out of properties, and NUL out of everything", () => {
     const [event] = leadCreatedBody({ ...lead, mobile: "212\u0000555", subject: "move", locality: "", extras: { name: "Jane\u0000" } }, ctx, "vifnet-site").events;
     expect(event.properties).toEqual({ channel: "form" });
-    expect(event.pii).toEqual({ name: "Jane", phone: "212555", need: "move" });
+    expect(event.pii).toEqual({ name: "Jane", phone: "212555", need: "Entrée / sortie" });
     expect(JSON.stringify(event)).not.toContain("\\u0000");
   });
 
@@ -108,6 +110,20 @@ describe("lead.created for the panel", () => {
     const [event] = leadCreatedBody({ ...lead, channel: "callback", consent }, ctx, "vifnet-site").events;
     expect(event.properties).toEqual({ channel: "form" });
     expect(JSON.stringify(event)).not.toContain(consent.text);
+  });
+
+  // LEAD-FORMS-REVIEW-2026-10-03 #13: the operator read `deep`, `standard`.
+  it("names the job in the operator's words: the French service card's name", () => {
+    for (const subject of SUBJECTS) {
+      expect(PANEL_NEED[subject], subject).toBe(TEXT.fr.services.items[subject].name);
+      const [event] = leadCreatedBody({ ...lead, subject }, ctx, "vifnet-site").events;
+      expect(event.pii?.["need"], subject).toBe(TEXT.fr.services.items[subject].name);
+    }
+  });
+
+  it("keeps a job that is none of ours as it was posted", () => {
+    const [event] = leadCreatedBody({ ...lead, subject: "windows" }, ctx, "vifnet-site").events;
+    expect(event.pii?.["need"]).toBe("windows");
   });
 
   it("leaves the location out for a lead from no point", () => {

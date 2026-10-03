@@ -7,6 +7,21 @@ import { validateLead, type LeadSchema } from "@evinvest/kitstart";
 export const SUBJECTS = ["standard", "deep", "move", "post-construction"] as const;
 export type Subject = (typeof SUBJECTS)[number];
 
+export const isSubject = (value: string): value is Subject => (SUBJECTS as readonly string[]).includes(value);
+
+/**
+ * Each job in the panel's words: the French name of its service card, which
+ * the operator reads in a lead's `need` — never the posted id. The copy's
+ * `services.items.*.name` in French, held equal to it by
+ * tests/funnel-event.test.ts: config cannot read the copy (it sits above).
+ */
+export const PANEL_NEED: Readonly<Record<Subject, string>> = {
+  standard: "Ménage standard",
+  deep: "Grand ménage",
+  move: "Entrée / sortie",
+  "post-construction": "Fin de chantier",
+};
+
 /** The frame's featured service: the forest card on the home page, the "Most popular" row of the price table. */
 export const FEATURED: Subject = "deep";
 

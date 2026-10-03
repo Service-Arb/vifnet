@@ -2,6 +2,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { channelOf, type Lead } from "@evinvest/kitstart";
 import { panelChannel, type LeadWebhookContext, type WebhookSigning } from "@evinvest/kitstart/server";
+import { isSubject, PANEL_NEED } from "@/shared/config/lead";
 
 /**
  * The panel's ingest scheme (Service-Arb/panel README, "Sending events"): the
@@ -70,7 +71,9 @@ const clean = (s: string): string => s.replaceAll("\u0000", "");
 
 /**
  * What the customer typed, kept apart from `properties`: the panel seals
- * `pii` and reads `name`, `phone` and `need` from it. The fields are capped by
+ * `pii` and reads `name`, `phone` and `need` from it. `need` is the job in the
+ * operator's words (`PANEL_NEED`), or as posted when it is none of ours — a
+ * stale page's value is still what the customer asked for. The fields are capped by
  * the lead schema (200 characters, an extra its own `max`), far below the
  * panel's 16 KiB. A callback's consent stays in the leads file: the panel's
  * contract has no field for it.
@@ -83,7 +86,7 @@ function piiOf(lead: Lead): Record<string, string> {
   };
   for (const [name, value] of Object.entries(lead.extras)) put(name, value);
   put("phone", lead.mobile);
-  put("need", lead.subject);
+  put("need", isSubject(lead.subject) ? PANEL_NEED[lead.subject] : lead.subject);
   put("locality", lead.locality);
   return pii;
 }
@@ -123,3 +126,4 @@ export function leadCreatedBody(lead: Lead, ctx: LeadWebhookContext, sourceId: s
   if (Object.keys(pii).length > 0) event.pii = pii;
   return { events: [event] };
 }
+
