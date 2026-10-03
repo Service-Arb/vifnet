@@ -59,4 +59,20 @@ export const LEAD_CAPTURE_LOOK: Readonly<Partial<Record<LeadCapturePart, string>
   callbackLede: "text-sm leading-5",
   callbackSubmit: `${WIDE_BUTTON} px-(--control-px) text-(length:--control-text)`,
   consent: "text-sm leading-5",
+  // The estimate (no frame draws it yet): its answers are the qualify-first
+  // tiles — the Field's radius, border and type, the kit's gold check — and
+  // the price a quiet card-coloured box, the total in the display face.
+  estimate: "gap-3",
+  estimateLegend: "mb-1.5 text-sm leading-5 font-semibold text-brand",
+  estimateOption: "justify-center rounded-xl px-3 py-2.5 text-center text-sm leading-5 text-slate-700",
+  price: "gap-1 rounded-xl border-input px-4 py-3",
+  priceTotal: "text-3xl leading-9 text-brand",
+  breakdown: "leading-5",
+  // 16 px, not the fine print's 16.5: one odd half pixel put every band under the hero off the pixel grid.
+  priceNote: "text-[11px] leading-4 text-slate-400",
+  photos: "rounded-xl border-input",
+  // After a priced lead: under the Done check, centred like it.
+  priced: "-mt-2 items-center gap-1 pb-6 text-center",
+  pricedPrice: "text-base leading-6 font-semibold text-brand",
+  pricedNote: "text-sm leading-5 text-ink-soft",
 };

@@ -39,6 +39,16 @@ async function fill(page: Page, mobile: string): Promise<void> {
   await page.waitForTimeout(MIN_FILL_MS + 500);
 }
 
+/**
+ * A deep clean: a quote, so the card asks only the contact. The default job,
+ * a regular clean, is an estimate whose answers the script requires
+ * (flows.spec.ts).
+ */
+async function pickQuote(page: Page): Promise<void> {
+  await page.getByRole("combobox", { name: "Prestation" }).click();
+  await page.getByRole("listbox").getByRole("option", { name: "Grand ménage" }).click();
+}
+
 const done = (page: Page) => expect(card(page).getByRole("status")).toContainText("C’est noté, Amanda !");
 
 test.describe("a refused lead, at 390", () => {
@@ -83,6 +93,7 @@ test.describe("a refused lead, at 390", () => {
     phoneOnly(testInfo.project.name);
     await page.goto("/fr#devis");
     await hydrated(page);
+    await pickQuote(page);
     // Past the form's own check, as a page cached before a rule change would be.
     await form(page).evaluate(el => el instanceof HTMLFormElement && (el.noValidate = true));
     await fill(page, "0000000000");
@@ -103,6 +114,7 @@ test.describe("a refused lead, at 390", () => {
     phoneOnly(testInfo.project.name);
     await page.goto("/fr#devis");
     await hydrated(page);
+    await pickQuote(page);
     await page.route(
       url => isQuote(url.href),
       route => {
@@ -126,6 +138,7 @@ test.describe("no answer", () => {
     const mobile = freshMobile("06");
     await page.goto("/fr#devis");
     await hydrated(page);
+    await pickQuote(page);
     await fill(page, mobile);
     await context.setOffline(true);
     await card(page).getByRole("button", { name: SUBMIT }).click();
@@ -158,6 +171,7 @@ test.describe("no answer", () => {
     );
     await page.goto("/fr#devis");
     await hydrated(page);
+    await pickQuote(page);
     await fill(page, mobile);
     await card(page).getByRole("button", { name: SUBMIT }).click();
     const alert = form(page).getByRole("alert");
@@ -169,7 +183,7 @@ test.describe("no answer", () => {
     expect(ids).toHaveLength(2);
     expect(ids[0]).toMatch(/^[0-9a-f-]{36}$/);
     expect(ids[1]).toBe(ids[0]);
-    expect(leadRows(mobile)).toEqual([{ job: "standard", location_id: "vifnet", submission_id: ids[0] }]);
+    expect(leadRows(mobile)).toEqual([{ job: "deep", location_id: "vifnet", submission_id: ids[0] }]);
   });
 
   // #5: a server that never answers. The page's clock is the kit's timer.
@@ -189,6 +203,7 @@ test.describe("no answer", () => {
     await page.clock.install();
     await page.goto("/fr#devis");
     await hydrated(page);
+    await pickQuote(page);
     await fill(page, mobile);
     await card(page).getByRole("button", { name: SUBMIT }).click();
     const sending = form(page).locator("button[type=submit]");

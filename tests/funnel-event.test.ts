@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { TEXT } from "@/entities/content";
 import { PANEL_NEED, SUBJECTS } from "@/shared/config/lead";
 import { site } from "@/shared/config/site";
-import { isOpaqueId, leadCreatedBody, PANEL_SUSPECT, panelLeadId, panelWebhookOptions, SA_INGEST_SIGNING, uuidV7 } from "@/shared/lib/funnel-event";
+import { isOpaqueId, leadCreatedBody, PANEL_FLOW, PANEL_SUSPECT, panelLeadId, panelWebhookOptions, SA_INGEST_SIGNING, uuidV7 } from "@/shared/lib/funnel-event";
 
 const lead: Lead = {
   subject: "deep",
@@ -197,7 +197,7 @@ describe("the lead webhook, wired as the site wires it", () => {
   }
 
   /** One event whose properties are exactly these: a `suspect` key that should not be there fails it. */
-  const withProperties = (properties: Record<string, string>) => ({ events: [expect.objectContaining({ properties })] });
+  const withProperties = (properties: Record<string, unknown>) => ({ events: [expect.objectContaining({ properties })] });
   const fast: Lead = { ...lead, spamVerdict: "too-fast" };
   const limited: Lead = { ...lead, spamVerdict: "rate-limited" };
   const trapped: Lead = { ...lead, spamVerdict: "honeypot" };
@@ -218,6 +218,39 @@ describe("the lead webhook, wired as the site wires it", () => {
       withProperties({ channel: "form" }),
       withProperties({ channel: "form", suspect: "too_fast" }),
       withProperties({ channel: "form", suspect: "rate_limited" }),
+      withProperties({ channel: "form" }),
+    ]);
+  });
+
+  // A regular clean sold as an estimate, and a deep clean asked as a quote.
+  const estimated: Lead = {
+    ...lead,
+    subject: "standard",
+    flow: "estimate",
+    price: { cents: 7700, validFrom: "2026-10-03", inputs: { bedrooms: "2", surface: "40-70", frequency: "biweekly" } },
+  };
+  const quoted: Lead = { ...lead, flow: "quote" };
+
+  // FORM-VARIANTS-SPEC.md, "Contract amendments" 1. Off: the panel in
+  // production refuses properties it does not know yet.
+  it("sends no sale while the panel cannot take it", async () => {
+    expect(PANEL_FLOW).toBe(false);
+    const { bodies } = await delivered(panelWebhookOptions("vifnet-site"), [estimated, quoted]);
+    expect(bodies).toEqual([withProperties({ channel: "form" }), withProperties({ channel: "form" })]);
+  });
+
+  it("switched on, sends the flow, the server's price, the model's date and the answers", async () => {
+    const { bodies } = await delivered(panelWebhookOptions("vifnet-site", { panelSuspect: false, panelFlow: true }), [estimated, quoted, { ...lead, channel: "callback" }]);
+    expect(bodies).toEqual([
+      withProperties({
+        channel: "form",
+        flow: "estimate",
+        quoted_cents: 7700,
+        pricing_valid_from: "2026-10-03",
+        estimate_inputs: { bedrooms: "2", surface: "40-70", frequency: "biweekly" },
+      }),
+      // A quote carries no price; a lead with no flow (a callback) carries nothing.
+      withProperties({ channel: "form", flow: "quote" }),
       withProperties({ channel: "form" }),
     ]);
   });

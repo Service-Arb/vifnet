@@ -3,6 +3,7 @@ import { COPY_TODO } from "./copy-todo";
 import { i18n } from "./i18n";
 import { LEAD } from "./lead";
 import { PLACES } from "./places";
+import { PRICING } from "./pricing";
 
 /**
  * Vifnet as the machinery sees it — routing, the lead funnel, schema.org,
@@ -33,6 +34,8 @@ export const site = defineSite({
   places: PLACES,
   publication: SERVICE_AREA_GATE,
   lead: LEAD,
+  // The baked price list; the panel's, when it serves one, overrides it whole (env.ts).
+  pricing: PRICING,
   // What app/ serves as a file besides the routes every landing has.
   publicFiles: ["/icon.svg"],
 });
@@ -55,6 +58,11 @@ export const OWNER_TODO: readonly OwnerTodo[] = [
   { field: "SIRET", why: "mentions légales (LCEN) need the operating entity's SIRET, in the footer's legal line", blocksLaunch: true },
   { field: "places[vifnet].serviceArea", why: "which communes the crew covers: the structured data names none until then", blocksLaunch: true },
   { field: "places[vifnet].hours", why: "working hours — the publication gate needs them", blocksLaunch: true },
+  {
+    field: "shared/config/pricing.ts",
+    why: "the regular clean's prices are placeholders (base, bedrooms, surface, frequency discounts, minimum): the owner sets the real ones in the panel, which overrides the baked model",
+    blocksLaunch: true,
+  },
   { field: "places[vifnet].gbpName", why: "the Google Business Profile's exact name, for the live rating", blocksLaunch: false },
   {
     field: "design sample content",

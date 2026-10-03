@@ -34,6 +34,9 @@ test.describe("with JavaScript", () => {
   test("asks only the postcode and the phone, by placeholder; the name and bedrooms are optional", async ({ page }) => {
     await page.goto("/fr#devis");
     await hydrated(page);
+    // A quote: the default job, a regular clean, is priced from answers first (flows.spec.ts).
+    await page.getByRole("combobox", { name: SERVICE }).click();
+    await page.getByRole("listbox").getByRole("option", { name: "Grand ménage" }).click();
     await card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" }).click();
     const form = page.locator("form#devis-form");
     await expect(form.locator("input[name=locality]")).toBeFocused();

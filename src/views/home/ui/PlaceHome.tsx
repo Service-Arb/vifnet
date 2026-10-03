@@ -1,4 +1,4 @@
-import { contactOf, faqPageNode, placeGraph, type AnalyticsTarget, type PlaceView } from "@evinvest/kitstart";
+import { contactOf, faqPageNode, placeGraph, type AnalyticsTarget, type PlaceView, type PricingModel } from "@evinvest/kitstart";
 import { JsonLd } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { ExperimentScope } from "@/features/experiment";
@@ -34,6 +34,8 @@ export interface PlaceHomeProps {
   view: PlaceView<Locale>;
   copy: Copy;
   renderedAt: number;
+  /** The price list the quote card prices estimates from: the panel's, else the baked one. */
+  pricing: PricingModel | null;
   /** The bucket this render is (the path's, never the request's) and where its events go. */
   experiments: { assignment: Assignment; target: AnalyticsTarget };
 }
@@ -43,7 +45,7 @@ export interface PlaceHomeProps {
  * nothing else, in its order. The structured data is built from `site` and
  * the place only — never from the frame's sample rating, reviews or phone.
  */
-export function PlaceHome({ view, copy, renderedAt, experiments }: PlaceHomeProps) {
+export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: PlaceHomeProps) {
   const { t, f } = copy;
   const now = new Date(renderedAt);
   const nav = placeNav(view, t.nav, site.pages.home);
@@ -72,6 +74,7 @@ export function PlaceHome({ view, copy, renderedAt, experiments }: PlaceHomeProp
                 place={view.place}
                 contact={contactOf(site, view.place)}
                 renderedAt={renderedAt}
+                pricing={pricing}
                 layout={LEAD_LAYOUTS[variant]}
                 experiment={running ? { name: "lead_layout", variant } : undefined}
               />
