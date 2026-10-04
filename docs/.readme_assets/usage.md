@@ -13,10 +13,10 @@ it as it is; without any of it the site runs as it does alone.
 | Variable | What it does | Unset |
 | --- | --- | --- |
 | `PORT` | the dev server's port | 59082 (`nix run .#dev`), 3000 (`npm run dev`) |
-| `LOCATIONS_API_URL` | the panel's place source, `GET <url>/locations/vifnet?locale=fr`: its phone shows on every surface — header, menu, FAQ, gold band, footer, sticky bar — and the quote card offers the call (and WhatsApp, when given). The same base serves the price list, `GET <url>/pricing`, which overrides the baked one whole | the baked place: no number anywhere, no call or WhatsApp; the baked price list |
+| `LOCATIONS_API_URL` | the panel's place source, `GET <url>/locations/vifnet?locale=fr`: its phone shows on every surface — header, menu, FAQ, gold band, footer, sticky bar — and the quote card offers the call (and WhatsApp, when given). The same base serves the price list, `GET <url>/pricing`, which overrides the baked one whole, and the experiments' weights and kill switches, `GET <url>/experiments` (docs/EXPERIMENTS.md) | the baked place: no number anywhere, no call or WhatsApp; the baked price list; the experiments as coded |
 | `LEAD_WEBHOOK_URL`, `LEAD_WEBHOOK_KEY_ID`, `LEAD_WEBHOOK_SECRET` | each lead to the panel as a signed `lead.created`; all three or none, and `http:` only to localhost or a `*.svc` host | off |
 | `LEADS_DB_PATH` | the SQLite leads file (and the webhook's outbox) | `~/.local/share/vifnet/leads.db` |
-| `POSTHOG_KEY` (`POSTHOG_HOST`) | analytics and the experiments' events | off |
+| `POSTHOG_KEY` (`POSTHOG_HOST`) | analytics and the experiments' events — their results are read in PostHog (docs/EXPERIMENTS.md) | off |
 
 Run the checks:
 
