@@ -32,11 +32,13 @@ production accepts what it adds: it refuses an unknown property, and the
 outbox would park the lead. The lead's id is kitstart's `leadRef`, the
 reference the page was answered with, so a booking joins its lead.
 The visit's analytics id goes as `properties.analytics_id`, so the panel's
-lead events join the visit in PostHog — under `PANEL_ANALYTICS_ID`, off
-until the panel v0.4.0 is in production. Under `PANEL_EXPERIMENTS` (off on
-the same terms) the same outbox carries one `experiments.declared@1` per
-start (`instrumentation.ts`): the experiments this build runs, for the
-panel's "Experiments" screen.
+lead events join the visit in PostHog — under `PANEL_ANALYTICS_ID`, on with
+the panel v0.4.0. Under `PANEL_EXPERIMENTS` (on with the same release) the
+same outbox carries one `experiments.declared@1` per start
+(`instrumentation.ts`): the experiments this build runs, for the panel's
+"Experiments" screen. A site that ships before that panel is in production
+sees such rows go `dead`; `kitstart-outbox requeue` on the pod sends them
+again once the panel is upgraded.
 
 ## A place without an address
 

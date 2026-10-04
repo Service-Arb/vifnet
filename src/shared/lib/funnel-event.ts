@@ -48,20 +48,23 @@ export const PANEL_BOOKING = false;
 /**
  * Whether `lead.created` carries the visit's analytics id (`analytics_id`,
  * panel contract A), so the panel's lead events join the visit in PostHog.
- * Off until the panel in production accepts the property (v0.4.0): it
- * refuses an unknown one, and the outbox would park the lead itself.
+ * On since the panel v0.4.0 accepts the property (`LeadCreatedV1` field 8).
+ * Should the site ship before that panel is in production, the panel refuses
+ * the unknown property and the lead itself goes `dead` in the outbox: once the
+ * panel is upgraded, `kitstart-outbox requeue` on the pod sends it again.
  */
-export const PANEL_ANALYTICS_ID = false;
+export const PANEL_ANALYTICS_ID = true;
 
 /**
  * Whether the server declares its experiments to the panel at start
- * (`experiments.declared@1`, `instrumentation.ts`). Off until the panel in
- * production accepts the event type (v0.4.0): until then the outbox would
- * park every start's declaration. The weights and kill switch the proxy reads
- * need no switch — a panel without the endpoint answers 404, which leaves
- * the config in code.
+ * (`experiments.declared@1`, `instrumentation.ts`). On since the panel v0.4.0
+ * accepts the event type. Should the site ship before that panel is in
+ * production, each start's declaration goes `dead` in the outbox; nothing
+ * else waits on it, and the first start after the upgrade declares again. The weights and
+ * kill switch the proxy reads need no switch — a panel without the endpoint
+ * answers 404, which leaves the config in code.
  */
-export const PANEL_EXPERIMENTS = false;
+export const PANEL_EXPERIMENTS = true;
 
 /**
  * `lead.created@1` as protojson — `sa.v1.Event` with `LeadCreatedV1` for
@@ -224,7 +227,7 @@ export function bookingRequestedBody(request: BookingRequest, ctx: BookingWebhoo
   };
 }
 
-/** The panel's switches: each stays off until the panel in production accepts what it adds — it refuses the unknown. */
+/** The panel's switches: each goes on only once the panel in production accepts what it adds — it refuses the unknown. */
 export interface PanelSwitches {
   panelSuspect: boolean;
   panelFlow: boolean;

@@ -18,7 +18,7 @@ A/B tests on the home page. Three places, each with one job:
 - **Declaration**: at every start (`instrumentation.ts`) the server tells the
   panel which experiments this build runs, with their variants, weights and
   hypotheses — `experiments.declared@1` through the lead webhook's outbox,
-  under `PANEL_EXPERIMENTS` (off until the panel v0.4.0 is in production).
+  under `PANEL_EXPERIMENTS` (on with the panel v0.4.0).
   An experiment missing from the latest declaration is retired in the panel.
 - **Overrides**: `GET <LOCATIONS_API_URL>/experiments`, the operator's
   `enabled`, `weights` and `holdout` per key (`experimentOverrides` in
@@ -82,7 +82,8 @@ A/B tests on the home page. Three places, each with one job:
   random per page, so exposure and lead are compared as aggregates per
   variant, not per visitor. (A lead's later life — contacted, won, paid —
   reaches PostHog from the panel, as `sa_*` events, under the visit's
-  analytics id once `lead.created` carries it: `PANEL_ANALYTICS_ID`.)
+  analytics id, which `lead.created` carries: `PANEL_ANALYTICS_ID`, on with
+  the panel v0.4.0.)
 
 ## Reading the result
 
