@@ -128,10 +128,10 @@ describe("lead.created for the panel", () => {
     expect(JSON.stringify(event)).not.toContain("\\u0000");
   });
 
-  it("sends a callback as the panel's form, without its consent", () => {
+  it("sends a callback as the panel's callback, without its consent", () => {
     const consent = { text: "J’accepte d’être rappelé·e à ce numéro au sujet de ma demande.", at: "2026-10-01T09:30:00.000Z" };
     const [event] = leadCreatedBody({ ...lead, channel: "callback", consent }, ctx, "vifnet-site").events;
-    expect(event.properties).toEqual({ channel: "form" });
+    expect(event.properties).toEqual({ channel: "callback" });
     expect(JSON.stringify(event)).not.toContain(consent.text);
   });
 
@@ -279,7 +279,7 @@ describe("the lead webhook, wired as the site wires it", () => {
       }),
       // A quote carries no price; a lead with no flow (a callback) carries nothing.
       withProperties({ channel: "form", flow: "quote" }),
-      withProperties({ channel: "form" }),
+      withProperties({ channel: "callback" }),
     ]);
   });
 

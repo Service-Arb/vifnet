@@ -79,8 +79,8 @@ export interface LeadCreatedEvent {
   source: { kind: "site"; id: string };
   subject: { brandId: string; locationId?: string; leadId: string };
   /**
-   * `channel` is the panel's closed set: a callback travels as `form` until it
-   * accepts `callback` (`panelChannel`). `suspect` only when the kit sets
+   * `channel` is the panel's closed set, `form` or `callback` since kitstart
+   * 0.13.0 (`panelChannel`). `suspect` only when the kit sets
    * `ctx.suspect`, which it does only under `PANEL_SUSPECT`: `rate_limited` or
    * `too_fast`, never `honeypot`. The sale's properties only when the kit sets
    * `ctx.flow`, which it does only under `PANEL_FLOW`. `analytics_id` only
