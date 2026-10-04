@@ -18,6 +18,15 @@ export const WIDE_BUTTON = "w-full py-4 leading-6 font-bold shadow-sm hover:bg-a
 export const FINE_PRINT = "text-center text-[11px] leading-[16.5px] text-slate-400";
 
 /**
+ * A field in the contact step pairs with its neighbour when two fit (2 × 12rem
+ * and the gap: the desktop card, not the 302 px phone one) and takes the row
+ * alone otherwise. `basis-48` beats Field's own `w-full` on the row axis; in a
+ * column it would be a 192 px height, which is why every other container a
+ * kit Field sits in (the form, the callback's form) is a grid.
+ */
+export const PAIRED_FIELD = "min-w-0 grow basis-48";
+
+/**
  * "Call me back" folded to one quiet text line under the form: the frame's
  * card has no callback, and a full-width outline button under the gold one
  * would be a second call to action. Open, its form wears the card's Field
@@ -29,43 +38,53 @@ const CALLBACK_LINK =
 /**
  * `LeadCapture`'s parts in the frame's QuoteCard: its 20 px between the head
  * and the form and 12 px between fields, the Field box, the gold submit at the
- * frame's Button lg (`size="xl"`'s padding and text, which `touch` lacks).
- * The labels are the kit's, `sr-only` under `labels="hidden"`: the frame
+ * frame's Button lg (`size="xl"`'s padding and text, which `touch` lacks),
+ * the contact step's fields two to a row where they fit. The labels are the kit's, `sr-only` under `labels="hidden"`: the frame
  * draws placeholders.
  */
 export const LEAD_CAPTURE_LOOK: Readonly<Partial<Record<LeadCapturePart, string>>> = {
   root: "gap-5",
-  form: "gap-3",
-  contact: "gap-3",
-  trust: "gap-3",
+  // A grid, not the kit's column: the need's Field shares `field` with the
+  // contact step's, and its `basis-48` must not become a height here.
+  form: "grid gap-3",
+  // Fields pair on a row (`field`); everything else in the step takes one.
+  contact: "flex-row flex-wrap gap-3",
+  field: PAIRED_FIELD,
+  error: "w-full",
+  opening: "w-full",
+  trust: "w-full gap-3",
   control: `${FIELD} px-4`,
   // qualify-first's tiles: the Field's box and type, so both arms read alike.
   need: "rounded-xl py-3.5 text-sm leading-5 text-slate-700",
   summary: "text-sm leading-5",
   submit: `${WIDE_BUTTON} px-(--control-px) text-(length:--control-text)`,
-  privacy: FINE_PRINT,
+  privacy: `w-full ${FINE_PRINT}`,
   // "Ou contactez-nous · Rappelez-moi" on one line; open, the callback takes
   // a line of its own (`open:basis-full`).
   others: "flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-3 text-center",
   channel: "rounded-xl font-semibold",
   callback: "w-auto open:basis-full",
   callbackSummary: CALLBACK_LINK,
-  callbackForm: "mt-3 gap-3 text-left",
+  // A grid for the phone's Field, as `form`.
+  callbackForm: "mt-3 grid gap-3 text-left",
   callbackLede: "text-sm leading-5",
   callbackSubmit: `${WIDE_BUTTON} px-(--control-px) text-(length:--control-text)`,
   consent: "text-sm leading-5",
-  // The estimate (no frame draws it yet): its answers are the qualify-first
-  // tiles — the Field's radius, border and type, the kit's gold check — and
-  // the price a quiet card-coloured box, the total in the display face.
-  estimate: "gap-3",
-  estimateLegend: "mb-1.5 text-sm leading-5 font-semibold text-brand",
-  estimateOption: "justify-center rounded-xl px-3 py-2.5 text-center text-sm leading-5 text-slate-700",
-  price: "gap-1 rounded-xl border-input px-4 py-3",
+  // The estimate (Figma 60:3497, Option A): its answers are the qualify-first
+  // tiles — the Field's radius, border and type, the kit's gold check — at one
+  // line's height, so a two-line label ("Toutes les 2 semaines") fits the same
+  // 44 px tile (40 on desktop; the phone keeps the kit's 44 px touch target).
+  // The price is a quiet card-coloured box: the title and the total, in the
+  // display face, on one line, the breakdown in two columns from `sm`.
+  estimate: "w-full gap-3",
+  estimateLegend: "mb-1 text-sm leading-5 font-semibold text-brand",
+  estimateOption: "justify-center rounded-xl px-3 py-1 text-center text-sm leading-4 text-slate-700 md:min-h-10",
+  price: "w-full flex-row flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-xl border-input px-4 py-3",
   priceTotal: "text-3xl leading-9 text-brand",
-  breakdown: "leading-5",
+  breakdown: "w-full leading-5 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-0",
   // 16 px, not the fine print's 16.5: one odd half pixel put every band under the hero off the pixel grid.
-  priceNote: "text-[11px] leading-4 text-slate-400",
-  photos: "rounded-xl border-input",
+  priceNote: "w-full text-[11px] leading-4 text-slate-400",
+  photos: "w-full rounded-xl border-input",
   // After a priced lead: under the Done check, centred like it.
   priced: "-mt-2 items-center gap-1 pb-6 text-center",
   pricedPrice: "text-base leading-6 font-semibold text-brand",
