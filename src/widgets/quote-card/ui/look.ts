@@ -70,15 +70,21 @@ export const LEAD_CAPTURE_LOOK: Readonly<Partial<Record<LeadCapturePart, string>
   callbackLede: "text-sm leading-5",
   callbackSubmit: `${WIDE_BUTTON} px-(--control-px) text-(length:--control-text)`,
   consent: "text-sm leading-5",
-  // The estimate (Figma 60:3497, Option A): its answers are the qualify-first
+  // The estimate (Figma 60:3497, Option B): its answers are the qualify-first
   // tiles — the Field's radius, border and type, the kit's gold check — at one
   // line's height, so a two-line label ("Toutes les 2 semaines") fits the same
   // 44 px tile (40 on desktop; the phone keeps the kit's 44 px touch target).
-  // The price is a quiet card-coloured box: the title and the total, in the
-  // display face, on one line, the breakdown in two columns from `sm`.
+  // Denser than the kit's 2/3 columns, 3 on the phone and 4 from `sm`: fewer
+  // rows, a shorter card. The price is a quiet card-coloured box: the title
+  // and the total, in the display face, on one line, the breakdown in two
+  // columns from `sm`.
   estimate: "w-full gap-3",
   estimateLegend: "mb-1 text-sm leading-5 font-semibold text-brand",
-  estimateOption: "justify-center rounded-xl px-3 py-1 text-center text-sm leading-4 text-slate-700 md:min-h-10",
+  estimateGrid: "grid-cols-3 sm:grid-cols-4",
+  // Three to a row leave a phone tile ~79 px of text at `px-2`: "Toutes les 2
+  // semaines" in two lines, not three. `text-balance` splits a wrapped answer
+  // evenly ("Moins de / 40 m²"), never a lone unit on the second line.
+  estimateOption: "justify-center rounded-xl px-2 py-1 text-center text-sm leading-4 text-balance text-slate-700 sm:px-3 md:min-h-10",
   price: "w-full flex-row flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-xl border-input px-4 py-3",
   priceTotal: "text-3xl leading-9 text-brand",
   breakdown: "w-full leading-5 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-0",
