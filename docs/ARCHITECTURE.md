@@ -135,7 +135,8 @@ pages, and experiment `booking_provider` (docs/EXPERIMENTS.md) picks between
 the call (`manual`) and a Google schedule. Without a schedule the card
 promises the call and offers an optional preference, which it posts to
 `/quote/booking`; that queues `booking.requested@1` on the lead webhook's
-outbox only under `PANEL_BOOKING`, off until the panel accepts the event. A
+outbox under `PANEL_BOOKING` (on since panel v0.4.0), after the lead's own
+`lead.created` is delivered. A
 plain post whose price changed under the page lands on `/quote/confirm`,
 never cached, which asks again at the fresh price.
 

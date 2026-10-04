@@ -40,10 +40,10 @@ export const PANEL_FLOW = true;
 /**
  * Whether a priced lead's booking request goes to the panel as
  * `booking.requested@1` (`/quote/booking`, after the lead's `lead.created`).
- * Off until the panel accepts the event type: it refuses an unknown one, and
- * the outbox would park the request. Off, the route answers and drops it.
+ * On since the panel accepts the event type (panel v0.4.0, bookings). The
+ * outbox sends it only after the lead's own `lead.created` is delivered.
  */
-export const PANEL_BOOKING = false;
+export const PANEL_BOOKING = true;
 
 /**
  * Whether `lead.created` carries the visit's analytics id (`analytics_id`,

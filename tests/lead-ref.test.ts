@@ -42,9 +42,18 @@ describe("a priced lead's booking request", () => {
     return body.lead;
   }
 
-  it("is answered and dropped while the panel cannot take it", async () => {
-    expect(PANEL_BOOKING).toBe(false);
+  it("is queued by the production wiring", async () => {
+    expect(PANEL_BOOKING).toBe(true);
     harness = panelHarness();
+    const ref = await bookedLead(harness);
+    const answer = await harness.book({ submission: SUBMISSION, lead_ref: ref, provider: "manual", preferred_part: "morning" });
+    expect(answer).toEqual({ status: 200, body: { ok: true, queued: true } });
+    const sent = await harness.deliver();
+    expect(sent.map(b => eventOf(b).type)).toEqual(["lead.created", "booking.requested"]);
+  });
+
+  it("switched off, is answered and dropped", async () => {
+    harness = panelHarness({ panelBooking: false });
     const ref = await bookedLead(harness);
     const answer = await harness.book({ submission: SUBMISSION, lead_ref: ref, provider: "manual", preferred_part: "morning" });
     expect(answer).toEqual({ status: 200, body: { ok: true, queued: false } });
