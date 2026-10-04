@@ -181,7 +181,7 @@ the arms pool; aquafix is to run it with the same arms.
   providers contract").
 - **Control (a)**: `manual` — the card says "Nous vous rappelons pour fixer le
   créneau" and offers an optional preference (a day, a part of the day),
-  sent as `booking.requested@1` once the panel accepts it (`PANEL_BOOKING`).
+  sent as `booking.requested@1` (`PANEL_BOOKING`, on since panel v0.4.0).
 - **Variant (b)**: `google_calendar` — "Choisir un créneau" opens the
   schedule in a new tab, nothing loaded before the click. Google takes no
   parameter, so the card asks the visitor to enter the same phone number
