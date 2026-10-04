@@ -29,7 +29,7 @@ function leadRow(mobile: string): unknown {
 test.describe("with JavaScript", () => {
   test.use({ extraHTTPHeaders: { "x-forwarded-for": "10.8.0.1" } });
 
-  test("asks only the postcode and the phone, by placeholder; the name and bedrooms are optional", async ({ page }) => {
+  test("asks only the postcode and the phone, by placeholder; no name, the bedrooms optional", async ({ page }) => {
     await page.goto("/fr#devis");
     await hydrated(page);
     // A quote: the default job, a regular clean, is priced from answers first (flows.spec.ts).
@@ -39,11 +39,10 @@ test.describe("with JavaScript", () => {
     const form = page.locator("form#devis-form");
     await expect(form.locator("input[name=locality]")).toBeFocused();
     await expect(form.locator("input[name=mobile]")).toHaveAttribute("required", "");
-    await expect(form.locator("input[name=name]")).not.toHaveAttribute("required", "");
+    await expect(form.locator("input[name=name]")).toHaveCount(0);
     // The frame draws placeholders; the labels still name the fields, unseen.
     await expect(page.getByRole("textbox", { name: "Code postal" })).toHaveAttribute("placeholder", "Code postal");
     await expect(page.getByRole("textbox", { name: "Téléphone" })).toHaveAttribute("placeholder", "Numéro de téléphone");
-    await expect(page.getByRole("textbox", { name: "Nom (facultatif)" })).toHaveAttribute("placeholder", "Votre nom complet");
     await expect(form.locator("label", { hasText: "Téléphone" })).toHaveClass(/sr-only/);
     await expect(page.getByRole("combobox", { name: "Chambres (facultatif)" })).toHaveText("Nombre de chambres");
     await expect(page).toHaveURL(/\/fr#devis$/);
@@ -66,14 +65,13 @@ test.describe("with JavaScript", () => {
     const form = page.locator("form#devis-form");
     await form.locator("input[name=locality]").fill(locality);
     await form.locator("input[name=mobile]").fill(mobile);
-    await form.locator("input[name=name]").fill("Amanda Reyes");
     await page.getByRole("combobox", { name: "Chambres (facultatif)" }).click();
     await page.getByRole("listbox").getByRole("option", { name: "2 chambres" }).click();
 
     // The time trap flags anything faster than a person; this is a person.
     await page.waitForTimeout(MIN_FILL_MS + 500);
     await card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" }).click();
-    await expect(card(page).getByRole("status")).toContainText("C’est noté, Amanda\u00a0!");
+    await expect(card(page).getByRole("status")).toContainText("C’est noté\u00a0!");
     await expect(card(page).getByRole("status")).toContainText(mobile);
     await expect(page).toHaveURL(/\/fr#devis$/);
     expect(leadRow(mobile)).toEqual({
@@ -81,7 +79,7 @@ test.describe("with JavaScript", () => {
       zip: locality,
       location_id: "vifnet",
       spam_verdict: null,
-      extras: JSON.stringify({ name: "Amanda Reyes", bedrooms: "2" }),
+      extras: JSON.stringify({ bedrooms: "2" }),
       channel: "form",
     });
   });

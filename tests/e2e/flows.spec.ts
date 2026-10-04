@@ -19,10 +19,9 @@ const price = (page: Page) => form(page).locator("[data-price-cents]");
 const answer = (page: Page, label: string) => form(page).getByRole("radio", { name: label, exact: true }).check();
 const isQuote = (url: string) => new URL(url).pathname === "/quote";
 
-async function contact(page: Page, mobile: string, name = "Amanda Reyes"): Promise<void> {
+async function contact(page: Page, mobile: string): Promise<void> {
   await form(page).locator("input[name=locality]").fill("75011");
   await form(page).locator("input[name=mobile]").fill(mobile);
-  await form(page).locator("input[name=name]").fill(name);
   // The time trap flags anything faster than a person; this is a person.
   await page.waitForTimeout(MIN_FILL_MS + 500);
 }
@@ -119,7 +118,7 @@ test.describe("a regular clean, priced live", () => {
       quoted_cents: 9000,
       pricing_valid_from: "2026-10-03",
       estimate_inputs: JSON.stringify({ bedrooms: "3", surface: "40-70", frequency: "biweekly" }),
-      extras: JSON.stringify({ name: "Amanda Reyes" }),
+      extras: null,
     });
   });
 
@@ -136,7 +135,7 @@ test.describe("a regular clean, priced live", () => {
     await contact(page, freshMobile("07"));
     await card(page).getByRole("button", { name: "Réserver" }).click();
     const status = card(page).getByRole("status");
-    await expect(status).toContainText("C’est noté, Amanda !");
+    await expect(status).toContainText("C’est noté !");
     await expect(status).toContainText(/Demande enregistrée au prix de 49\s€\./);
     await expect(status).toContainText("Nous vous rappelons pour fixer le créneau.");
     await expect(status).not.toContainText("devis ferme");
@@ -193,7 +192,7 @@ test.describe("the jobs priced from a visit", () => {
       quoted_cents: null,
       pricing_valid_from: null,
       estimate_inputs: null,
-      extras: JSON.stringify({ name: "Amanda Reyes" }),
+      extras: null,
     });
   });
 });

@@ -16,7 +16,6 @@ test.describe("without JavaScript", () => {
 
     await page.goto("/fr#devis");
     const form = page.locator("form#devis-form");
-    await form.locator("input[name=name]").fill("Amanda Reyes");
     await form.locator("input[name=mobile]").fill(mobile);
     await form.locator("input[name=locality]").fill(locality);
     // Without a script the selects are the platform's own, which post as they are.
@@ -43,7 +42,7 @@ test.describe("without JavaScript", () => {
         zip: locality,
         location_id: "vifnet",
         spam_verdict: null,
-        extras: JSON.stringify({ name: "Amanda Reyes" }),
+        extras: null,
       });
     } finally {
       db.close();

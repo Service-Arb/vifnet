@@ -14,10 +14,8 @@ export function leadCaptureText(t: Text, locale: Locale): LeadCaptureText {
     needLabel: t.quote.labels.subject,
     localityLabel: t.quote.labels.locality,
     phoneLabel: t.quote.labels.mobile,
-    nameLabel: t.quote.labels.name,
     localityPlaceholder: t.quote.placeholders.locality,
     phonePlaceholder: t.quote.placeholders.mobile,
-    namePlaceholder: t.quote.placeholders.name,
     submit: t.quoteForm.submit,
     honeypotLabel: t.quoteForm.honeypotLabel,
   };

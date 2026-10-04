@@ -11,7 +11,8 @@ const HIDDEN_BY_ESTIMATE = String.raw`group-has-[[data-lead-field=estimate\_bedr
  * kit's fields under `labels="hidden"`: for assistive technology only. An
  * estimate asks the bedrooms among its answers (`estimate_bedrooms`), so
  * while its tiles are in the form this one is not shown (unanswered, it
- * posts nothing). Sized like the kit's fields, it pairs with the name.
+ * posts nothing). Sized like the kit's fields, it pairs with the phone where
+ * two fit.
  */
 export function BedroomsField({ label, placeholder, options }: { label: string; placeholder: string; options: readonly FormSelectOption[] }) {
   return (

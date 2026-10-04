@@ -10,5 +10,5 @@ import { QuoteDone, type QuoteDoneText } from "./QuoteDone";
  * words do, as strings.
  */
 export function QuoteCapture({ doneText, ...props }: Omit<LeadCaptureProps, "done"> & { doneText: QuoteDoneText }) {
-  return <LeadCapture {...props} done={sent => <QuoteDone text={doneText} name={sent.name} phone={sent.phone} priced={sent.cents !== undefined} />} />;
+  return <LeadCapture {...props} done={sent => <QuoteDone text={doneText} phone={sent.phone} priced={sent.cents !== undefined} />} />;
 }

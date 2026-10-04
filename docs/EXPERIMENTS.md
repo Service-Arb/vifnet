@@ -147,13 +147,14 @@ The same key, arms and weights as aquafix's, so the two sites' results pool
   form studies and lose in others (Zuko), while fewer visible fields reliably
   help (LEAD-CAPTURE-SPEC.md, Service-Arb). No site data of ours.
 - **Control (a)**: `single` — service (the kit's select), postcode, phone,
-  then the optional name and bedrooms, and the submit, in the frame's card.
+  then the optional bedrooms, and the submit, in the frame's card.
 - **Variant (b)**: `qualify-first` — a tile per service; the tap shows the
   contact step and focuses its first empty field. A service card's link
   (`data-need`) or `?need=` answers the first step for the visitor, in both
   arms.
-- **Both arms**: the name is optional (the lead schema no longer requires
-  it), bedrooms is an optional select after the phone, and "Rappelez-moi"
+- **Both arms**: no name field (dropped in both arms alike with kitstart
+  0.13.0: the call back asks it), bedrooms is an optional select after the
+  phone, and "Rappelez-moi"
   (kitstart's callback: the phone and a consent) sits under the form as one
   text line. The fields show the frame's placeholders and a taken lead says
   done in the card (kitstart 0.7.0, from 2026-10-03, in both arms alike).

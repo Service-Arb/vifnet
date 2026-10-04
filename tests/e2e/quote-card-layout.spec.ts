@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { abState } from "./env";
 
-// The card's compact layout (Figma 60:3497, Option A), drawn with kitstart's
+// The card's compact layout (Figma 60:3497, Option B), drawn with kitstart's
 // parts only: the contact step's fields two to a row where two fit (the
 // desktop card) and stacked on the phone's. `field` is also the part of the
 // need's Field and the callback phone's, both in a column the kit draws: there
@@ -47,16 +47,40 @@ test.describe("lead_layout a (single)", () => {
     await expectPostcodeAndPhone(page, testInfo.project.name === "desktop");
   });
 
-  test("a quote pairs the name with the bedrooms where two fit", async ({ page }, testInfo) => {
+  test("a quote's bedrooms, with no name to pair with, take their row at the Field's height", async ({ page }) => {
     await page.goto("/fr#devis");
     await hydrated(page);
     await card(page).getByRole("combobox", { name: "Prestation" }).click();
     await page.getByRole("listbox").getByRole("option", { name: "Grand ménage" }).click();
-    const name = await rect(fieldOf(form(page).locator("input[name=name]")));
+    await expect(form(page).locator("input[name=name]")).toHaveCount(0);
+    const phone = await rect(fieldOf(form(page).locator("input[name=mobile]")));
     const bedrooms = await rect(fieldOf(page.getByRole("combobox", { name: "Chambres (facultatif)" })));
     expect(bedrooms.height).toBe(FIELD_HEIGHT);
-    if (testInfo.project.name === "desktop") expect(bedrooms.y).toBe(name.y);
-    else expect(bedrooms.y).toBeGreaterThanOrEqual(name.y + name.height);
+    expect(bedrooms.y).toBeGreaterThanOrEqual(phone.y + phone.height);
+  });
+
+  // Option B: the estimate's answers 3 to a row on the phone, 4 from `sm`.
+  // A two-line answer ("Toutes les 2 semaines") grows its row, not itself
+  // alone: every tile of a row is as tall as the tallest, and on the phone
+  // none is under the 44 px touch target.
+  test("the estimate's answers sit 3 to a row on the phone, 4 on desktop, a row's tiles alike", async ({ page }, testInfo) => {
+    await page.goto("/fr#devis");
+    await hydrated(page);
+    const desktop = testInfo.project.name === "desktop";
+    const inputs = form(page).locator("fieldset", { has: page.locator("input[name^=estimate_]") });
+    await expect(inputs).not.toHaveCount(0);
+    for (const input of await inputs.all()) {
+      const tiles = await input.locator("label:has(input[name^=estimate_]) > span").evaluateAll(spans =>
+        spans.map(span => {
+          const r = span.getBoundingClientRect();
+          return { x: Math.round(r.x), y: Math.round(r.y), height: r.height };
+        }),
+      );
+      const rows = [...new Set(tiles.map(t => t.y))].map(y => tiles.filter(t => t.y === y));
+      expect(rows[0]?.length).toBe(Math.min(desktop ? 4 : 3, tiles.length));
+      for (const row of rows) expect(new Set(row.map(t => t.height)).size).toBe(1);
+      if (!desktop) for (const tile of tiles) expect(tile.height).toBeGreaterThanOrEqual(44);
+    }
   });
 
   test("the callback's phone Field stays 50 px", async ({ page }) => {

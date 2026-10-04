@@ -77,17 +77,15 @@ export interface Text extends CoreText<PageKey, Facts> {
   /** The brand's words over kitstart's `LeadCapture`; the rest of the card is the kit's. */
   quote: {
     /** The fields' names: visually hidden, still each field's accessible name. */
-    labels: { name: string; mobile: string; locality: string; bedrooms: string; subject: string };
+    labels: { mobile: string; locality: string; bedrooms: string; subject: string };
     /** What the frame draws in the empty fields instead of a label. */
-    placeholders: { name: string; mobile: string; locality: string };
+    placeholders: { mobile: string; locality: string };
     /** Shown in the bedrooms select until one is picked. */
     bedroomsPlaceholder: string;
     trust: readonly string[];
     bedrooms: Record<Bedrooms, string>;
-    /** The card once a lead is taken (Figma QuoteCard Done); `{first}`: the name's first word. */
+    /** The card once a lead is taken (Figma QuoteCard Done): the form asks no name, so it greets no one by it. */
     doneTitle: string;
-    /** The same with no name given. */
-    doneTitleNoName: string;
     /** Around the number as typed, which is set bold. */
     doneBody: readonly [string, string];
   };

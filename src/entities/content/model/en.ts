@@ -77,13 +77,12 @@ export const EN = {
     chips: ["Fully insured & bonded", "Background-checked", "100% satisfaction guarantee", "Same-day available"],
   },
   quote: {
-    labels: { name: "Name", mobile: "Phone", locality: "ZIP code", bedrooms: "Bedrooms", subject: "Service" },
-    placeholders: { name: "Your full name", mobile: "Phone number", locality: "ZIP code" },
+    labels: { mobile: "Phone", locality: "ZIP code", bedrooms: "Bedrooms", subject: "Service" },
+    placeholders: { mobile: "Phone number", locality: "ZIP code" },
     bedroomsPlaceholder: "Number of bedrooms",
     trust: ["✓ No commitment", "✓ Call back in 15 min", "✓ Same-day available"],
     bedrooms: { studio: "Studio", "1": "1 bedroom", "2": "2 bedrooms", "3": "3 bedrooms", "4": "4 bedrooms", "5+": "5+ bedrooms" },
-    doneTitle: "You're all set, {first}!",
-    doneTitleNoName: "You're all set!",
+    doneTitle: "You're all set!",
     doneBody: ["We'll call ", " within 15 minutes with a firm quote."],
   },
   stats: [
