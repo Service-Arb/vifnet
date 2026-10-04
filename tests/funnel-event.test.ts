@@ -86,24 +86,23 @@ describe("lead.created for the panel", () => {
     keysWithin(event.subject, "Subject");
     // The panel checks registered properties strictly: an unknown field rejects the event.
     keysWithin(event.properties, "LeadCreatedV1");
-    // With every switch's property set: the suspect mark and the sale (panel v0.3.0).
+    // With every switch as the site ships it and each property set: the suspect
+    // mark, the visit's analytics id (panel v0.4.0) and the sale (panel v0.3.0).
     const flow = { flow: "estimate" as const, quotedCents: 7700, pricingValidFrom: "2026-10-03", estimateInputs: { bedrooms: "2" } };
-    const [full] = leadCreatedBody(lead, { ...ctx, suspect: "too_fast", flow }, "vifnet-site").events;
-    expect(Object.keys(full.properties)).toEqual(["channel", "suspect", "flow", "quoted_cents", "pricing_valid_from", "estimate_inputs"]);
+    const visit = { analyticsId: "0b5c1f0e-7d1a-4e8b-9c2d-3f4a5b6c7d8e" };
+    const [full] = leadCreatedBody(lead, { ...ctx, ...visit, suspect: "too_fast", flow }, "vifnet-site").events;
+    expect(Object.keys(full.properties)).toEqual(["channel", "suspect", "analytics_id", "flow", "quoted_cents", "pricing_valid_from", "estimate_inputs"]);
     keysWithin(full.properties, "LeadCreatedV1");
-    // And the visit's analytics id, under its switch (panel v0.4.0).
-    const [joined] = leadCreatedBody(lead, { ...ctx, analyticsId: "0b5c1f0e-7d1a-4e8b-9c2d-3f4a5b6c7d8e" }, "vifnet-site", true).events;
-    expect(joined.properties).toEqual({ channel: "form", analytics_id: "0b5c1f0e-7d1a-4e8b-9c2d-3f4a5b6c7d8e" });
-    keysWithin(joined.properties, "LeadCreatedV1");
   });
 
-  // Off until the panel in production takes `analytics_id`: it refuses an unknown property.
-  it("sends the visit's analytics id only under its switch, and never an empty one", () => {
-    expect(PANEL_ANALYTICS_ID).toBe(false);
+  // On since the panel v0.4.0 takes `analytics_id`; off, for a panel that refuses it.
+  it("sends the visit's analytics id as the site ships, and never an empty one", () => {
+    expect(PANEL_ANALYTICS_ID).toBe(true);
     const visited = { ...ctx, analyticsId: "a1.b2:c3-d4" };
-    expect(leadCreatedBody(lead, visited, "vifnet-site").events[0].properties).toEqual({ channel: "form" });
-    expect(leadCreatedBody(lead, visited, "vifnet-site", true).events[0].properties).toEqual({ channel: "form", analytics_id: "a1.b2:c3-d4" });
-    expect(leadCreatedBody(lead, ctx, "vifnet-site", true).events[0].properties).toEqual({ channel: "form" });
+    expect(leadCreatedBody(lead, visited, "vifnet-site").events[0].properties).toEqual({ channel: "form", analytics_id: "a1.b2:c3-d4" });
+    expect(leadCreatedBody(lead, ctx, "vifnet-site").events[0].properties).toEqual({ channel: "form" });
+    expect(leadCreatedBody(lead, { ...ctx, analyticsId: "" }, "vifnet-site").events[0].properties).toEqual({ channel: "form" });
+    expect(leadCreatedBody(lead, visited, "vifnet-site", false).events[0].properties).toEqual({ channel: "form" });
   });
 
   it("meets the panel's checks on the envelope", () => {
@@ -284,12 +283,13 @@ describe("the lead webhook, wired as the site wires it", () => {
     ]);
   });
 
-  // The id the page posted reaches the body through the kit's queue, only when switched on.
+  // The id the page posted reaches the body through the kit's queue with the
+  // production wiring; switched off, it does not.
   it("carries the posted analytics id through the outbox under its switch", async () => {
     const meta = { analyticsId: "0b5c1f0e-7d1a-4e8b-9c2d-3f4a5b6c7d8e" };
-    const on = await delivered(panelWebhookOptions("vifnet-site", { panelAnalyticsId: true }), [lead], meta);
+    const on = await delivered(panelWebhookOptions("vifnet-site"), [lead], meta);
     expect(on.bodies).toEqual([withProperties({ channel: "form", analytics_id: meta.analyticsId })]);
-    const off = await delivered(panelWebhookOptions("vifnet-site"), [lead], meta);
+    const off = await delivered(panelWebhookOptions("vifnet-site", { panelAnalyticsId: false }), [lead], meta);
     expect(off.bodies).toEqual([withProperties({ channel: "form" })]);
   });
 
