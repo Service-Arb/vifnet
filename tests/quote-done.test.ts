@@ -7,38 +7,23 @@ import { TEXT } from "@/entities/content";
 import { QuoteDone } from "@/widgets/quote-card/ui/QuoteDone";
 
 // French typography: a no-break space before the `!`.
-const NBSP = "\u00a0";
-const text = { title: TEXT.fr.quote.doneTitle, titleNoName: TEXT.fr.quote.doneTitleNoName, body: TEXT.fr.quote.doneBody };
+const NBSP = " ";
+const text = { title: TEXT.fr.quote.doneTitle, body: TEXT.fr.quote.doneBody };
 
-/** The title as a visitor reads it: the first paragraph's text, entities decoded. */
-function title(name: string | null): string {
-  const html = renderToStaticMarkup(createElement(QuoteDone, { text, name, phone: "06 12 34 56 78", priced: false }));
-  const inner = /<p[^>]*>(.*?)<\/p>/.exec(html)?.[1] ?? "";
-  return inner.replaceAll("&#x27;", "'").replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&quot;", '"');
-}
+const done = (priced: boolean) => renderToStaticMarkup(createElement(QuoteDone, { text, phone: "06 12 34 56 78", priced }));
 
 describe("the card's Done state", () => {
-  it("greets the visitor by the first word of the name", () => {
-    expect(title("Jean Dupont")).toBe(`C’est noté, Jean${NBSP}!`);
-  });
-
-  it("greets without a name when none was given", () => {
-    expect(title(null)).toBe(`C’est noté${NBSP}!`);
-    expect(title("   ")).toBe(`C’est noté${NBSP}!`);
-  });
-
-  // LEAD-FORMS-REVIEW-2026-10-03 #16: as a replacement string, `$'` and `` $` ``
-  // are the text after and before the match, `$&` the match itself.
-  it.each(["$'", "$`", "$&", "$$", "$1"])("prints a name typed as %s as it was typed", name => {
-    expect(title(`${name} Jean`)).toBe(`C’est noté, ${name}${NBSP}!`);
+  // The form asks no name: the title greets no one by it.
+  it("says done without a name", () => {
+    const title = /<p[^>]*>(.*?)<\/p>/.exec(done(false))?.[1];
+    expect(title).toBe(`C’est noté${NBSP}!`);
   });
 
   // An estimate's price is confirmed under it by the kit: a "firm quote" to come would contradict it.
-  it("promises no quote to a priced lead, and still greets it", () => {
-    const quoted = renderToStaticMarkup(createElement(QuoteDone, { text, name: "Jean", phone: "06 12 34 56 78", priced: false }));
-    const priced = renderToStaticMarkup(createElement(QuoteDone, { text, name: "Jean", phone: "06 12 34 56 78", priced: true }));
-    expect(quoted).toContain("devis ferme");
-    expect(priced).not.toContain("devis ferme");
-    expect(priced).toContain("Jean");
+  it("promises no quote to a priced lead, and still says done", () => {
+    expect(done(false)).toContain("devis ferme");
+    expect(done(false)).toContain("06 12 34 56 78");
+    expect(done(true)).not.toContain("devis ferme");
+    expect(done(true)).toContain(`C’est noté${NBSP}!`);
   });
 });

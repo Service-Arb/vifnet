@@ -1,7 +1,7 @@
 import type { BookingProvider, Place, PricingModel } from "@evinvest/kitstart";
 import type { LeadCaptureLayout } from "@evinvest/kitstart/react";
 import { leadCaptureText, type Copy } from "@/entities/content";
-import { BEDROOMS, EXTRAS, FLOWS, LEAD, PHOTO_NEEDS, SUBJECTS, type Subject } from "@/shared/config/lead";
+import { BEDROOMS, FLOWS, LEAD, PHOTO_NEEDS, SUBJECTS, type Subject } from "@/shared/config/lead";
 import { BedroomsField, TrustLine } from "./fields";
 import { LEAD_CAPTURE_LOOK } from "./look";
 import { QuoteCapture } from "./QuoteCapture";
@@ -36,7 +36,7 @@ export interface QuoteCardProps {
  * every Service-Arb brand shares so an experiment's results pool across them.
  * The heading, the placeholders (labels only for assistive technology) and
  * the Done state are the frame's; the fields, channels and events are the
- * kit's. A service card names its service (`data-need`), so the card does not
+ * kit's. No name field: the call back asks it, and every field costs leads. A service card names its service (`data-need`), so the card does not
  * ask it again. The card is `#<id>` (`#devis`), its form `#devis-form`, the
  * callback `#devis-callback`; the form posts `form_id=quote`, the kit's
  * default, so its events stay comparable across brands. A regular clean is
@@ -61,7 +61,6 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
       photos={PHOTO_NEEDS}
       need={need}
       layout={layout}
-      name={{ field: EXTRAS.name.name }}
       extras={
         <BedroomsField
           label={`${t.quote.labels.bedrooms} (${text.optional})`}
@@ -84,7 +83,7 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
       }
       trust={<TrustLine lines={t.quote.trust} />}
       classNames={LEAD_CAPTURE_LOOK}
-      doneText={{ title: t.quote.doneTitle, titleNoName: t.quote.doneTitleNoName, body: t.quote.doneBody }}
+      doneText={{ title: t.quote.doneTitle, body: t.quote.doneBody }}
     />
   );
 }

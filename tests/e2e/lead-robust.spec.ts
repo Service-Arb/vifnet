@@ -32,7 +32,6 @@ function leadRows(mobile: string): unknown[] {
 async function fill(page: Page, mobile: string): Promise<void> {
   await form(page).locator("input[name=locality]").fill("75015");
   await form(page).locator("input[name=mobile]").fill(mobile);
-  await form(page).locator("input[name=name]").fill("Amanda Reyes");
   // The time trap flags anything faster than a person; this is a person.
   await page.waitForTimeout(MIN_FILL_MS + 500);
 }
@@ -47,7 +46,7 @@ async function pickQuote(page: Page): Promise<void> {
   await page.getByRole("listbox").getByRole("option", { name: "Grand ménage" }).click();
 }
 
-const done = (page: Page) => expect(card(page).getByRole("status")).toContainText("C’est noté, Amanda !");
+const done = (page: Page) => expect(card(page).getByRole("status")).toContainText("C’est noté !");
 
 test.describe("a refused lead, at 390", () => {
   test.use({ extraHTTPHeaders: { "x-forwarded-for": "10.8.1.1" } });
@@ -104,7 +103,6 @@ test.describe("a refused lead, at 390", () => {
     await expect(phone).toBeFocused();
     await expect(phone).toHaveValue("0000000000");
     await expect(form(page).locator("input[name=locality]")).toHaveValue("75015");
-    await expect(form(page).locator("input[name=name]")).toHaveValue("Amanda Reyes");
     await expect(page).toHaveURL(/\/fr#devis$/);
   });
 

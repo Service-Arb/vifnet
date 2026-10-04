@@ -47,16 +47,16 @@ test.describe("lead_layout a (single)", () => {
     await expectPostcodeAndPhone(page, testInfo.project.name === "desktop");
   });
 
-  test("a quote pairs the name with the bedrooms where two fit", async ({ page }, testInfo) => {
+  test("a quote's bedrooms, with no name to pair with, take their row at the Field's height", async ({ page }) => {
     await page.goto("/fr#devis");
     await hydrated(page);
     await card(page).getByRole("combobox", { name: "Prestation" }).click();
     await page.getByRole("listbox").getByRole("option", { name: "Grand ménage" }).click();
-    const name = await rect(fieldOf(form(page).locator("input[name=name]")));
+    await expect(form(page).locator("input[name=name]")).toHaveCount(0);
+    const phone = await rect(fieldOf(form(page).locator("input[name=mobile]")));
     const bedrooms = await rect(fieldOf(page.getByRole("combobox", { name: "Chambres (facultatif)" })));
     expect(bedrooms.height).toBe(FIELD_HEIGHT);
-    if (testInfo.project.name === "desktop") expect(bedrooms.y).toBe(name.y);
-    else expect(bedrooms.y).toBeGreaterThanOrEqual(name.y + name.height);
+    expect(bedrooms.y).toBeGreaterThanOrEqual(phone.y + phone.height);
   });
 
   test("the callback's phone Field stays 50 px", async ({ page }) => {

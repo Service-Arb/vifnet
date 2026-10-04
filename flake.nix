@@ -56,7 +56,7 @@
           smoke = {
             page = "/fr";
             og = "/og?l=vifnet";
-            quote = { location = "vifnet"; subject = "deep"; locality = "83702"; mobile = "+12085550192"; name = "Smoke Test"; bedrooms = "3"; };
+            quote = { location = "vifnet"; subject = "deep"; locality = "83702"; mobile = "+12085550192"; bedrooms = "3"; };
           };
         };
 

@@ -53,7 +53,9 @@ describe("the home page", () => {
   it.each(["fr", "en"] as const)("posts the quote form and its callback, on the hero's card, with every field (%s)", locale => {
     const html = home(locale);
     expect(html).toMatch(/<form id="devis-form"[^>]*action="\/quote"[^>]*method="post"/);
-    for (const name of [LEAD.wire.subject, LEAD.wire.locality, LEAD.wire.mobile, "name", "bedrooms"]) expect(html).toContain(`name="${name}"`);
+    for (const name of [LEAD.wire.subject, LEAD.wire.locality, LEAD.wire.mobile, "bedrooms"]) expect(html).toContain(`name="${name}"`);
+    // No name field: the call back asks it, and every field costs leads.
+    expect(html).not.toContain('name="name"');
     // No number to call yet: the form and "call me back" are the two ways in.
     expect(html.match(/<form id="[^"]+"/g)).toEqual(['<form id="devis-form"', '<form id="devis-callback-form"']);
     // The anchor is the card itself, head included, not a wrapper around it.
@@ -103,15 +105,15 @@ describe("the home page", () => {
 describe("the lead", () => {
   const lead = (extras: Record<string, string>) => ({ ...testLead(), subject: "standard", extras });
 
-  it("takes a name or none, and bedrooms from the list or none", () => {
-    expect(LEAD.validate?.(lead({ name: "Amanda Reyes", bedrooms: "3" }))).toBeNull();
-    expect(LEAD.validate?.(lead({ name: "Amanda Reyes" }))).toBeNull();
+  it("takes bedrooms from the list or none, and keeps no name", () => {
+    expect(LEAD.validate?.(lead({ bedrooms: "3" }))).toBeNull();
     expect(LEAD.validate?.(lead({}))).toBeNull();
+    expect(LEAD.extras?.map(e => e.name)).toEqual(["bedrooms"]);
   });
 
   it("refuses bedrooms off the list, and a number we cannot call, naming the field", () => {
-    expect(LEAD.validate?.(lead({ name: "Amanda", bedrooms: "12" }))).toMatchObject({ field: "bedrooms" });
-    expect(LEAD.validate?.({ ...lead({ name: "Amanda" }), mobile: "0612" })).toMatchObject({ field: "phone" });
+    expect(LEAD.validate?.(lead({ bedrooms: "12" }))).toMatchObject({ field: "bedrooms" });
+    expect(LEAD.validate?.({ ...lead({}), mobile: "0612" })).toMatchObject({ field: "phone" });
     // The phone is judged first: one refusal at a time, the one the form shows.
     expect(LEAD.validate?.({ ...lead({ bedrooms: "9" }), mobile: "06 12 34 56 7" })).toMatchObject({ field: "phone" });
   });
