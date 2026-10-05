@@ -92,7 +92,7 @@ Google Maps, and a map here did not lift conversion.
 
 Place pages are ISR (`revalidate = 600`): no page reads the request, the link
 mode rides in the `[location]` param — and so does the home page's A/B
-bucket (`_vifnet~lead_layout.b~booking_provider.a`, docs/EXPERIMENTS.md),
+bucket (`_vifnet~lead_form.b~booking_provider.a`, docs/EXPERIMENTS.md),
 which the proxy writes from the visitor's `ab_<key>` cookies under the
 panel's weights and kill switches; the page never asks the panel. The quote form is kitstart's
 `LeadCapture` — the form every Service-Arb brand shares, drawn as the frame's
