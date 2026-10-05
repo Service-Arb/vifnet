@@ -309,7 +309,6 @@ export const EN = {
     title: "Boise and the towns around it.",
     lede: "Boise, Meridian, Eagle, Nampa and Caldwell — the towns our clients write from. Not sure you’re in the area? Ask when we call back.",
     towns: ["Boise", "Meridian", "Eagle", "Nampa", "Caldwell"],
-    map: { label: "Vifnet · Boise, Idaho", show: "Show the map", title: "Map of Boise, Idaho" },
   },
   sticky: { title: "Ready for a spotless home?", lede: "Same-day booking available", call: "Call", book: "Book Now" },
   brandPage: { title: "Vifnet", description: "Home cleaning.", open: "Open" },

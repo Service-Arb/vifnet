@@ -103,14 +103,13 @@ describe("the guarantee page", () => {
 });
 
 describe("the about page", () => {
-  it("names the frame's crew and towns, and keeps the map behind a button hidden on a phone", () => {
+  it("names the frame's crew and towns, and draws no map", () => {
     const html = render("en", "about");
     for (const name of ["Ana R.", "Luis M.", "Hannah K.", "Dev P."]) expect(html).toContain(name);
     for (const town of ["Boise", "Meridian", "Eagle", "Nampa", "Caldwell"]) expect(html).toContain(`>${town}</li>`);
-    // Nothing from Google until the click: a button, no iframe.
-    expect(html).toContain("Show the map");
+    // Visitors arrive from Google Maps: no map facade, no embed.
+    expect(html).not.toContain("Show the map");
+    expect(html).not.toContain('data-state="idle"');
     expect(html).not.toContain("<iframe");
-    // The Mobile frame has no map.
-    expect(html).toMatch(/<div class="[^"]*\bhidden\b[^"]*\bmd:block\b[^"]*" data-state="idle"><button type="button"/);
   });
 });

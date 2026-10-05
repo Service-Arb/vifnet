@@ -131,8 +131,8 @@ export interface Text extends CoreText<PageKey, Facts> {
   steps: BandHeadCopy & { items: readonly { title: string; body: string }[] };
   /** About (42:1910): the crew (CrewCard 38:1476) — the frame's sample names. */
   team: BandHeadCopy & { facts: string; members: readonly { initials: string; name: string; role: string }[] };
-  /** About: where the crew goes, and the map's face (MapFacade 38:1485). */
-  area: BandHeadCopy & { towns: readonly string[]; map: { label: string; show: string; title: string } };
+  /** About: where the crew goes, as chips. */
+  area: BandHeadCopy & { towns: readonly string[] };
   sticky: { title: string; lede: string; call: string; book: string };
   /** The apex of a network of places: its `<head>` and the directory's link. */
   brandPage: { title: string; description: string; open: string };

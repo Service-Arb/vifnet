@@ -55,25 +55,17 @@ test("the proof card's action opens the home page's form", async ({ page }, test
   await expect(page.locator("form#devis-form")).toBeVisible();
 });
 
-test("the proof card and the map are not on a phone", async ({ page }, testInfo) => {
+test("the proof card is not on a phone", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile", "the phone's layout");
   await page.goto("/fr/about");
   await expect(page.locator("[data-band=proof]")).toBeHidden();
-  await expect(page.locator("#zone [data-state]")).toBeHidden();
 });
 
-test("the map asks Google for nothing until it is clicked", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "desktop", "the map shows from md");
-  const google: string[] = [];
-  page.on("request", r => {
-    if (new URL(r.url()).hostname.endsWith("google.com")) google.push(r.url());
-  });
-  // The page's own requests are over before the click, so any Google request
-  // counted at the check is the page's, not the map's.
-  await page.goto("/en/about#zone", { waitUntil: "networkidle" });
-  expect(google).toEqual([]);
-  await page.locator("#zone").getByRole("button", { name: /Show the map/ }).click();
-  await expect(page.locator('#zone iframe[title="Map of Boise, Idaho"]')).toHaveAttribute("src", /google\.com\/maps\?q=Boise/);
+test("the about page draws no map at any width", async ({ page }) => {
+  await page.goto("/en/about#zone");
+  await expect(page.locator("#zone").getByRole("listitem").first()).toBeVisible();
+  await expect(page.locator("#zone").getByRole("button")).toHaveCount(0);
+  await expect(page.locator("#zone iframe")).toHaveCount(0);
 });
 
 test("the price table keeps its caption and drops What's included on a phone", async ({ page }, testInfo) => {

@@ -339,7 +339,6 @@ export const FR = {
     title: "Boise et les villes alentour.",
     lede: "Boise, Meridian, Eagle, Nampa et Caldwell — les villes d’où nos clients nous écrivent. Vous ne savez pas si vous êtes dans la zone ? Demandez-le-nous lors de notre rappel.",
     towns: ["Boise", "Meridian", "Eagle", "Nampa", "Caldwell"],
-    map: { label: "Vifnet · Boise, Idaho", show: "Afficher la carte", title: "Carte de Boise, Idaho" },
   },
   sticky: { title: "Prêt pour une maison impeccable ?", lede: "Réservation possible le jour même", call: "Appeler", book: "Réserver" },
   brandPage: { title: "Vifnet", description: "Ménage à domicile.", open: "Ouvrir" },
