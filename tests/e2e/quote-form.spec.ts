@@ -5,7 +5,7 @@ import { abState, LEADS_DB } from "./env";
 import { freshMobile } from "./support/mobile";
 
 // The quote card is kitstart's LeadCapture in the frame's card (experiment
-// `lead_layout`'s control, `single`, which the suite is pinned to). The selects
+// `lead_form`'s control, `single`, which the suite is pinned to). The selects
 // are kitstart's FormSelect: the platform's select until the page hydrates (the
 // no-JS post is in funnel.spec.ts), the kit's list after — never the OS menu,
 // which ignores the palette — in the same box, so nothing moves when one
@@ -94,7 +94,7 @@ test.describe("call me back", () => {
     await hydrated(page);
     const callback = page.locator("#devis-callback");
     await expect(callback).not.toHaveAttribute("open", "");
-    await callback.getByText("Rappelez-moi").click();
+    await callback.getByText("Rappel", { exact: true }).click();
     const form = page.locator("form#devis-callback-form");
     await form.locator("input[name=mobile]").fill(mobile);
     await form.getByRole("checkbox").check();

@@ -60,7 +60,9 @@ test.describe("a regular clean, priced live", () => {
     await answer(page, "Toutes les 2 semaines");
     // 45 + 30 + 10 = 85 €, 10 % off = 76,50 €, to the euro: 77 €.
     await expect(price(page)).toHaveAttribute("data-price-cents", "7700");
-    await expect(price(page)).toHaveText(/^77\s€$/);
+    await expect(price(page)).toHaveText(/^env\.\s77\s€$/);
+    // How it was reached sits behind "Détail" on the compact card.
+    await form(page).getByText("Détail", { exact: true }).click();
     await expect(form(page).getByRole("listitem").filter({ hasText: "Toutes les 2 semaines" })).toContainText("8,50");
 
     await answer(page, "Une fois");
@@ -171,7 +173,7 @@ test.describe("the jobs priced from a visit", () => {
       // Photos go by WhatsApp, which this place has not: the ask stays out, the callback in.
       await expect(card(page)).not.toContainText("Envoyez des photos");
       await expect(card(page).locator('a[href*="wa.me"]')).toHaveCount(0);
-      await expect(page.locator("#devis-callback")).toContainText("Rappelez-moi");
+      await expect(page.locator("#devis-callback")).toContainText("Rappel");
       await expect(page.getByRole("combobox", { name: "Chambres (facultatif)" })).toBeVisible();
     });
   }
@@ -197,7 +199,8 @@ test.describe("the jobs priced from a visit", () => {
   });
 });
 
-// lead_layout b (docs/EXPERIMENTS.md): the job first, then the rest — the estimate's answers among it.
+// lead_form b (docs/EXPERIMENTS.md): one question a screen — the job, the
+// estimate's answers, then the postcode and the phone.
 test.describe("variant b", () => {
   test.use({ storageState: abState("b"), extraHTTPHeaders: { "x-forwarded-for": "10.7.0.3" } });
 
@@ -205,11 +208,13 @@ test.describe("variant b", () => {
     const mobile = freshMobile("07");
     await page.goto("/fr#devis");
     await hydrated(page);
-    await expect(form(page).locator("input[name^=estimate_]")).toHaveCount(0);
+    await expect(form(page).locator("input[name^=estimate_]:visible")).toHaveCount(0);
     await card(page).getByRole("radio", { name: "Ménage standard" }).click();
-    await answer(page, "3 chambres");
-    await answer(page, "70 à 100 m²");
-    await answer(page, "Chaque mois");
+    // Each tap answers its screen and moves on.
+    await card(page).getByRole("radio", { name: "3 chambres", exact: true }).click();
+    await card(page).getByRole("radio", { name: "70 à 100 m²", exact: true }).click();
+    // A frequency is a card with the total it makes.
+    await card(page).getByRole("radio", { name: /^Chaque mois/ }).click();
     // 45 + 45 + 25 = 115 €, 5 % off = 109,25 €: 109 €.
     await expect(price(page)).toHaveAttribute("data-price-cents", "10900");
     await contact(page, mobile);
@@ -224,6 +229,40 @@ test.describe("variant b", () => {
     await card(page).getByRole("radio", { name: "Grand ménage" }).click();
     await expect(form(page).locator("input[name^=estimate_]")).toHaveCount(0);
     await expect(card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" })).toBeVisible();
+  });
+});
+
+// lead_form c (docs/EXPERIMENTS.md): the regular clean's size first, its
+// frequencies as priced cards, then the contact; "Je ne sais pas" makes it a quote.
+test.describe("variant c", () => {
+  test.use({ storageState: abState("c"), extraHTTPHeaders: { "x-forwarded-for": "10.7.0.5" } });
+
+  test("the size, then a priced frequency, books at the server's price", async ({ page }) => {
+    const mobile = freshMobile("07");
+    await page.goto("/fr#devis");
+    await hydrated(page);
+    await card(page).getByRole("radio", { name: "2 chambres", exact: true }).click();
+    await card(page).getByRole("radio", { name: "40 à 70 m²", exact: true }).click();
+    await card(page).getByRole("radio", { name: /^Chaque semaine/ }).click();
+    // 45 + 30 + 10 = 85 €, 15 % off = 72,25 €: 72 €; half back as a tax credit.
+    await expect(price(page)).toHaveAttribute("data-price-cents", "7200");
+    await expect(form(page).locator("[data-credit-cents]")).toHaveAttribute("data-credit-cents", "3600");
+    await contact(page, mobile);
+    await card(page).getByRole("button", { name: "Réserver" }).click();
+    await expect(card(page).getByRole("status")).toContainText(/Demande enregistrée au prix de 72\s€\./);
+    expect(leadRow(mobile)).toMatchObject({ job: "standard", flow: "estimate", quoted_cents: 7_200 });
+  });
+
+  test("\"Je ne sais pas\" asks nothing more and stores a quote", async ({ page }) => {
+    const mobile = freshMobile("07");
+    await page.goto("/fr#devis");
+    await hydrated(page);
+    await form(page).locator("input[name=estimate_bedrooms][value='?']").check();
+    await expect(price(page)).toHaveCount(0);
+    await contact(page, mobile);
+    await card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" }).click();
+    await expect(card(page).getByRole("status")).toBeVisible();
+    expect(leadRow(mobile)).toMatchObject({ job: "standard", flow: "quote", quoted_cents: null });
   });
 });
 

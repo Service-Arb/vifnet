@@ -48,6 +48,14 @@ export const PHOTO_NEEDS: readonly Subject[] = SUBJECTS.filter(s => FLOWS[s] ===
 export const BEDROOMS = ["studio", "1", "2", "3", "4", "5+"] as const;
 export type Bedrooms = (typeof BEDROOMS)[number];
 
+/**
+ * The quote card's forms (Figma "Lead form A/B", experiment `lead_form`):
+ * `compact`, everything on one screen; `steps`, one question per screen;
+ * `price-first`, the size on one screen, the frequencies priced as cards,
+ * then the contact — with "Je ne sais pas" turning the clean into a quote.
+ */
+export type LeadForm = "compact" | "steps" | "price-first";
+
 /** The extra fields the form posts beyond the core three, each capped at `max` characters. */
 export const EXTRAS = { bedrooms: { name: "bedrooms", max: 3 } } as const;
 

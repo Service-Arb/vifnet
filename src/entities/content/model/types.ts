@@ -82,7 +82,23 @@ export interface Text extends CoreText<PageKey, Facts> {
     placeholders: { mobile: string; locality: string };
     /** Shown in the bedrooms select until one is picked. */
     bedroomsPlaceholder: string;
-    trust: readonly string[];
+    /** One line right under the phone (Figma "Lead form A/B"): the privacy and the call back, said once. */
+    afterPhone: string;
+    /** The price on one line, `{price}` the total; then what is left after the tax credit. */
+    priceLine: string;
+    priceTaxCredit: string;
+    /** "Call me back" as a button of the channel row. */
+    callback: string;
+    /** The service, asked on a screen of its own (`steps`): its heading. */
+    needQuestion: string;
+    /** The answers' words on a phone's tile, by the price list's option id; the radio keeps the whole label. */
+    shortLabels: { bedrooms: Record<string, string>; surface: Record<string, string>; frequency: Record<string, string> };
+    /** The tag on the cheapest regular frequency (`price-first`). */
+    best: string;
+    /** The button of the size screen (`price-first`). */
+    seePrices: string;
+    /** "Je ne sais pas" turned the clean into a quote (`price-first`): the photos ask. */
+    unknown: { title: string; lede: string };
     bedrooms: Record<Bedrooms, string>;
     /** The card once a lead is taken (Figma QuoteCard Done): the form asks no name, so it greets no one by it. */
     doneTitle: string;

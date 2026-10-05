@@ -1,6 +1,6 @@
 import type { ExperimentConfig, OverriddenConfig } from "@evinvest/experiments";
 import type { BookingProvider } from "@evinvest/kitstart";
-import type { LeadCaptureLayout } from "@evinvest/kitstart/react";
+import type { LeadForm } from "./lead";
 
 /**
  * The A/B tests running on the home page (docs/EXPERIMENTS.md). `variants[0]`
@@ -15,11 +15,12 @@ import type { LeadCaptureLayout } from "@evinvest/kitstart/react";
  */
 export const EXPERIMENTS = {
   /**
-   * kitstart's `LeadCapture` layout, the same key and arms as aquafix's so the
-   * two sites' results pool: a, everything on one screen; b, the service
-   * first, then the contact.
+   * The lead form (Figma "Lead form A/B"): a, the compact card on one screen;
+   * b, one question per screen; c, the price first. `a` and `b` are aquafix's
+   * arms under the same key, so the two sites' results pool; `c` is this
+   * brand's own.
    */
-  lead_layout: { variants: ["a", "b"], weights: [0.5, 0.5], enabled: true },
+  lead_form: { variants: ["a", "b", "c"], weights: [1, 1, 1], enabled: true },
   /**
    * How a priced lead sets its slot: a, the call (`manual`); b, the place's
    * Google appointment schedule. kitstart's key (`BOOKING_EXPERIMENT`), the
@@ -40,13 +41,13 @@ export type LiveExperiments = OverriddenConfig<typeof EXPERIMENTS>;
  * The panel refuses a summary over 200 characters (`tests/experiments.test.ts`).
  */
 export const EXPERIMENT_SUMMARIES: Record<ExperimentKey, string> = {
-  lead_layout: "Asking the service first, one tap on a tile, then the contact raises the lead rate over every field on one screen.",
+  lead_form: "One question per screen (b), or the price of each frequency first with an \"I don't know\" way to a quote (c), lifts leads per visit over the compact one-screen form (a).",
   booking_provider: "After a priced lead, picking a slot on the owner's Google schedule books more slots than the promise of a call.",
 };
 export type VariantOf<K extends ExperimentKey> = (typeof EXPERIMENTS)[K]["variants"][number];
 
-/** `lead_layout`'s arms as `LeadCapture` names them. */
-export const LEAD_LAYOUTS = { a: "single", b: "qualify-first" } as const satisfies Record<VariantOf<"lead_layout">, LeadCaptureLayout>;
+/** `lead_form`'s arms as the quote card's forms. */
+export const LEAD_FORMS = { a: "compact", b: "steps", c: "price-first" } as const satisfies Record<VariantOf<"lead_form">, LeadForm>;
 
 /** `booking_provider`'s arms as kitstart's `bookingOf` names the providers. */
 export const BOOKING_ARMS = { a: "manual", b: "google_calendar" } as const satisfies Record<VariantOf<"booking_provider">, BookingProvider>;

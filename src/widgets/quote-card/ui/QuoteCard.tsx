@@ -1,10 +1,16 @@
 import type { BookingProvider, Place, PricingModel } from "@evinvest/kitstart";
-import type { LeadCaptureLayout } from "@evinvest/kitstart/react";
 import { leadCaptureText, type Copy } from "@/entities/content";
-import { BEDROOMS, FLOWS, LEAD, PHOTO_NEEDS, SUBJECTS, type Subject } from "@/shared/config/lead";
-import { BedroomsField, TrustLine } from "./fields";
-import { LEAD_CAPTURE_LOOK } from "./look";
+import { BEDROOMS, FLOWS, LEAD, PHOTO_NEEDS, SUBJECTS, type LeadForm, type Subject } from "@/shared/config/lead";
+import { Icon } from "@/shared/ui/Icon";
+import { AfterPhone, BedroomsField } from "./fields";
+import { formShape } from "./forms";
 import { QuoteCapture } from "./QuoteCapture";
+
+/**
+ * The French *crédit d'impôt* for help at home: half of what is paid comes
+ * back, so the price line says what is left (`price="compact"`).
+ */
+const TAX_CREDIT = 0.5;
 
 export interface QuoteCardProps {
   copy: Copy;
@@ -18,8 +24,8 @@ export interface QuoteCardProps {
   pricing: PricingModel | null;
   /** The job the page already knows, not asked again; `?need=` and a service card's `data-need` set it too. */
   need?: Subject | undefined;
-  /** Experiment `lead_layout`'s switch: the need on the same screen, or first. */
-  layout: LeadCaptureLayout;
+  /** Experiment `lead_form`'s switch (`formShape`): one screen, one question per screen, or the price first. */
+  form: LeadForm;
   /** The assignment the card's events and its post carry; none when no test runs. */
   experiment: { name: string; variant: string } | undefined;
   /**
@@ -40,16 +46,29 @@ export interface QuoteCardProps {
  * ask it again. The card is `#<id>` (`#devis`), its form `#devis-form`, the
  * callback `#devis-callback`; the form posts `form_id=quote`, the kit's
  * default, so its events stay comparable across brands. A regular clean is
- * an estimate (`FLOWS`): its answers as tiles, the price live, "Réserver";
- * the other jobs are quotes, with photos on WhatsApp when the place has it.
+ * an estimate (`FLOWS`): its answers as tiles, the price live on one line
+ * with what is left after the tax credit, "Réserver"; the other jobs are
+ * quotes, with photos on WhatsApp when the place has it. Under the phone one
+ * line says the number stays with us; the other channels are one row.
  */
-export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need, layout, experiment, bookingVariant }: QuoteCardProps) {
+export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need, form, experiment, bookingVariant }: QuoteCardProps) {
   const { t, locale } = copy;
-  const text = leadCaptureText(t, locale);
+  const shape = formShape(form, t, pricing);
+  const priceFirst = form === "price-first";
+  const text = {
+    ...leadCaptureText(t, locale),
+    callback: t.quote.callback,
+    // Said once, right under the phone (`afterPhone`).
+    privacy: "",
+    ...(form === "steps" ? { needLabel: t.quote.needQuestion } : {}),
+    // "Je ne sais pas" made the clean a quote: the frame's words over the photos ask.
+    ...(priceFirst ? { photosTitle: t.quote.unknown.title, photosLede: t.quote.unknown.lede } : {}),
+  };
+  const phone = <Icon name="phone" className="size-4" />;
   return (
     <QuoteCapture
       id={id}
-      className="light rounded-2xl bg-background p-7 text-ink shadow-2xl"
+      className="light group/card rounded-2xl bg-background p-7 text-ink shadow-2xl"
       place={place}
       contact={contact}
       locale={locale}
@@ -58,9 +77,19 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
       needs={SUBJECTS.map(s => ({ value: s, label: t.services.items[s].name }))}
       flows={FLOWS}
       pricing={pricing}
-      photos={PHOTO_NEEDS}
-      need={need}
-      layout={layout}
+      // In price-first the regular clean may become a quote too ("Je ne sais pas"): its photos are asked then.
+      photos={priceFirst ? SUBJECTS : PHOTO_NEEDS}
+      need={need ?? shape.need}
+      layout={shape.layout}
+      needDisplay={shape.needDisplay}
+      localityStep={shape.localityStep}
+      questions={shape.questions}
+      focusNext
+      price="compact"
+      taxCredit={TAX_CREDIT}
+      afterPhone={<AfterPhone text={t.quote.afterPhone} />}
+      channelsDisplay="row"
+      channelIcons={{ phone, callback: phone }}
       extras={
         <BedroomsField
           label={`${t.quote.labels.bedrooms} (${text.optional})`}
@@ -72,17 +101,15 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
       bookingVariant={bookingVariant}
       text={text}
       labels="hidden"
-      // Folded: the frame's card has no callback, so it is one quiet line
-      // until asked for — even when the place is closed and it would lead.
+      // Folded: one button of the channel row until asked for — even when the place is closed and it would lead.
       callbackOpen={false}
       head={
-        <div className="flex flex-col gap-1">
+        <div className={`flex flex-col gap-1 ${shape.head}`}>
           <h2 className="font-display text-2xl leading-8 font-bold text-brand">{t.quoteForm.title}</h2>
           <p className="text-sm leading-5 text-ink-soft">{t.quoteForm.lede}</p>
         </div>
       }
-      trust={<TrustLine lines={t.quote.trust} />}
-      classNames={LEAD_CAPTURE_LOOK}
+      classNames={shape.look}
       doneText={{ title: t.quote.doneTitle, body: t.quote.doneBody }}
     />
   );

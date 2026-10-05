@@ -25,7 +25,7 @@ export function variantsOf(bucket: Bucket): Assignment {
 }
 
 /**
- * The bucket as a suffix of the `[location]` param: `~lead_layout.a~booking_provider.b`,
+ * The bucket as a suffix of the `[location]` param: `~lead_form.a~booking_provider.b`,
  * one `~key.variant` per experiment the visitor runs, the control spelt out,
  * in config order. Whether a test runs is in the path, not read by the page:
  * the panel can switch one off at any moment, and a cached page must not go
