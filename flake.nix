@@ -53,6 +53,12 @@
             "instrumentation.ts"
           ];
           requiredFiles = [ "assets/fonts/Inter-Regular.ttf" ];
+          # BLOCKER (PR #37): the unpublished @evinvest/kitstart from EV-invest/lib#192,
+          # vendored until the owner publishes it to npm; then drop this, vendor/ and
+          # the `file:` dependency.
+          packageSourceOverrides = {
+            "node_modules/@evinvest/kitstart" = ./vendor/evinvest/evinvest-kitstart-0.13.0-form-ab.tgz;
+          };
           smoke = {
             page = "/fr";
             og = "/og?l=vifnet";
