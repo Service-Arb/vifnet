@@ -4,9 +4,9 @@ import { createRouting, parsePlaceParam } from "@evinvest/kitstart";
 import { createProxy, GONE_HEADER, LANG_COOKIE } from "@evinvest/kitstart/proxy";
 import { NextResponse, type NextRequest } from "next/server";
 import { liveExperiments } from "@/shared/config/env";
-import { EXPERIMENTS, type ExperimentKey, FORCE_PARAM, QA_COOKIE } from "@/shared/config/experiments";
+import { EXPERIMENTS, type ExperimentKey, FORCE_PARAM, type LiveExperiments, QA_COOKIE, QA_PAUSED_COOKIE } from "@/shared/config/experiments";
 import { site } from "@/shared/config/site";
-import { assignedBy, bucketSuffix, isBot, parseLocation, runningOf } from "@/shared/lib/experiments";
+import { assignedBy, bucketSuffix, isBot, parseLocation, pausedOf, runningOf } from "@/shared/lib/experiments";
 
 const kitstart = createProxy(site);
 const routing = createRouting(site);
@@ -68,10 +68,23 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const response = suffix ? NextResponse.rewrite(new URL(`${decision.pathname}${suffix}${url.search}`, url), { request: { headers: withoutGoneHeader(request) } }) : routed;
 
   for (const cookie of assigned.cookies.getAll()) response.cookies.set(cookie);
-  if (KEYS.some(k => forcedVariant(live, k, url.searchParams.get(`${FORCE_PARAM}${k}`)) !== undefined)) {
-    response.cookies.set(QA_COOKIE, "1", { path: "/", maxAge: ASSIGNMENT_MAX_AGE, sameSite: "lax" });
-  }
+  const forced = KEYS.some(k => forcedVariant(live, k, url.searchParams.get(`${FORCE_PARAM}${k}`)) !== undefined);
+  if (forced) response.cookies.set(QA_COOKIE, "1", { path: "/", maxAge: ASSIGNMENT_MAX_AGE, sameSite: "lax" });
+  // The visit this response marks is QA already: its menu mounts on this very page.
+  if (forced || request.cookies.get(QA_COOKIE)?.value) pausedForQa(request, response, live);
   return response;
+}
+
+/**
+ * A QA browser (the caller checks) learns which tests the panel has paused (`QA_PAUSED_COOKIE`),
+ * for its menu. Only the paused list: a pause keeps every visitor's
+ * `ab_<key>`, so a test switched back on carries on with the same arms.
+ * Nobody else gets a cookie from this.
+ */
+function pausedForQa(request: NextRequest, response: NextResponse, live: LiveExperiments): void {
+  const paused = pausedOf(live).join(",");
+  if (paused) response.cookies.set(QA_PAUSED_COOKIE, paused, { path: "/", sameSite: "lax" });
+  else if (request.cookies.has(QA_PAUSED_COOKIE)) response.cookies.set(QA_PAUSED_COOKIE, "", { path: "/", maxAge: 0, sameSite: "lax" });
 }
 
 export const config = {

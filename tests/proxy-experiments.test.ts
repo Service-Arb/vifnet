@@ -42,6 +42,52 @@ describe("the proxy under the panel's overrides", () => {
     expect(cookies.get("ab_booking_provider")?.value).toBe("b");
   });
 
+  describe("the paused list a QA browser gets", () => {
+    const pausedCookie = (response: Response) => response.headers.getSetCookie().filter(c => c.startsWith("ab__qa_off="));
+
+    it("names a paused test, as a session cookie, and keeps the test's arm", async () => {
+      overrides = { lead_form: { enabled: false } };
+      const response = await proxy(get("/fr", "ab__qa=1; ab_lead_form=b; ab_booking_provider=a"));
+      const [sent, ...more] = pausedCookie(response);
+      expect(more).toEqual([]);
+      expect(sent).toMatch(/^ab__qa_off=lead_form;/);
+      expect(sent).toMatch(/Path=\//i);
+      expect(sent).toMatch(/SameSite=Lax/i);
+      expect(sent).not.toMatch(/Max-Age|Expires/i);
+      expect(response.headers.getSetCookie().filter(c => c.startsWith("ab_lead_form="))).toEqual([]);
+    });
+
+    it("names it on the forced visit that makes the browser QA, beside the QA mark", async () => {
+      overrides = { lead_form: { enabled: false } };
+      const response = await proxy(get("/fr?ab_booking_provider=b", "ab_lead_form=b"));
+      expect(pausedCookie(response)).toEqual([expect.stringMatching(/^ab__qa_off=lead_form;/)]);
+      expect(response.cookies.get("ab__qa")?.value).toBe("1");
+      expect(response.cookies.get("ab_booking_provider")?.value).toBe("b");
+    });
+
+    it("drops the list once nothing is paused", async () => {
+      const [sent, ...more] = pausedCookie(await proxy(get("/fr", "ab__qa=1; ab__qa_off=lead_form; ab_lead_form=b; ab_booking_provider=a")));
+      expect(more).toEqual([]);
+      expect(sent).toMatch(/^ab__qa_off=;/);
+      expect(sent).toMatch(/Max-Age=0/i);
+    });
+
+    it("sends nothing when nothing is paused and the browser has no list", async () => {
+      expect(pausedCookie(await proxy(get("/fr", "ab__qa=1; ab_lead_form=b; ab_booking_provider=a")))).toEqual([]);
+    });
+
+    it("gives a visitor who is not QA no new cookie at all, paused test or not", async () => {
+      overrides = { lead_form: { enabled: false } };
+      expect((await proxy(get("/fr", "ab_lead_form=b; ab_booking_provider=a"))).headers.getSetCookie()).toEqual([]);
+    });
+
+    it("gives a bot nothing, QA cookie or not", async () => {
+      overrides = { lead_form: { enabled: false } };
+      const bot = new NextRequest(new URL("/fr", "http://localhost"), { headers: { host: "localhost", "user-agent": "Googlebot/2.1", cookie: "ab__qa=1; ab_lead_form=b" } });
+      expect(pausedCookie(await proxy(bot))).toEqual([]);
+    });
+  });
+
   it("takes no forced variant of a switched-off test, so the browser is not marked QA for it", async () => {
     overrides = { lead_form: { enabled: false } };
     const response = await proxy(get("/fr?ab_lead_form=b", "ab_booking_provider=a"));

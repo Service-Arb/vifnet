@@ -85,6 +85,11 @@ export function assignedBy(live: LiveExperiments, cookie: (name: string) => stri
   return { assigned: assigned as Bucket, forced: cookie(QA_COOKIE) === "1" };
 }
 
+/** The experiments `live` has switched off (paused): their visitors keep their arms. */
+export function pausedOf(live: LiveExperiments): ExperimentKey[] {
+  return KEYS.filter(key => live[key].enabled === false);
+}
+
 /**
  * Crawlers and link previews: always the control, and no cookie, so they are
  * never an exposure. `HeadlessChrome` is not here — it is the e2e browser.
