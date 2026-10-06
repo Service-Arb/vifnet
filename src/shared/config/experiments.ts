@@ -86,6 +86,13 @@ export const FORCE_PARAM = "ab_";
  */
 export const QA_COOKIE = "ab__qa";
 
+/**
+ * Set on a QA browser's home page only, for the session: the experiments the
+ * live config has paused, comma-separated, so the QA menu can say "not
+ * running" rather than show a stale arm. Dropped once none is paused.
+ */
+export const QA_PAUSED_COOKIE = "ab__qa_off";
+
 /** The four events every Service-Arb landing sends for its experiments (aquafix too). */
 export const EXPERIMENT_EVENTS = {
   exposed: "experiment_exposed",
