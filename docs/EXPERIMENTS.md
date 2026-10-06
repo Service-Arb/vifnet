@@ -135,9 +135,8 @@ normal visitor again.
 
 The same key, a/b arms and weights as aquafix's, so the two sites' results
 pool on a and b (site as the stratum); c is each brand's own hypothesis. All
-three are kitstart's `LeadCapture` (from the vendored build of
-EV-invest/lib#192 until it is published), drawn to the Figma page "Lead form
-A/B" (77:3531), and share the compact card of FORM-AB-VARIANTS-SPEC.md §1:
+three are kitstart's `LeadCapture` (0.14.0, with the steps layout), drawn to
+the Figma page "Lead form A/B" (77:3531), and share the compact card of FORM-AB-VARIANTS-SPEC.md §1:
 the price on one line with what is left after the 50 % tax credit and the
 breakdown behind "Détail"; one line under the phone ("Numéro gardé entre
 nous · rappel sous 15 min.") instead of the trust line and the privacy note;
