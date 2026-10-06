@@ -33,11 +33,17 @@ async function panelChunks(browser: Browser): Promise<string[]> {
 }
 
 /**
- * Resolves once the next page has sent its exposure beacon: an effect of the
- * same hydration as the gate's, so by then the gate has decided.
+ * Resolves once the page the next navigation loads has sent its exposure
+ * beacon: an effect of the same hydration as the gate's, so by then the gate
+ * has decided. Only beacons after the main frame navigates count — a late one
+ * from the page being left must not pass for the new page's.
  */
 async function gateDecided(page: Page): Promise<{ exposed: Promise<unknown> }> {
-  const exposed = page.waitForRequest(r => r.url().startsWith(POSTHOG_HOST) && (r.postData() ?? "").includes("experiment_exposed"));
+  let navigated = false;
+  page.on("framenavigated", frame => {
+    if (frame === page.mainFrame()) navigated = true;
+  });
+  const exposed = page.waitForRequest(r => navigated && r.url().startsWith(POSTHOG_HOST) && (r.postData() ?? "").includes("experiment_exposed"));
   await page.route(`${POSTHOG_HOST}/**`, route => route.fulfill({ status: 200, body: "1" }));
   // Wrapped: an async function returning the bare promise would be awaited through.
   return { exposed };
