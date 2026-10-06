@@ -26,7 +26,7 @@ function card(need: Subject | undefined, opts: { whatsapp?: string | null; prici
       renderedAt: Date.UTC(2026, 9, 3),
       pricing: opts.pricing === undefined ? PRICING : opts.pricing,
       need,
-      layout: "single",
+      form: "compact",
       experiment: undefined,
       bookingVariant: null,
     }),

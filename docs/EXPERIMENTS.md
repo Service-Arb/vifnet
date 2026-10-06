@@ -13,7 +13,7 @@ A/B tests on the home page. Three places, each with one job:
 ## How it works
 
 - **Config**: `src/shared/config/experiments.ts` — each experiment's variants
-  (`variants[0]` is the control), weights (50/50), `enabled` and a one-line
+  (`variants[0]` is the control), weights (equal), `enabled` and a one-line
   hypothesis (`EXPERIMENT_SUMMARIES`).
 - **Declaration**: at every start (`instrumentation.ts`) the server tells the
   panel which experiments this build runs, with their variants, weights and
@@ -42,7 +42,7 @@ A/B tests on the home page. Three places, each with one job:
   bingbot, AdsBot, anything saying bot/crawler/spider/preview, and no user
   agent at all) get the control and no cookie.
 - **Rendering stays ISR.** An assigned visitor is rewritten to the
-  bucket's own path, `/fr/_vifnet~lead_layout.b~booking_provider.a`: every
+  bucket's own path, `/fr/_vifnet~lead_form.b~booking_provider.a`: every
   experiment that runs for them, the control spelt out. The page reads its
   variants — and whether each test runs at all — from the `[location]` param,
   never from the request or the panel, so each bucket is its own cache entry.
@@ -73,7 +73,7 @@ A/B tests on the home page. Three places, each with one job:
   on kitstart's schema — the same on every brand, which is what lets an
   experiment's results pool across sites (the site is the stratum):
   `lead_form_view`, `lead_form_start`, `lead_form_field_error {field}`,
-  `lead_form_step {step}` (`qualify-first` only), with `form_id` and
+  `lead_form_step {step}` (each screen moved to in `steps`), with `form_id` and
   `layout`; `contact_intent_click {channel}`; and, server side,
   `lead_form_submit` with the posted assignment. They go through kitstart's
   sink, not ours: they are not gated on the cookie and carry no `forced`, so
@@ -109,7 +109,7 @@ stop early on a lucky day — the thresholds assume the minimums above.
 
 ## Forcing a variant (QA)
 
-`/fr?ab_lead_layout=b` renders b and stores it in the cookie. A forced
+`/fr?ab_lead_form=b` (or `=a`, `=c`) renders that arm and stores it in the cookie. A forced
 visit also sets `ab__qa=1` for 30 days: every event from that browser says
 `forced: true` and the funnel's `forced` filter leaves it out. Clear the site's cookies to be a
 normal visitor again.
@@ -131,37 +131,57 @@ normal visitor again.
 
 ## Running experiments
 
-### `lead_layout`
+### `lead_form`
 
-The same key, arms and weights as aquafix's, so the two sites' results pool
-(site as the stratum): both run kitstart's `LeadCapture`, and only its
-`layout` differs between the arms.
+The same key, a/b arms and weights as aquafix's, so the two sites' results
+pool on a and b (site as the stratum); c is each brand's own hypothesis. All
+three are kitstart's `LeadCapture` (0.14.0, with the steps layout), drawn to
+the Figma page "Lead form A/B" (77:3531), and share the compact card of FORM-AB-VARIANTS-SPEC.md §1:
+the price on one line with what is left after the 50 % tax credit and the
+breakdown behind "Détail"; one line under the phone ("Numéro gardé entre
+nous · rappel sous 15 min.") instead of the trust line and the privacy note;
+the other channels as one row of buttons (WhatsApp · Rappel on a phone,
+where the sticky bar has the call; Appeler too on desktop); after a choice
+the focus moves to the next empty field.
 
-- **Hypothesis**: asking the service first, as one tap on a tile, and only
-  then the postcode and the phone (`qualify-first`) raises the share of
-  visitors who send a lead, against everything on one screen (`single`). A
-  first question that costs nothing commits the visitor; a wall of fields
-  turns some away.
-- **Evidence**: mixed, which is why it is a test and not a default:
-  qualification-first multi-step forms beat single screens in some published
-  form studies and lose in others (Zuko), while fewer visible fields reliably
-  help (LEAD-CAPTURE-SPEC.md, Service-Arb). No site data of ours.
-- **Control (a)**: `single` — service (the kit's select), postcode, phone,
-  then the optional bedrooms, and the submit, in the frame's card.
-- **Variant (b)**: `qualify-first` — a tile per service; the tap shows the
-  contact step and focuses its first empty field. A service card's link
-  (`data-need`) or `?need=` answers the first step for the visitor, in both
-  arms.
-- **Both arms**: no name field (dropped in both arms alike with kitstart
-  0.13.0: the call back asks it), bedrooms is an optional select after the
-  phone, and "Rappelez-moi"
-  (kitstart's callback: the phone and a consent) sits under the form as one
-  text line. The fields show the frame's placeholders and a taken lead says
-  done in the card (kitstart 0.7.0, from 2026-10-03, in both arms alike).
+- **Hypothesis**: one question per screen (b), or the price of each
+  frequency first with an "I don't know" way out to a quote (c), raises the
+  share of visitors who send a lead over the compact one-screen form (a).
+  Fewer fields in view and a first answer that costs nothing commit the
+  visitor; seeing the price before the phone removes the reason to leave.
+- **Evidence**: mixed, which is why it is a test: multi-step forms beat
+  single screens in some published form studies and lose in others (Zuko).
+  The pieces are taken from live booking funnels walked through on
+  2026-10-05 — one question a screen with a progress bar (Thumbtack, Bark,
+  Yoojo), a price on each frequency card (Housekeep), an "I don't know"
+  answer that does not block (Bark, IZI, Yoojo) —
+  reviews/FORM-FEATURES-2026-10-05.md (Service-Arb); none of them published
+  its effect. No site data of ours.
+- **Control (a)** — Compact (77:3532 / 77:3693): `single`. The service (the
+  kit's select), the regular clean's answers as one row of tiles each (short
+  words on a phone: "Studio · 1 … 5+", "< 40 · 40–70 · 70–100 · > 100",
+  "Semaine · 2 sem. · Mois · Une fois"), the price line, postcode, phone,
+  "Réserver".
+- **Variant (b)** — Step by step (81:3566 … 81:3700, 81:3798): `steps`. The
+  service as a list, the bedrooms, the surface, the frequency as cards with
+  the price each makes, then the postcode with the phone. A thin gold bar,
+  "Retour", the screens answered as chips with "Modifier".
+- **Variant (c)** — Price first (84:3596 … 84:3860): `steps` over the regular
+  clean, answered for the visitor (a service card's `data-need` or `?need=`
+  still wins). The bedrooms and the surface on one screen, each with "Je ne
+  sais pas" over two columns, and "Voir les prix"; the frequencies as cards
+  with their price and "Le plus avantageux" on the one the price list
+  discounts most; then the contact. "Je ne sais pas" asks nothing more: the
+  lead is a quote (kitstart's `ESTIMATE_UNKNOWN`, which the server stores as
+  a quote too), with the photos asked on WhatsApp where the place has it.
+- **All arms**: no name field; bedrooms is an optional select after the phone
+  for a quote; "Rappel" (kitstart's callback) is a button of the channel row;
+  a taken lead says done in the card.
 - **Primary metric**: lead rate, `experiment_lead / experiment_exposed`.
 - **Guardrail**: contact rate, (leads + calls) / exposures.
 - **Diagnostic**: kitstart's `lead_form_start`, `lead_form_step` and
-  `lead_form_field_error` per variant, pooled across brands in PostHog.
+  `lead_form_field_error` per variant, pooled across brands in PostHog; in
+  c, the share of quotes ("Je ne sais pas") among its leads.
 
 ### `booking_provider` — inert until the panel sets a Google schedule
 
@@ -191,8 +211,8 @@ the arms pool; aquafix is to run it with the same arms.
   phone ("Téléphone", required).
 - **Both arms**: only a priced lead (the regular clean, an estimate) books;
   a quote's slot is set on the call. The page view counts an exposure and
-  the taps a contact under `booking_provider`, as for `lead_layout`, so
-  its PostHog funnel reads like `lead_layout`'s; its lead rate is a guardrail here (the arm
+  the taps a contact under `booking_provider`, as for `lead_form`, so
+  its PostHog funnel reads like `lead_form`'s; its lead rate is a guardrail here (the arm
   shows only after the lead), not the result.
 - **Primary metric**: slots booked per lead, by arm. A Google schedule
   opens in a new tab and never tells the page a slot was taken, so the
@@ -206,6 +226,19 @@ the arms pool; aquafix is to run it with the same arms.
 
 ## Ended experiments
 
+### `lead_layout` — ended unresolved (code 2026-10-05; live with the next release)
+
+- **What it tested**: kitstart's `LeadCapture` with everything on one screen
+  (`single`, a) against the service first as a tile, then the contact
+  (`qualify-first`, b). Hypothesis: a first question that costs one tap
+  raises the lead rate.
+- **Why it ended**: replaced before reaching the stop rule by `lead_form`,
+  which asks the same question with the compact card in every arm and a
+  third arm; its `qualify-first` arm is gone (b is now one question per
+  screen). Removed outright (step 3 above): no verdict. Its events stay in
+  PostHog under `experiment = lead_layout`.
+- **Successor**: `lead_form`.
+
 ### `quote_single_step` — ended unresolved (code 2026-10-03; live with the next release)
 
 - **What it tested**: the Figma frame's two-step quote card (name, phone,
@@ -217,5 +250,6 @@ the arms pool; aquafix is to run it with the same arms.
   arm exists any more. It was removed outright (step 3 above) before reaching
   the stop rule — no verdict. Its events stay in PostHog under
   `experiment = quote_single_step`.
-- **Successor**: `lead_layout`, which asks the same question — how much of
-  the form a visitor faces at once — on the shared component.
+- **Successor**: `lead_layout` (itself ended for `lead_form`), which asked the
+  same question — how much of the form a visitor faces at once — on the
+  shared component.

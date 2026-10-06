@@ -2,7 +2,7 @@ import { contactOf, faqPageNode, placeGraph, type AnalyticsTarget, type PlaceVie
 import { JsonLd } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { ExperimentScope } from "@/features/experiment";
-import { BOOKING_ARMS, LEAD_LAYOUTS } from "@/shared/config/experiments";
+import { BOOKING_ARMS, LEAD_FORMS } from "@/shared/config/experiments";
 import type { Locale } from "@/shared/config/i18n";
 import { ANCHORS, placeNav } from "@/shared/config/nav";
 import { site } from "@/shared/config/site";
@@ -55,8 +55,8 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
   const now = new Date(renderedAt);
   const nav = placeNav(view, t.nav, site.pages.home);
   const graph = placeGraph(site, view, "home", { placeName: f.place, title: t.pages.home.title(f), description: t.pages.home.description(f) }, now);
-  const { lead_layout: variant, booking_provider: booking } = variantsOf(experiments.bucket);
-  const running = experiments.bucket.lead_layout !== undefined;
+  const { lead_form: variant, booking_provider: booking } = variantsOf(experiments.bucket);
+  const running = experiments.bucket.lead_form !== undefined;
   const bookingRunning = experiments.bucket.booking_provider !== undefined;
   return (
     <>
@@ -65,7 +65,7 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
       <ExperimentScope
         target={experiments.target}
         placeSlug={view.place.slug}
-        experiment="lead_layout"
+        experiment="lead_form"
         variant={variant}
         enabled={running}
       >
@@ -89,8 +89,8 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
                   contact={contactOf(site, view.place)}
                   renderedAt={renderedAt}
                   pricing={pricing}
-                  layout={LEAD_LAYOUTS[variant]}
-                  experiment={running ? { name: "lead_layout", variant } : undefined}
+                  form={LEAD_FORMS[variant]}
+                  experiment={running ? { name: "lead_form", variant } : undefined}
                   bookingVariant={bookingRunning ? BOOKING_ARMS[booking] : null}
                 />
               }

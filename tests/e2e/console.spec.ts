@@ -24,7 +24,8 @@ test.beforeEach(async ({ page }) => {
   await page.route(`${POSTHOG_HOST}/**`, route => route.fulfill({ status: 204 }));
 });
 
-for (const path of ["/fr", "/en", "/fr/prices", "/fr/guarantee", "/fr/about", "/fr/thanks"]) {
+// The quote card's three forms (`lead_form`), each forced by its link.
+for (const path of ["/fr", "/en", "/fr?ab_lead_form=b", "/fr?ab_lead_form=c", "/fr/prices", "/fr/guarantee", "/fr/about", "/fr/thanks"]) {
   test(`${path} loads with a clean console`, async ({ page }) => {
     const said = listen(page);
     await page.goto(path);
@@ -40,7 +41,7 @@ test("the quote card hydrates and opens its lists with a clean console", async (
   await page.getByRole("combobox", { name: "Prestation" }).click();
   await expect(page.getByRole("listbox")).toBeVisible();
   await page.keyboard.press("Escape");
-  await page.locator("#devis-callback").getByText("Rappelez-moi").click();
+  await page.locator("#devis-callback").getByText("Rappel", { exact: true }).click();
   await page.waitForLoadState("networkidle");
   expect(said).toEqual([]);
 });

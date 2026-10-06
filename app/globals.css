@@ -41,9 +41,6 @@
 .vf-icon-phone {
   --vf-icon: url("../assets/icons/phone.svg");
 }
-.vf-icon-home {
-  --vf-icon: url("../assets/icons/home.svg");
-}
 .vf-icon-home-outline {
   --vf-icon: url("../assets/icons/home-outline.svg");
 }
@@ -68,6 +65,48 @@
 .vf-icon-google-g {
   background: url("../assets/icons/google-g.svg") center / 100% 100% no-repeat;
   mask: none;
+}
+
+/* The quote card's marks (src/widgets/quote-card/ui/look.ts, Figma "Lead form
+   A/B"): kitstart's parts take classes, not nodes, so the frame's chevrons and
+   checks are drawn around them from the same icon files. */
+.vf-chevron-right::after,
+.vf-step-back::before,
+.vf-price-detail > summary::after,
+.vf-chip > span:nth-child(2)::before {
+  content: "";
+  display: block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  mask: url("../assets/icons/chevron-down.svg") center / 100% 100% no-repeat;
+}
+.vf-chevron-right::after {
+  rotate: -90deg;
+  color: var(--color-slate-400);
+}
+.vf-step-back::before {
+  rotate: 90deg;
+}
+.vf-chip > span:nth-child(2)::before {
+  width: 12px;
+  height: 12px;
+  background-color: var(--positive);
+  mask-image: url("../assets/icons/check.svg");
+}
+/* The frame's bar counts the price-first screens as three — the size, the
+   price, the contact — where the kit also counts the service the card
+   answered for the visitor: its fill set per screen, over the kit's inline one. */
+.vf-price-first-bar [data-slot="progress-indicator"] {
+  transform: translateX(-66.667%) !important;
+}
+form:has([data-lead-step^="estimate_frequency"]:not([data-lead-off])) .vf-price-first-bar [data-slot="progress-indicator"],
+form:has(input[value="?"]:checked) .vf-price-first-bar [data-slot="progress-indicator"] {
+  transform: translateX(-33.333%) !important;
+}
+form:has([data-lead-step="phone"]:not([data-lead-off])):not(:has(input[value="?"]:checked)) .vf-price-first-bar [data-slot="progress-indicator"] {
+  transform: none !important;
 }
 
 /* The lock-up's parts (src/shared/ui/brand/Logo.tsx, Figma Logo 5:66). Dark

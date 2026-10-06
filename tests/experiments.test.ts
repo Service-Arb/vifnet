@@ -9,32 +9,32 @@ import { BOOKING_ARMS, EXPERIMENT_SUMMARIES, EXPERIMENTS } from "@/shared/config
 import { site } from "@/shared/config/site";
 import { assignedBy, bucketSuffix, CONTROL, isBot, parseLocation, placeOfLocation, runningOf, variantsOf } from "@/shared/lib/experiments";
 
-/** The config as the panel serves it: none of its overrides, or lead_layout switched off. */
+/** The config as the panel serves it: none of its overrides, or lead_form switched off. */
 const AS_CODED = applyOverrides(EXPERIMENTS, {});
-const LAYOUT_OFF = applyOverrides(EXPERIMENTS, { lead_layout: { enabled: false } });
+const LAYOUT_OFF = applyOverrides(EXPERIMENTS, { lead_form: { enabled: false } });
 
 describe("the bucket in the place param", () => {
   it("spells out every running test, the control too; no test running is no suffix", () => {
     expect(bucketSuffix({})).toBe("");
-    expect(bucketSuffix(CONTROL)).toBe("~lead_layout.a~booking_provider.a");
-    expect(bucketSuffix({ ...CONTROL, lead_layout: "b" })).toBe("~lead_layout.b~booking_provider.a");
+    expect(bucketSuffix(CONTROL)).toBe("~lead_form.a~booking_provider.a");
+    expect(bucketSuffix({ ...CONTROL, lead_form: "b" })).toBe("~lead_form.b~booking_provider.a");
     expect(bucketSuffix({ booking_provider: "b" })).toBe("~booking_provider.b");
   });
 
   it("round-trips, and the place is what the loader gets", () => {
-    expect(parseLocation("_vifnet~lead_layout.b~booking_provider.a")).toEqual({ place: "_vifnet", bucket: { lead_layout: "b", booking_provider: "a" } });
-    expect(parseLocation("_vifnet~lead_layout.a")).toEqual({ place: "_vifnet", bucket: { lead_layout: "a" } });
+    expect(parseLocation("_vifnet~lead_form.b~booking_provider.a")).toEqual({ place: "_vifnet", bucket: { lead_form: "b", booking_provider: "a" } });
+    expect(parseLocation("_vifnet~lead_form.a")).toEqual({ place: "_vifnet", bucket: { lead_form: "a" } });
     expect(parseLocation("_vifnet")).toEqual({ place: "_vifnet", bucket: {} });
-    expect(placeOfLocation("_vifnet~lead_layout.b~booking_provider.b")).toBe("_vifnet");
+    expect(placeOfLocation("_vifnet~lead_form.b~booking_provider.b")).toBe("_vifnet");
   });
 
   it("renders a test that is not in the path as its control, and counts it as not running", () => {
-    expect(variantsOf({ booking_provider: "b" })).toEqual({ lead_layout: "a", booking_provider: "b" });
+    expect(variantsOf({ booking_provider: "b" })).toEqual({ lead_form: "a", booking_provider: "b" });
     expect(variantsOf({})).toEqual(CONTROL);
   });
 
   it("refuses a suffix the proxy never writes: no second cache entry for the same page", () => {
-    for (const bad of ["_vifnet~lead_layout", "_vifnet~lead_layout.z", "_vifnet~nope.b", "_vifnet~lead_layout.b~lead_layout.b", "_vifnet~booking_provider.b~lead_layout.b"]) {
+    for (const bad of ["_vifnet~lead_form", "_vifnet~lead_form.z", "_vifnet~nope.b", "_vifnet~lead_form.b~lead_form.b", "_vifnet~booking_provider.b~lead_form.b"]) {
       expect(parseLocation(bad)).toBeNull();
       expect(placeOfLocation(bad)).toBe(bad);
     }
@@ -75,17 +75,17 @@ describe("booking_provider", () => {
 
 describe("who is in the experiment", () => {
   it("is whoever carries an ab_ cookie; the QA cookie marks it forced", () => {
-    const jar: Record<string, string> = { ab_lead_layout: "b", ab__qa: "1" };
-    expect(assignedBy(AS_CODED, n => jar[n])).toEqual({ assigned: { lead_layout: "b" }, forced: true });
+    const jar: Record<string, string> = { ab_lead_form: "b", ab__qa: "1" };
+    expect(assignedBy(AS_CODED, n => jar[n])).toEqual({ assigned: { lead_form: "b" }, forced: true });
     expect(assignedBy(AS_CODED, () => undefined)).toEqual({ assigned: {}, forced: false });
-    expect(assignedBy(AS_CODED, n => (n === "ab_lead_layout" ? "garbage" : undefined)).assigned).toEqual({ lead_layout: "a" });
+    expect(assignedBy(AS_CODED, n => (n === "ab_lead_form" ? "garbage" : undefined)).assigned).toEqual({ lead_form: "a" });
   });
 
   it("is nobody for a test the panel switched off, whatever the cookie says", () => {
-    const jar: Record<string, string> = { ab_lead_layout: "b", ab_booking_provider: "b" };
+    const jar: Record<string, string> = { ab_lead_form: "b", ab_booking_provider: "b" };
     expect(assignedBy(LAYOUT_OFF, n => jar[n]).assigned).toEqual({ booking_provider: "b" });
-    expect(runningOf(LAYOUT_OFF, { lead_layout: "b", booking_provider: "a" })).toEqual({ booking_provider: "a" });
-    expect(runningOf(AS_CODED, { lead_layout: "b" })).toEqual({ lead_layout: "b" });
+    expect(runningOf(LAYOUT_OFF, { lead_form: "b", booking_provider: "a" })).toEqual({ booking_provider: "a" });
+    expect(runningOf(AS_CODED, { lead_form: "b" })).toEqual({ lead_form: "b" });
   });
 
   it("never counts crawlers and previews", () => {
@@ -107,16 +107,16 @@ describe("who is in the experiment", () => {
 
 describe("event names", () => {
   it("map the library's `<key>_<action>` to one name per action", () => {
-    expect(experimentEvent("lead_layout", "lead_layout_exposed", { variant: "b" }, false)).toEqual([
+    expect(experimentEvent("lead_form", "lead_form_exposed", { variant: "b" }, false)).toEqual([
       "experiment_exposed",
-      { experiment: "lead_layout", variant: "b", forced: false },
+      { experiment: "lead_form", variant: "b", forced: false },
     ]);
-    expect(experimentEvent("lead_layout", "lead_layout_step", { variant: "a", step: 2 }, true)).toEqual([
+    expect(experimentEvent("lead_form", "lead_form_step", { variant: "a", step: 2 }, true)).toEqual([
       "experiment_step",
-      { experiment: "lead_layout", variant: "a", step: 2, forced: true },
+      { experiment: "lead_form", variant: "a", step: 2, forced: true },
     ]);
-    expect(experimentEvent("lead_layout", "lead_layout_clicked", {}, false)).toBeNull();
-    expect(experimentEvent("lead_layout", "other_exposed", {}, false)).toBeNull();
+    expect(experimentEvent("lead_form", "lead_form_clicked", {}, false)).toBeNull();
+    expect(experimentEvent("lead_form", "other_exposed", {}, false)).toBeNull();
   });
 });
 
@@ -142,17 +142,17 @@ describe("experiment_lead on /quote", () => {
   };
 
   it("is sent once per experiment for an accepted lead, forced or not", async () => {
-    expect(await setup(true)("lang=fr; ab_lead_layout=b")).toEqual([["experiment_lead", { experiment: "lead_layout", variant: "b", forced: false }]]);
-    expect(await setup(true)("ab_lead_layout=a; ab__qa=1")).toEqual([["experiment_lead", { experiment: "lead_layout", variant: "a", forced: true }]]);
+    expect(await setup(true)("lang=fr; ab_lead_form=b")).toEqual([["experiment_lead", { experiment: "lead_form", variant: "b", forced: false }]]);
+    expect(await setup(true)("ab_lead_form=a; ab__qa=1")).toEqual([["experiment_lead", { experiment: "lead_form", variant: "a", forced: true }]]);
   });
 
   it("is not sent for a rejected or suspected submission, nor without a cookie", async () => {
-    expect(await setup(false)("ab_lead_layout=b")).toEqual([]);
+    expect(await setup(false)("ab_lead_form=b")).toEqual([]);
     expect(await setup(true)()).toEqual([]);
   });
 
   it("is not sent for a test the panel switched off, even with its cookie", async () => {
-    expect(await setup(true, LAYOUT_OFF)("ab_lead_layout=b; ab_booking_provider=a")).toEqual([
+    expect(await setup(true, LAYOUT_OFF)("ab_lead_form=b; ab_booking_provider=a")).toEqual([
       ["experiment_lead", { experiment: "booking_provider", variant: "a", forced: false }],
     ]);
   });

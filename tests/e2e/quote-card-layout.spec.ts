@@ -1,13 +1,12 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { abState } from "./env";
 
-// The card's compact layout (Figma 60:3497, Option B), drawn with kitstart's
-// parts only: the contact step's fields two to a row where two fit (the
-// desktop card) and stacked on the phone's. `field` is also the part of the
-// need's Field and the callback phone's, both in a column the kit draws: there
-// the pairing's `basis-48` would be a 192 px height, so those stay 50 px —
-// the frame's Field — in both arms of `lead_layout`. Pixel baselines miss it
-// off Linux; these do not.
+// The card's three forms against the Figma page "Lead form A/B" (77:3531),
+// drawn with kitstart's parts only: the heights the frames give, where the
+// kit can draw them, and the rows the tiles and fields sit in. Pixel
+// baselines miss it off Linux; these do not. The mock panel gives the place
+// no phone and no WhatsApp, so the channel row is "Rappel" alone — the same
+// 42 px row the frames draw with two buttons.
 
 const card = (page: Page) => page.locator("#devis");
 const form = (page: Page) => page.locator("form#devis-form");
@@ -17,95 +16,137 @@ const fieldOf = (control: Locator) => control.locator("xpath=ancestor::*[@data-s
 const rect = (el: Locator) =>
   el.evaluate(node => {
     const r = node.getBoundingClientRect();
-    return { x: r.x, y: r.y, width: r.width, height: r.height };
+    return { x: r.x, y: r.y, width: r.width, height: r.height, bottom: r.bottom };
   });
+const answer = (page: Page, name: string | RegExp) => card(page).getByRole("radio", { name, exact: typeof name === "string" }).click();
 
-const FIELD_HEIGHT = 50;
-
-async function expectPostcodeAndPhone(page: Page, desktop: boolean) {
-  const postcode = await rect(fieldOf(form(page).locator("input[name=locality]")));
-  const phone = await rect(fieldOf(form(page).locator("input[name=mobile]")));
-  expect(postcode.height).toBe(FIELD_HEIGHT);
-  expect(phone.height).toBe(FIELD_HEIGHT);
-  if (desktop) {
-    expect(phone.y).toBe(postcode.y);
-    expect(phone.x).toBeGreaterThan(postcode.x + postcode.width);
-  } else {
-    expect(phone.y).toBeGreaterThanOrEqual(postcode.y + postcode.height);
-    expect(phone.x).toBe(postcode.x);
-    expect(phone.width).toBe(postcode.width);
-  }
+/** The card's height, and the submit's bottom from the card's top. */
+async function geometry(page: Page): Promise<{ height: number; submitBottom: number | null }> {
+  const box = await rect(card(page));
+  const submit = form(page).locator("button[type=submit]");
+  const shown = (await submit.count()) > 0 && (await submit.first().isVisible());
+  return { height: Math.round(box.height), submitBottom: shown ? Math.round((await rect(submit.first())).bottom - box.y) : null };
 }
 
-test.describe("lead_layout a (single)", () => {
-  test("the postcode and the phone share a row where two fit; the need's Field stays 50 px", async ({ page }, testInfo) => {
+/** The tiles of one question, by the row they sit on. */
+async function rows(question: Locator): Promise<number[]> {
+  const tops = await question.locator("label > span").evaluateAll(spans => spans.map(s => Math.round(s.getBoundingClientRect().y)));
+  return [...new Set(tops)].map(y => tops.filter(t => t === y).length);
+}
+const question = (page: Page, input: string) => form(page).locator("fieldset", { has: page.locator(`input[name=estimate_${input}]`) });
+
+test.describe("lead_form a (compact)", () => {
+  test("answered, the card is the frame's height and the button where the frame puts it", async ({ page }, testInfo) => {
     await page.goto("/fr#devis");
     await hydrated(page);
-    const need = card(page).getByRole("combobox", { name: "Prestation" });
-    await expect(need).toBeVisible();
-    expect((await rect(fieldOf(need))).height).toBe(FIELD_HEIGHT);
-    await expectPostcodeAndPhone(page, testInfo.project.name === "desktop");
+    await answer(page, "2 chambres");
+    await answer(page, "40 à 70 m²");
+    await answer(page, "Toutes les 2 semaines");
+    // 77:3611 (1440): 690 tall, the button's bottom at 600. 77:3533 (390) draws
+    // 736 and 646, with "≈ 77 €"; Instrument Sans has no ≈, and "env. 77 €" is
+    // wide enough to push "Détail" to a line of its own at 390: one row (24 px) more.
+    const want = testInfo.project.name === "desktop" ? { height: 690, submitBottom: 600 } : { height: 760, submitBottom: 670 };
+    expect(await geometry(page)).toEqual(want);
+    await expect(form(page).locator("[data-price-cents]")).toHaveText("env. 77 €");
+    await expect(form(page).locator("[data-credit-cents]")).toContainText("38,50 € après crédit d’impôt");
   });
 
-  test("a quote's bedrooms, with no name to pair with, take their row at the Field's height", async ({ page }) => {
+  test("each question's answers on one row, in short words on the phone", async ({ page }, testInfo) => {
     await page.goto("/fr#devis");
     await hydrated(page);
-    await card(page).getByRole("combobox", { name: "Prestation" }).click();
-    await page.getByRole("listbox").getByRole("option", { name: "Grand ménage" }).click();
-    await expect(form(page).locator("input[name=name]")).toHaveCount(0);
-    const phone = await rect(fieldOf(form(page).locator("input[name=mobile]")));
-    const bedrooms = await rect(fieldOf(page.getByRole("combobox", { name: "Chambres (facultatif)" })));
-    expect(bedrooms.height).toBe(FIELD_HEIGHT);
-    expect(bedrooms.y).toBeGreaterThanOrEqual(phone.y + phone.height);
-  });
-
-  // Option B: the estimate's answers 3 to a row on the phone, 4 from `sm`.
-  // A two-line answer ("Toutes les 2 semaines") grows its row, not itself
-  // alone: every tile of a row is as tall as the tallest, and on the phone
-  // none is under the 44 px touch target.
-  test("the estimate's answers sit 3 to a row on the phone, 4 on desktop, a row's tiles alike", async ({ page }, testInfo) => {
-    await page.goto("/fr#devis");
-    await hydrated(page);
+    expect(await rows(question(page, "bedrooms"))).toEqual([6]);
+    expect(await rows(question(page, "surface"))).toEqual([4]);
+    expect(await rows(question(page, "frequency"))).toEqual([4]);
     const desktop = testInfo.project.name === "desktop";
-    const inputs = form(page).locator("fieldset", { has: page.locator("input[name^=estimate_]") });
-    await expect(inputs).not.toHaveCount(0);
-    for (const input of await inputs.all()) {
-      const tiles = await input.locator("label:has(input[name^=estimate_]) > span").evaluateAll(spans =>
-        spans.map(span => {
-          const r = span.getBoundingClientRect();
-          return { x: Math.round(r.x), y: Math.round(r.y), height: r.height };
-        }),
-      );
-      const rows = [...new Set(tiles.map(t => t.y))].map(y => tiles.filter(t => t.y === y));
-      expect(rows[0]?.length).toBe(Math.min(desktop ? 4 : 3, tiles.length));
-      for (const row of rows) expect(new Set(row.map(t => t.height)).size).toBe(1);
-      if (!desktop) for (const tile of tiles) expect(tile.height).toBeGreaterThanOrEqual(44);
+    await expect(question(page, "surface").getByText(desktop ? "40 à 70 m²" : "40–70", { exact: true })).toBeVisible();
+    await expect(question(page, "frequency").getByText(desktop ? "Toutes les 2 semaines" : "2 sem.", { exact: true })).toBeVisible();
+    // The bedrooms are "1 … 5+" on desktop too, as the frame draws them.
+    await expect(question(page, "bedrooms").getByText("5+", { exact: true })).toBeVisible();
+  });
+
+  test("the postcode and the phone share a row on desktop, the line under the phone in its column", async ({ page }, testInfo) => {
+    await page.goto("/fr#devis");
+    await hydrated(page);
+    const postcode = await rect(fieldOf(form(page).locator("input[name=locality]")));
+    const phone = await rect(fieldOf(form(page).locator("input[name=mobile]")));
+    const line = await rect(card(page).getByText("Numéro gardé entre nous · rappel sous 15 min."));
+    expect([postcode.height, phone.height]).toEqual([50, 50]);
+    if (testInfo.project.name === "desktop") {
+      expect(phone.y).toBe(postcode.y);
+      expect(line.x).toBeGreaterThanOrEqual(phone.x);
+    } else {
+      expect(phone.y).toBe(postcode.bottom + 12);
+      expect(phone.width).toBe(postcode.width);
     }
+    expect(Math.round(line.y - phone.bottom)).toBe(6);
   });
 
   test("the callback's phone Field stays 50 px", async ({ page }) => {
     await page.goto("/fr#devis");
     await hydrated(page);
-    await page.locator("#devis-callback").getByText("Rappelez-moi").click();
+    await page.locator("#devis-callback").getByText("Rappel", { exact: true }).click();
     const phone = page.locator("form#devis-callback-form input[name=mobile]");
     await expect(phone).toBeVisible();
-    expect((await rect(fieldOf(phone))).height).toBe(FIELD_HEIGHT);
+    expect((await rect(fieldOf(phone))).height).toBe(50);
   });
 });
 
-test.describe("lead_layout b (qualify-first)", () => {
+test.describe("lead_form b (steps)", () => {
   test.use({ storageState: abState("b") });
 
-  test("the need's tiles are as tall as their grid, and the contact step pairs as in a", async ({ page }, testInfo) => {
+  test("one question a screen at the frames' heights, the heading on the first only", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === "desktop", "the frames of every screen are the phone's (81:3566 … 81:3700)");
     await page.goto("/fr#devis");
     await hydrated(page);
-    // The tiles' fieldset wears `field` too: its legend is sr-only, so it is
-    // exactly its grid unless the pairing's basis became its height.
-    const tiles = form(page).locator("fieldset", { has: page.locator("[data-need-option]") });
-    const group = await rect(tiles);
-    const grid = await rect(tiles.locator(":scope > div"));
-    expect(group.height).toBeLessThanOrEqual(grid.height + 1);
-    await card(page).getByRole("radio", { name: "Ménage standard" }).click();
-    await expectPostcodeAndPhone(page, testInfo.project.name === "desktop");
+    const heading = card(page).getByRole("heading", { name: "Votre devis gratuit" });
+    await expect(heading).toBeVisible();
+    // 81:3566: the services as a list of four 52 px tiles; no channel row before the phone.
+    expect(await geometry(page)).toEqual({ height: 436, submitBottom: null });
+    await answer(page, "Ménage standard");
+    await expect(heading).toBeHidden();
+    // 81:3594: the bedrooms 3 to a row.
+    expect(await rows(question(page, "bedrooms"))).toEqual([3, 3]);
+    expect((await geometry(page)).height).toBe(318);
+    await answer(page, "2 chambres");
+    // 81:3627: the surfaces 2 to a row.
+    expect(await rows(question(page, "surface"))).toEqual([2, 2]);
+    expect((await geometry(page)).height).toBe(318);
+    await answer(page, "40 à 70 m²");
+    // 81:3660: the frequencies one a line, each with its price.
+    await expect(question(page, "frequency").locator("label").first()).toContainText("72 €");
+    await answer(page, /^Toutes les 2 semaines/);
+    await expect(form(page).locator("[data-price-cents]")).toHaveText("env. 77 €");
+    await expect(form(page).locator("input[name=locality]")).toBeFocused();
+  });
+});
+
+test.describe("lead_form c (price first)", () => {
+  test.use({ storageState: abState("c") });
+
+  test("the size first, at the frame's height, with nothing to go back to", async ({ page }, testInfo) => {
+    await page.goto("/fr#devis");
+    await hydrated(page);
+    await expect(card(page).getByRole("heading", { name: "Votre devis gratuit" })).toBeVisible();
+    await expect(card(page).getByRole("button", { name: "Retour" })).toBeHidden();
+    await expect(card(page).getByRole("button", { name: "Voir les prix" })).toBeVisible();
+    // 84:3596: 4 then 2 + "Je ne sais pas" over two columns; 3 then 1 + it.
+    expect(await rows(question(page, "bedrooms"))).toEqual([4, 3]);
+    expect(await rows(question(page, "surface"))).toEqual([3, 2]);
+    if (testInfo.project.name !== "desktop") expect(await geometry(page)).toEqual({ height: 488, submitBottom: null });
+    // The frame's bar: a third of the way.
+    const bar = await rect(card(page).locator("[data-slot=progress]"));
+    const fill = await rect(card(page).locator("[data-slot=progress-indicator]"));
+    expect(Math.round(((fill.x + fill.width - bar.x) / bar.width) * 100)).toBe(33);
+  });
+
+  test("the frequencies as priced cards, the cheapest regular one badged", async ({ page }) => {
+    await page.goto("/fr#devis");
+    await hydrated(page);
+    await answer(page, "2 chambres");
+    await answer(page, "40 à 70 m²");
+    const weekly = question(page, "frequency").locator("label", { hasText: "Chaque semaine" });
+    await expect(weekly).toContainText("Le plus avantageux");
+    await expect(weekly).toContainText("72 €");
+    await expect(question(page, "frequency").locator("label", { hasText: "Le plus avantageux" })).toHaveCount(1);
   });
 });

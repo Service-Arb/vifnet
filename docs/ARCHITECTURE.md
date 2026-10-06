@@ -62,7 +62,7 @@ Mobile 390) verbatim, its sample content included: the rating, the stats, six
 named reviews. Its prices are not: a figure on the page is the price list's —
 the regular clean starts at the list's lowest `priceOf` over every answer
 (`shared/lib/from-price.ts`), and the jobs sold as quotes state none. That content lives in the
-copy (`src/entities/content`) and `shared/config/sample.ts`, never in `site`
+copy (`src/entities/content`), never in `site`
 or `assets/card.toml`, so no JSON-LD, OG card or notification carries it
 (`tests/site.test.ts`). The frame's sample phone number is the exception: it
 is not shown at all. The number is the place's own, from the panel's place
@@ -82,17 +82,17 @@ list. They are one view (`views/subpage`), as aquafix's `LocationSubpage`:
 the home page's header, a `PageHead` with the proof card beside it from `lg`,
 the page's bands, the gold band, the footer and the sticky bar. They carry no
 form: every action lands on the home page's quote card (`#devis`). The
-header and footer links are `shared/config/nav.ts`. The About page's crew,
-towns and map are the frame's sample (OWNER_TODO "design sample content"):
-the chips and the click-to-load map are kitstart's `AreaChips` and
-`MapFacade`, fed from the copy and `shared/config/sample.ts`, never from the
-place, which still names no commune and has no address to map.
+header and footer links are `shared/config/nav.ts`. The About page's crew
+and towns are the frame's sample (OWNER_TODO "design sample content"): the
+chips are kitstart's `AreaChips`, fed from the copy, never from the place,
+which still names no commune. The page has no map: visitors arrive from
+Google Maps, and a map here did not lift conversion.
 
 ## Pages stay cached, and work without JavaScript
 
 Place pages are ISR (`revalidate = 600`): no page reads the request, the link
 mode rides in the `[location]` param — and so does the home page's A/B
-bucket (`_vifnet~lead_layout.b~booking_provider.a`, docs/EXPERIMENTS.md),
+bucket (`_vifnet~lead_form.b~booking_provider.a`, docs/EXPERIMENTS.md),
 which the proxy writes from the visitor's `ab_<key>` cookies under the
 panel's weights and kill switches; the page never asks the panel. The quote form is kitstart's
 `LeadCapture` — the form every Service-Arb brand shares, drawn as the frame's

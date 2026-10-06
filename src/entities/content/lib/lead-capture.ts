@@ -17,6 +17,8 @@ export function leadCaptureText(t: Text, locale: Locale): LeadCaptureText {
     localityPlaceholder: t.quote.placeholders.locality,
     phonePlaceholder: t.quote.placeholders.mobile,
     submit: t.quoteForm.submit,
+    priceLine: t.quote.priceLine,
+    priceTaxCredit: t.quote.priceTaxCredit,
     honeypotLabel: t.quoteForm.honeypotLabel,
   };
 }

@@ -67,7 +67,7 @@ export const OWNER_TODO: readonly OwnerTodo[] = [
   {
     field: "design sample content",
     why:
-      "the page shows the Figma file's sample content as it stands: the 4.9 / 340 Google rating and the stats (500+, 100 %, < 2 hr), six named reviews marked \"Verified\" with Google's logo, Boise, Idaho, \"photos from actual client homes\" over stock photos, and review job photos that show other companies' branded staff (Greentree Cleaning Services, MYT Cleaning & Maintenance); on the sub-pages, the four named team members, the Boise-area towns and the map of Boise behind the About page's button. Replace every one with Vifnet's own before a launch",
+      "the page shows the Figma file's sample content as it stands: the 4.9 / 340 Google rating and the stats (500+, 100 %, < 2 hr), six named reviews marked \"Verified\" with Google's logo, Boise, Idaho, \"photos from actual client homes\" over stock photos, and review job photos that show other companies' branded staff (Greentree Cleaning Services, MYT Cleaning & Maintenance); on the sub-pages, the four named team members and the Boise-area towns. Replace every one with Vifnet's own before a launch",
     blocksLaunch: true,
   },
   ...COPY_TODO,

@@ -30,7 +30,7 @@ function withoutGoneHeader(request: NextRequest): Headers {
  * kitstart's routing, then the home page's experiments under the panel's
  * overrides (`liveExperiments`): `abProxy` assigns the sticky `ab_<key>`
  * cookies (bots skipped), and the visitor is rewritten to the bucket's own
- * path — `/fr/_vifnet~lead_layout.b~booking_provider.a`, every experiment
+ * path — `/fr/_vifnet~lead_form.b~booking_provider.a`, every experiment
  * that runs spelt out — so every bucket is an ISR entry and no page reads the
  * request or the panel.
  */

@@ -3,9 +3,10 @@ import { MIN_FILL_MS, normalizePhone } from "@evinvest/kitstart";
 import { expect, test, type Page } from "@playwright/test";
 import { abState, LEADS_DB, POSTHOG_HOST } from "./env";
 
-// Experiment `lead_layout` (docs/EXPERIMENTS.md), the same key and arms as
-// aquafix's: a is kitstart's LeadCapture on one screen (`single`), b asks the
-// service first (`qualify-first`). The rest of the suite is pinned to a.
+// Experiment `lead_form` (docs/EXPERIMENTS.md), the same key and a/b arms as
+// aquafix's: a is kitstart's LeadCapture on one screen (`single`), b one
+// question per screen (`steps`), c — this brand's — the price first (`steps`
+// over the size and priced frequency cards). The rest of the suite is pinned to a.
 
 type Sent = { event: string; properties: Record<string, unknown> };
 
@@ -23,7 +24,7 @@ async function beacons(page: Page): Promise<Sent[]> {
 
 const ours = (sent: Sent[], event: string) => sent.filter(s => s.event === event).map(s => s.properties);
 /** One experiment's events: every page carries both tests, each with its own exposure and contacts. */
-const of = (sent: Sent[], event: string, experiment = "lead_layout") => ours(sent, event).filter(p => p["experiment"] === experiment);
+const of = (sent: Sent[], event: string, experiment = "lead_form") => ours(sent, event).filter(p => p["experiment"] === experiment);
 
 const card = (page: Page) => page.locator("#devis");
 
@@ -32,7 +33,7 @@ const card = (page: Page) => page.locator("#devis");
 test.describe("variant b", () => {
   test.use({ storageState: abState("b"), extraHTTPHeaders: { "x-forwarded-for": "10.9.0.1" } });
 
-  test("asks the service first, then the contact, and its events carry the arm", async ({ page }) => {
+  test("asks one question a screen, the phone last, and its events carry the arm", async ({ page }) => {
     const sent = await beacons(page);
     await page.goto("/fr#devis");
     await expect(page.locator("form#devis-form select")).toHaveCount(0);
@@ -40,7 +41,7 @@ test.describe("variant b", () => {
     const form = page.locator("form#devis-form");
     await expect(form.locator("input[name=mobile]")).toBeHidden();
 
-    // One tap answers the service and moves on to the first empty field.
+    // A quote asks nothing more: one tap, and the postcode and the phone share the last screen.
     await card(page).getByRole("radio", { name: "Entrée / sortie" }).click();
     await expect(form.locator("input[name=locality]")).toBeFocused();
     await form.locator("input[name=locality]").fill("69003");
@@ -49,20 +50,20 @@ test.describe("variant b", () => {
     await card(page).getByRole("button", { name: "Recevoir mon devis gratuit →" }).click();
     await expect(card(page).getByRole("status")).toBeVisible();
 
-    const arm = { experiment: "lead_layout", variant: "b" };
+    const arm = { experiment: "lead_form", variant: "b" };
     await expect.poll(() => of(sent, "experiment_exposed")).toEqual([expect.objectContaining({ ...arm, forced: false, brand_id: "vifnet", location_id: "vifnet" })]);
-    expect(ours(sent, "lead_form_step")).toEqual([expect.objectContaining({ ...arm, step: "contact", layout: "qualify-first", form_id: "quote" })]);
-    expect(ours(sent, "lead_form_start")).toEqual([expect.objectContaining({ ...arm, layout: "qualify-first" })]);
+    expect(ours(sent, "lead_form_step")).toEqual([expect.objectContaining({ ...arm, step: "phone", layout: "steps", form_id: "quote" })]);
+    expect(ours(sent, "lead_form_start")).toEqual([expect.objectContaining({ ...arm, layout: "steps" })]);
   });
 
   test.describe("without JavaScript", () => {
     test.use({ javaScriptEnabled: false, extraHTTPHeaders: { "x-forwarded-for": "10.9.0.2" } });
 
-    test("shows the contact once a service is checked, posts, and the lead is stored", async ({ page }, testInfo) => {
+    test("shows every screen at once, posts, and the lead is stored", async ({ page }, testInfo) => {
       const mobile = (await import("./support/mobile")).freshMobile("07");
       await page.goto("/fr#devis");
       const form = page.locator("form#devis-form");
-      await expect(form.locator("input[name=mobile]")).toBeHidden();
+      await expect(form.locator("input[name=mobile]")).toBeVisible();
       await form.getByRole("radio", { name: "Entrée / sortie" }).click();
       await form.locator("input[name=locality]").fill(`69003-${testInfo.project.name}`);
       await form.locator("input[name=mobile]").fill(mobile);
@@ -78,6 +79,25 @@ test.describe("variant b", () => {
         db.close();
       }
     });
+  });
+});
+
+test.describe("variant c", () => {
+  test.use({ storageState: abState("c") });
+
+  test("opens on the size, and each screen moved to is counted under the arm", async ({ page }) => {
+    const sent = await beacons(page);
+    await page.goto("/fr#devis");
+    await expect(page.locator("form#devis-form select")).toHaveCount(0);
+    await card(page).getByRole("radio", { name: "2 chambres", exact: true }).click();
+    await card(page).getByRole("radio", { name: "40 à 70 m²", exact: true }).click();
+    await card(page).getByRole("radio", { name: /^Chaque semaine/ }).click();
+    const arm = { experiment: "lead_form", variant: "c", layout: "steps" };
+    await expect.poll(() => of(sent, "experiment_exposed")).toEqual([expect.objectContaining({ experiment: "lead_form", variant: "c" })]);
+    await expect
+      .poll(() => ours(sent, "lead_form_step").map(p => p["step"]))
+      .toEqual(["estimate_frequency", "phone"]);
+    for (const p of ours(sent, "lead_form_step")) expect(p).toMatchObject(arm);
   });
 });
 
@@ -98,7 +118,7 @@ test("the control's events carry the experiment and its variant", async ({ page 
     call.click();
   });
 
-  const base = { experiment: "lead_layout", variant: "a", forced: false, brand_id: "vifnet" };
+  const base = { experiment: "lead_form", variant: "a", forced: false, brand_id: "vifnet" };
   await expect.poll(() => of(sent, "experiment_exposed")).toEqual([expect.objectContaining(base)]);
   await expect
     .poll(() => of(sent, "experiment_contact").map(p => p["channel"]))
@@ -109,7 +129,7 @@ test("the control's events carry the experiment and its variant", async ({ page 
   await expect.poll(() => of(sent, "experiment_exposed", "booking_provider")).toEqual([expect.objectContaining(booking)]);
   await expect.poll(() => of(sent, "experiment_contact", "booking_provider").map(p => p["channel"])).toEqual(["form_open", "phone"]);
   // kitstart's own funnel, on one schema across brands: the arm rides on it too.
-  const kit = { experiment: "lead_layout", variant: "a", layout: "single", form_id: "quote", brand_id: "vifnet" };
+  const kit = { experiment: "lead_form", variant: "a", layout: "single", form_id: "quote", brand_id: "vifnet" };
   await expect.poll(() => ours(sent, "lead_form_start")).toEqual([expect.objectContaining(kit)]);
   await expect.poll(() => ours(sent, "lead_form_view")).toEqual([expect.objectContaining(kit)]);
 });
@@ -119,11 +139,11 @@ test.describe("a forced visit", () => {
 
   test("renders the variant asked for, and marks the browser as QA", async ({ page, context }) => {
     const sent = await beacons(page);
-    await page.goto("/fr?ab_lead_layout=b#devis");
+    await page.goto("/fr?ab_lead_form=b#devis");
     await expect(page.locator("form#devis-form [data-need-option]")).toHaveCount(4);
     await expect.poll(() => of(sent, "experiment_exposed")).toEqual([expect.objectContaining({ variant: "b", forced: true })]);
     const jar = Object.fromEntries((await context.cookies()).map(c => [c.name, c.value]));
-    expect(jar).toMatchObject({ ab_lead_layout: "b", ab__qa: "1" });
+    expect(jar).toMatchObject({ ab_lead_form: "b", ab__qa: "1" });
   });
 });
 
@@ -132,7 +152,7 @@ test.describe("a new visitor", () => {
 
   test("gets a sticky assignment on the home page, and none on a sub-page", async ({ request }) => {
     const home = await request.get("/fr", { headers: { cookie: "" } });
-    expect(home.headers()["set-cookie"] ?? "").toMatch(/ab_lead_layout=[ab];/);
+    expect(home.headers()["set-cookie"] ?? "").toMatch(/ab_lead_form=[abc];/);
     // The panel's weights (mock-panel.mjs: booking_provider all on b), not the code's 50/50.
     expect(home.headers()["set-cookie"] ?? "").toMatch(/ab_booking_provider=b;/);
     const sub = await request.get("/fr/prices", { headers: { cookie: "" } });
