@@ -2,6 +2,7 @@ import { AnalyticsBoundary } from "@evinvest/kitstart/react";
 import type { ReactNode } from "react";
 import { loadPlace } from "@/views/place/server";
 import { serverEnv } from "@/shared/config/env";
+import { QA_COOKIE } from "@/shared/config/experiments";
 import { site } from "@/shared/config/site";
 
 /**
@@ -21,8 +22,9 @@ export default async function PlaceLayout({ children, params }: { children: Reac
   const { view } = await loadPlace(params);
   const env = serverEnv();
   // The key is read from the container when the page renders, never inlined.
+  // qaCookie: a test browser's page views and intents say `forced: true` too.
   return (
-    <AnalyticsBoundary target={{ key: env.posthogKey, host: env.posthogHost, brandId: site.brand.id }} placeSlug={view.place.slug}>
+    <AnalyticsBoundary target={{ key: env.posthogKey, host: env.posthogHost, brandId: site.brand.id }} placeSlug={view.place.slug} qaCookie={QA_COOKIE}>
       {children}
     </AnalyticsBoundary>
   );

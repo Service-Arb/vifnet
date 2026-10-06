@@ -144,11 +144,20 @@ test.describe("a forced visit", () => {
     await expect.poll(() => of(sent, "experiment_exposed")).toEqual([expect.objectContaining({ variant: "b", forced: true })]);
     const jar = Object.fromEntries((await context.cookies()).map(c => [c.name, c.value]));
     expect(jar).toMatchObject({ ab_lead_form: "b", ab__qa: "1" });
+    // kitstart's own page view says so too (AnalyticsBoundary's qaCookie).
+    await expect.poll(() => ours(sent, "location_page_view")).toEqual([expect.objectContaining({ forced: true })]);
   });
 });
 
 test.describe("a new visitor", () => {
   test.use({ storageState: abState(null) });
+
+  test("sends its page view with no forced key at all", async ({ page }) => {
+    const sent = await beacons(page);
+    await page.goto("/fr");
+    await expect.poll(() => ours(sent, "location_page_view")).toHaveLength(1);
+    expect(ours(sent, "location_page_view")[0]).not.toHaveProperty("forced");
+  });
 
   test("gets a sticky assignment on the home page, and none on a sub-page", async ({ request }) => {
     const home = await request.get("/fr", { headers: { cookie: "" } });

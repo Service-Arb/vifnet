@@ -1,8 +1,8 @@
 import { contactOf, faqPageNode, placeGraph, type AnalyticsTarget, type PlaceView, type PricingModel } from "@evinvest/kitstart";
-import { JsonLd } from "@evinvest/kitstart/react";
+import { AbSwitcher, JsonLd } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { ExperimentScope } from "@/features/experiment";
-import { BOOKING_ARMS, LEAD_FORMS } from "@/shared/config/experiments";
+import { abSwitcherExperiments, BOOKING_ARMS, LEAD_FORMS, QA_COOKIE } from "@/shared/config/experiments";
 import type { Locale } from "@/shared/config/i18n";
 import { ANCHORS, placeNav } from "@/shared/config/nav";
 import { site } from "@/shared/config/site";
@@ -108,6 +108,12 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
           <StickyBar copy={copy} quoteHref={nav.quoteHref} />
         </ExperimentScope>
       </ExperimentScope>
+      {/* The QA menu, here and not in the layout: the proxy forces and assigns
+          arms on a place's home page only, so elsewhere the menu could switch
+          nothing. Plain props, no cookie read: the gate decides after mount and
+          the page stays static. bottom-20 lifts the chip over the StickyBar,
+          which spans the bottom at every width (64 px). */}
+      <AbSwitcher experiments={abSwitcherExperiments()} qaCookie={QA_COOKIE} className="bottom-20" />
     </>
   );
 }

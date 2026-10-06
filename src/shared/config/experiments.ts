@@ -1,5 +1,6 @@
 import type { ExperimentConfig, OverriddenConfig } from "@evinvest/experiments";
 import type { BookingProvider } from "@evinvest/kitstart";
+import type { AbSwitcherExperiment } from "@evinvest/kitstart/react";
 import type { LeadForm } from "./lead";
 
 /**
@@ -51,6 +52,29 @@ export const LEAD_FORMS = { a: "compact", b: "steps", c: "price-first" } as cons
 
 /** `booking_provider`'s arms as kitstart's `bookingOf` names the providers. */
 export const BOOKING_ARMS = { a: "manual", b: "google_calendar" } as const satisfies Record<VariantOf<"booking_provider">, BookingProvider>;
+
+/**
+ * The QA menu's words (docs/EXPERIMENTS.md, "Forcing a variant"): every
+ * experiment and every one of its variants, no more — a variant the code
+ * drops or adds fails the type here, not on a tester's phone.
+ */
+const AB_SWITCHER_LABELS = {
+  lead_form: { label: "Lead form", variants: { a: "Compact", b: "Steps", c: "Price first" } },
+  booking_provider: { label: "Booking", variants: { a: "Call back", b: "Google Calendar" } },
+} as const satisfies { [K in ExperimentKey]: { label: string; variants: Record<VariantOf<K>, string> } };
+
+/**
+ * {@link AB_SWITCHER_LABELS} as kitstart's `AbSwitcher` takes them. A function,
+ * not a constant: this module is in the client bundle (`ExperimentScope`), and
+ * a top-level `.map` would ship there although only the server layout reads it.
+ */
+export function abSwitcherExperiments(): AbSwitcherExperiment[] {
+  return Object.entries(AB_SWITCHER_LABELS).map(([key, { label, variants }]) => ({
+    key,
+    label,
+    variants: Object.entries(variants).map(([value, variantLabel]) => ({ value, label: variantLabel })),
+  }));
+}
 
 /** `?ab_<key>=<variant>` forces a variant (QA); the same prefix as the cookie. */
 export const FORCE_PARAM = "ab_";
