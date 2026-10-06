@@ -141,8 +141,10 @@ the next page load. The labels are `AB_SWITCHER_LABELS` in
 ## Ending an experiment
 
 1. Switch it off in the panel's "Experiments" screen — no deploy: within
-   30 s every request gets the control, cookies are ignored and no event is
-   sent. (`enabled: false` in `src/shared/config/experiments.ts` does the same
+   30 s every request gets the control and no event is sent; the home page
+   drops the test's `ab_<key>` cookie from each browser that still has one
+   (a visitor re-entering later is drawn anew), and the QA menu shows the test
+   as "not running" (kitstart 0.17.0, not yet in use here). (`enabled: false` in `src/shared/config/experiments.ts` does the same
    with a deploy, and is what the next declaration says.)
 2. If b won, make b the page (the Figma frame follows, or the owner signs the
    departure off), then delete the experiment, its variant code and its row

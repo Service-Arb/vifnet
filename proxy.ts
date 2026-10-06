@@ -6,7 +6,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { liveExperiments } from "@/shared/config/env";
 import { EXPERIMENTS, type ExperimentKey, FORCE_PARAM, QA_COOKIE } from "@/shared/config/experiments";
 import { site } from "@/shared/config/site";
-import { assignedBy, bucketSuffix, isBot, parseLocation, runningOf } from "@/shared/lib/experiments";
+import { assignedBy, bucketSuffix, disabledCookies, isBot, parseLocation, runningOf } from "@/shared/lib/experiments";
 
 const kitstart = createProxy(site);
 const routing = createRouting(site);
@@ -61,13 +61,18 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (decision.kind !== "serve" || !homeOf(decision.pathname) || isBot(request.headers.get("user-agent"))) return routed;
 
   const live = await liveExperiments();
+  const read = (name: string) => request.cookies.get(name)?.value;
+  const dropped = disabledCookies(live, read);
   // Writes new assignments into `request.cookies` and its response's Set-Cookie.
   const assigned = abProxy(live, request, { forceParam: FORCE_PARAM });
-  const { assigned: bucket } = assignedBy(live, name => request.cookies.get(name)?.value);
+  const { assigned: bucket } = assignedBy(live, read);
   const suffix = bucketSuffix(bucket);
   const response = suffix ? NextResponse.rewrite(new URL(`${decision.pathname}${suffix}${url.search}`, url), { request: { headers: withoutGoneHeader(request) } }) : routed;
 
   for (const cookie of assigned.cookies.getAll()) response.cookies.set(cookie);
+  // A switched-off test's cookie is dropped, not kept for its return: the QA
+  // menu would show its stale arm, and a visitor re-entering is drawn anew.
+  for (const name of dropped) response.cookies.set(name, "", { path: "/", maxAge: 0, sameSite: "lax" });
   if (KEYS.some(k => forcedVariant(live, k, url.searchParams.get(`${FORCE_PARAM}${k}`)) !== undefined)) {
     response.cookies.set(QA_COOKIE, "1", { path: "/", maxAge: ASSIGNMENT_MAX_AGE, sameSite: "lax" });
   }
