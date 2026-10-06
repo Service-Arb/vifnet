@@ -110,10 +110,13 @@ stop early on a lucky day — the thresholds assume the minimums above.
 ## Forcing a variant (QA)
 
 `/fr?ab_lead_form=b` (or `=a`, `=c`) renders that arm and stores it in the cookie. A forced
-visit also sets `ab__qa=1` for 30 days: every event from that browser says
-`forced: true` — kitstart's page view and contact intent too (`AnalyticsBoundary`'s
-`qaCookie`) — and the funnel's `forced` filter leaves it out. Clear the site's cookies to be a
-normal visitor again.
+visit also sets `ab__qa=1` for 30 days: that browser's experiment events say
+`forced: true`, and so do kitstart's `location_page_view` and `contact_intent_click`
+(`AnalyticsBoundary`'s `qaCookie`); the funnel's `forced` filter leaves them out, and a
+traffic insight does too once it filters `forced` is not `true`. kitstart's lead-form events
+(`lead_form_*`, `lead_booking_*`, the server's `lead_form_submit`) are not tagged yet
+(EV-invest/lib#219): a QA lead still counts there. **Leave test** in the QA menu, or clearing
+the site's cookies, makes the browser a normal visitor again.
 
 **The menu (kitstart's `AbSwitcher`).** A test visit carries an "A/B" chip in
 the bottom-right corner of a place's home page, above the sticky bar, with the
