@@ -130,4 +130,22 @@ test.describe("from the menu", () => {
     await expect(chip(page)).toHaveCount(0);
     expect((await context.cookies()).map(c => c.name)).not.toContain("ab__qa");
   });
+
+  test("Leave test from the form's anchor reloads the page, not just the hash", async ({ page, context }) => {
+    // The test visit is marked; the page left is then the plain home page at
+    // its form, so Leave's target differs from it by nothing but the reload.
+    await page.goto("/fr?ab_lead_form=b");
+    await page.goto("/fr#devis");
+    await chip(page).click();
+    const { exposed } = await gateDecided(page);
+    const loaded = page.waitForEvent("load");
+    await button(page, "Leave test").click();
+
+    await loaded;
+    await exposed;
+    // kitstart drops the anchor on purpose: a URL differing by its hash alone would only scroll.
+    await expect(page).toHaveURL(url => url.pathname === "/fr" && url.hash === "");
+    await expect(chip(page)).toHaveCount(0);
+    expect((await context.cookies()).map(c => c.name)).not.toContain("ab__qa");
+  });
 });
