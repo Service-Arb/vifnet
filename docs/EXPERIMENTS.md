@@ -111,7 +111,8 @@ stop early on a lucky day — the thresholds assume the minimums above.
 
 `/fr?ab_lead_form=b` (or `=a`, `=c`) renders that arm and stores it in the cookie. A forced
 visit also sets `ab__qa=1` for 30 days: every event from that browser says
-`forced: true` and the funnel's `forced` filter leaves it out. Clear the site's cookies to be a
+`forced: true` — kitstart's page view and contact intent too (`AnalyticsBoundary`'s
+`qaCookie`) — and the funnel's `forced` filter leaves it out. Clear the site's cookies to be a
 normal visitor again.
 
 **The menu (kitstart's `AbSwitcher`).** A test visit carries an "A/B" chip in
