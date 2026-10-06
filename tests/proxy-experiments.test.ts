@@ -42,6 +42,33 @@ describe("the proxy under the panel's overrides", () => {
     expect(cookies.get("ab_booking_provider")?.value).toBe("b");
   });
 
+  it("drops a switched-off test's cookie, keeps a running one's, and keeps the other Set-Cookies", async () => {
+    overrides = { lead_form: { enabled: false } };
+    const response = await proxy(get("/fr?ab_booking_provider=b", "ab_lead_form=b; ab_booking_provider=a"));
+    const sent = response.headers.getSetCookie();
+    const dropped = sent.find(c => c.startsWith("ab_lead_form="));
+    expect(dropped).toMatch(/^ab_lead_form=;/);
+    expect(dropped).toMatch(/Max-Age=0/i);
+    expect(dropped).toMatch(/Path=\//i);
+    expect(dropped).toMatch(/SameSite=Lax/i);
+    expect(response.cookies.get("ab_booking_provider")?.value).toBe("b");
+    expect(response.cookies.get("ab__qa")?.value).toBe("1");
+  });
+
+  it("leaves a running test's cookie alone, and sends nothing for a switched-off test the browser never had", async () => {
+    const running = await proxy(get("/fr", "ab_lead_form=b; ab_booking_provider=a"));
+    expect(running.headers.getSetCookie().filter(c => c.startsWith("ab_lead_form="))).toEqual([]);
+    overrides = { lead_form: { enabled: false } };
+    const never = await proxy(get("/fr", "ab_booking_provider=a"));
+    expect(never.headers.getSetCookie().filter(c => c.startsWith("ab_lead_form="))).toEqual([]);
+  });
+
+  it("drops no cookie for a bot, which gets none either", async () => {
+    overrides = { lead_form: { enabled: false } };
+    const response = await proxy(new NextRequest(new URL("/fr", "http://localhost"), { headers: { host: "localhost", "user-agent": "Googlebot/2.1", cookie: "ab_lead_form=b" } }));
+    expect(response.headers.getSetCookie().filter(c => c.startsWith("ab_"))).toEqual([]);
+  });
+
   it("takes no forced variant of a switched-off test, so the browser is not marked QA for it", async () => {
     overrides = { lead_form: { enabled: false } };
     const response = await proxy(get("/fr?ab_lead_form=b", "ab_booking_provider=a"));
