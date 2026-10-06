@@ -1,7 +1,8 @@
-import { AnalyticsBoundary } from "@evinvest/kitstart/react";
+import { AbSwitcher, AnalyticsBoundary } from "@evinvest/kitstart/react";
 import type { ReactNode } from "react";
 import { loadPlace } from "@/views/place/server";
 import { serverEnv } from "@/shared/config/env";
+import { abSwitcherExperiments, QA_COOKIE } from "@/shared/config/experiments";
 import { site } from "@/shared/config/site";
 
 /**
@@ -24,6 +25,9 @@ export default async function PlaceLayout({ children, params }: { children: Reac
   return (
     <AnalyticsBoundary target={{ key: env.posthogKey, host: env.posthogHost, brandId: site.brand.id }} placeSlug={view.place.slug}>
       {children}
+      {/* Plain props and no cookie read here: the gate decides after mount, so the page stays static.
+          bottom-20 lifts the chip over the StickyBar, which spans the bottom at every width (64 px). */}
+      <AbSwitcher experiments={abSwitcherExperiments()} qaCookie={QA_COOKIE} className="bottom-20" />
     </AnalyticsBoundary>
   );
 }

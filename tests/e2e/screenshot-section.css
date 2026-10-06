@@ -3,3 +3,9 @@
 [data-band="sticky"] {
   display: none !important;
 }
+
+/* The QA menu's chip is fixed to a corner like the bar, and only a test
+ * visit (or a dev server) has it; no section shot includes it either. */
+[data-ab-switcher] {
+  display: none !important;
+}
