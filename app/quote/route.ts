@@ -3,6 +3,7 @@ import { after } from "next/server";
 import { TEXT } from "@/entities/content";
 import { experimentSink, withExperimentLead, witnessedDefer } from "@/features/experiment/server";
 import { liveExperiments, notifier, pricing, serverEnv, webhook } from "@/shared/config/env";
+import { QA_COOKIE } from "@/shared/config/experiments";
 import { ANCHORS } from "@/shared/config/nav";
 import { site } from "@/shared/config/site";
 
@@ -11,6 +12,8 @@ export const dynamic = "force-dynamic";
 
 const route = quoteRoute(site, {
   env: serverEnv,
+  // A QA browser's lead_form_submit says forced: true, as its page events do.
+  qaCookie: QA_COOKIE,
   notifier,
   webhook,
   // The server prices an estimate itself, from the posted answers: a posted amount is never read.
