@@ -114,6 +114,25 @@ visit also sets `ab__qa=1` for 30 days: every event from that browser says
 `forced: true` and the funnel's `forced` filter leaves it out. Clear the site's cookies to be a
 normal visitor again.
 
+**The menu (kitstart's `AbSwitcher`).** A test visit carries an "A/B" chip in
+the bottom-right corner, above the sticky bar, with the arm of each experiment;
+a dev server shows it always, production only to a browser with `ab__qa`. To
+get it on a phone:
+
+1. Open a place with a forced arm, `/fr?ab_lead_form=a` — that sets `ab__qa`
+   and the chip appears on that page and on every page after it.
+2. Tap the chip: each experiment lists its variants (`lead_form`: Compact,
+   Steps, Price first; `booking_provider`: Call back, Google Calendar). A tap
+   reloads the page on that variant, the same `?ab_<key>=` link as above.
+3. **Reset** draws a new random arm for every experiment; the visit stays a
+   test one (`ab__qa` kept, events still `forced: true`).
+4. **Leave test** clears the arms and `ab__qa`: the browser is a normal visitor
+   again and the chip is gone on the next page.
+
+`ab__qa` lives 30 days from the last forced visit. Minimize and Hide last until
+the next page load. The labels are `AB_SWITCHER_LABELS` in
+`src/shared/config/experiments.ts`, checked against `EXPERIMENTS`.
+
 ## Ending an experiment
 
 1. Switch it off in the panel's "Experiments" screen — no deploy: within
