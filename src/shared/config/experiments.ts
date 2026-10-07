@@ -124,7 +124,8 @@ export function abSwitcherExperiments({ whatsapp, leadChannelOwnsCard = false }:
 export const FORCE_PARAM = "ab_";
 
 /**
- * Set on a forced visit, until the home page is opened with no force: every
+ * Set on a forced visit, until an outside entry to the home page with no force
+ * or the menu's Reset ends QA (the proxy's `leavesQa`): every
  * event from that browser says `forced: true`, and PostHog's funnel leaves it
  * out; kitstart's menu shows while it has a value. The value is the visitor's
  * own arms, given back when QA ends (`qaSnapshot`, the proxy) — never a flag.
