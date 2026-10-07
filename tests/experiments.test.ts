@@ -9,7 +9,7 @@ import { messengerRuleDisagreements } from "@evinvest/kitstart/testing";
 import { abSwitcherExperiments, BOOKING_ARMS, EXPERIMENT_SUMMARIES, EXPERIMENTS } from "@/shared/config/experiments";
 import { LEAD } from "@/shared/config/lead";
 import { site } from "@/shared/config/site";
-import { assignedBy, bucketSuffix, cardArms, CONTROL, isBot, isQaMark, parseLocation, parseQaSnapshot, placeOfLocation, qaSnapshot, runningOf, variantsOf } from "@/shared/lib/experiments";
+import { assignedBy, type Bucket, bucketSuffix, cardArms, CONTROL, isBot, isQaMark, leadChannelOffered, leadChannelOwnsCard, parseLocation, parseQaSnapshot, placeOfLocation, qaSnapshot, runningOf, variantsOf } from "@/shared/lib/experiments";
 
 /** The config as the panel serves it: none of its overrides, or lead_form switched off. */
 const AS_CODED = applyOverrides(EXPERIMENTS, {});
@@ -145,6 +145,27 @@ describe("lead_channel over lead_form on the quote card", () => {
   it("is the bare control with no test running", () => {
     expect(cardArms({}, BOTH)).toEqual({ form: "compact", messenger: undefined, experiment: undefined, superseded: false });
   });
+
+  // The QA menu's labels read `leadChannelOwnsCard`; the card reads `cardArms`: they must never disagree.
+  it.each<[string, Bucket, MessengerFacts, boolean]>([
+    ["WhatsApp alone", { lead_form: "b", lead_channel: "c" }, WHATSAPP_ONLY, true],
+    ["both messengers", { lead_form: "c", booking_provider: "b", lead_channel: "b" }, BOTH, true],
+    ["both messengers, lead_channel's control", { lead_form: "c", lead_channel: "a" }, BOTH, true],
+    ["the bot alone", { lead_form: "c", lead_channel: "g" }, TELEGRAM_ONLY, false],
+    ["no messenger", { lead_form: "b", lead_channel: "c" }, NONE, false],
+    ["lead_channel not running", { lead_form: "b" }, BOTH, false],
+    ["no test running", {}, BOTH, false],
+  ])("gives the card to lead_channel exactly when the menu says it owns it: %s", (_, bucket, messengers, owns) => {
+    expect(leadChannelOwnsCard(bucket, messengers)).toBe(owns);
+    expect(cardArms(bucket, messengers).superseded).toBe(owns);
+  });
+
+  it("offers lead_channel only where the place has WhatsApp", () => {
+    expect(leadChannelOffered(WHATSAPP_ONLY)).toBe(true);
+    expect(leadChannelOffered(BOTH)).toBe(true);
+    expect(leadChannelOffered(TELEGRAM_ONLY)).toBe(false);
+    expect(leadChannelOffered(NONE)).toBe(false);
+  });
 });
 
 describe("the place's messengers", () => {
@@ -222,6 +243,10 @@ describe("the QA mark", () => {
     expect(parseQaSnapshot("-")).toEqual({});
   });
 
+  it("keeps the valid pairs of a snapshot that mixes them with broken ones", () => {
+    expect(parseQaSnapshot("lead_form.b~nonsense~lead_channel.z~.a~booking_provider.~booking_provider.b~lead_channel.f")).toEqual({ lead_form: "b", booking_provider: "b", lead_channel: "f" });
+  });
+
   it("skips a part naming a key or variant the code no longer has, and the legacy 1", () => {
     expect(parseQaSnapshot("lead_form.z~hero.b~booking_provider.b")).toEqual({ booking_provider: "b" });
     expect(parseQaSnapshot("1")).toEqual({});
@@ -235,6 +260,18 @@ describe("the QA menu's experiments", () => {
 
   it("calls lead_channel plainly on a place with WhatsApp", () => {
     expect(abSwitcherExperiments({ whatsapp: true }).map(e => e.label)).toEqual(["Lead form", "Booking", "Lead channel"]);
+  });
+
+  it("calls lead_form inactive where lead_channel owns the card, and lead_channel plainly", () => {
+    expect(abSwitcherExperiments({ whatsapp: true, leadChannelOwnsCard: true }).map(e => e.label)).toEqual([
+      "Lead form — inactive here (lead channel owns the card)",
+      "Booking",
+      "Lead channel",
+    ]);
+  });
+
+  it("calls lead_form plainly where the card is its own", () => {
+    expect(abSwitcherExperiments({ whatsapp: true, leadChannelOwnsCard: false }).map(e => e.label)).toEqual(["Lead form", "Booking", "Lead channel"]);
   });
 
   it("offers every variant either way: a tap still forces it", () => {

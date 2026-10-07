@@ -48,7 +48,7 @@ export interface CardArms {
  */
 export function cardArms(bucket: Bucket, messengers: MessengerFacts): CardArms {
   const { lead_form: form, lead_channel: channel } = variantsOf(bucket);
-  if (bucket.lead_channel !== undefined && messengers.whatsapp !== null) {
+  if (leadChannelOwnsCard(bucket, messengers)) {
     return { form: LEAD_FORMS.a, messenger: MESSENGER_ARMS[channel], experiment: { name: "lead_channel", variant: channel }, superseded: true };
   }
   return {
@@ -57,6 +57,21 @@ export function cardArms(bucket: Bucket, messengers: MessengerFacts): CardArms {
     experiment: bucket.lead_form === undefined ? undefined : { name: "lead_form", variant: form },
     superseded: false,
   };
+}
+
+/**
+ * Whether `lead_channel` can draw anything at a place: it needs WhatsApp
+ * (kitstart's `messengerShownOf`); a bot alone leaves every arm inert. The
+ * one rule the card ({@link leadChannelOwnsCard}) and the QA menu's labels
+ * both read, so the menu never calls inert a test the card runs, or the reverse.
+ */
+export function leadChannelOffered(messengers: MessengerFacts): boolean {
+  return messengers.whatsapp !== null;
+}
+
+/** Whether `lead_channel` draws this bucket's card at the place, `lead_form` superseded ({@link cardArms}). */
+export function leadChannelOwnsCard(bucket: Bucket, messengers: MessengerFacts): boolean {
+  return bucket.lead_channel !== undefined && leadChannelOffered(messengers);
 }
 
 /**
@@ -125,7 +140,7 @@ export function assignedBy(live: LiveExperiments, cookie: (name: string) => stri
  * rule of kitstart's menu gate and `qaVisit`. Its value is the visitor's own
  * arms ({@link qaSnapshot}), not a flag, so it is never compared to `"1"`.
  */
-export function isQaMark(value: string | undefined): boolean {
+export function isQaMark(value: string | undefined): value is string {
   return value !== undefined && value !== "";
 }
 

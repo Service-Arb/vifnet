@@ -50,11 +50,34 @@ async function gateDecided(page: Page): Promise<{ exposed: Promise<unknown> }> {
   return { exposed };
 }
 
+/** The headers of the next document request, as the browser sent them. */
+async function nextDocumentHeaders(page: Page): Promise<Record<string, string>> {
+  const request = await page.waitForRequest(r => r.isNavigationRequest() && r.frame() === page.mainFrame());
+  return request.allHeaders();
+}
+
 /** The cookies the next document request carries, by name. */
 async function nextDocumentCookies(page: Page): Promise<Record<string, string>> {
-  const request = await page.waitForRequest(r => r.isNavigationRequest() && r.frame() === page.mainFrame());
-  const header = (await request.allHeaders())["cookie"] ?? "";
+  const header = (await nextDocumentHeaders(page))["cookie"] ?? "";
   return Object.fromEntries(header.split("; ").filter(Boolean).map(pair => pair.split("=", 2) as [string, string]));
+}
+
+/**
+ * lead_form's exposure as the next page sends it: the arm that page rendered
+ * (`ExperimentScope` takes it from the bucket), not the cookie the chip reads.
+ * The beacon is only watched, not routed: with any `page.route` on, Playwright
+ * reports a document request's headers without `sec-fetch-site`.
+ */
+function nextLeadFormExposure(page: Page): Promise<Record<string, unknown>> {
+  let navigated = false;
+  page.on("framenavigated", frame => {
+    if (frame === page.mainFrame()) navigated = true;
+  });
+  const exposure = page.waitForRequest(r => {
+    const body = r.postData() ?? "";
+    return navigated && r.url().startsWith(POSTHOG_HOST) && body.includes("experiment_exposed") && body.includes('"experiment":"lead_form"');
+  });
+  return exposure.then(r => (JSON.parse(r.postData() ?? "{}") as { properties: Record<string, unknown> }).properties);
 }
 
 test("a forced visit shows the chip with the forced arm", async ({ page }) => {
@@ -105,6 +128,85 @@ test("the menu calls lead_channel inactive on a place with no WhatsApp", async (
   await expect(menu.getByRole("group", { name: "Lead channel — inactive here (no WhatsApp)" })).toBeVisible();
 });
 
+test.describe("moving around the site", () => {
+  test("the language link keeps the forced arm: the chip and the variant in English", async ({ page }) => {
+    await page.goto("/fr?ab_lead_form=b");
+    await expect(chip(page)).toBeVisible();
+    const sent = nextDocumentHeaders(page);
+    const exposure = nextLeadFormExposure(page);
+    await page.locator("footer#footer").getByRole("link", { name: "English" }).click();
+
+    // What the proxy keeps QA on: a navigation from the site itself.
+    expect((await sent)["sec-fetch-site"]).toBe("same-origin");
+    await expect(page).toHaveURL(url => url.pathname === "/en" && !url.searchParams.has("ab_lead_form"));
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    expect(await exposure).toMatchObject({ experiment: "lead_form", variant: "b", forced: true });
+    await expect(chip(page)).toHaveText(/^A\/B\s*b\s*a\s*a$/);
+  });
+
+  test("the logo keeps the forced arm on the plain home page", async ({ page }) => {
+    await page.goto("/fr?ab_lead_form=b");
+    await expect(chip(page)).toBeVisible();
+    const sent = nextDocumentHeaders(page);
+    const exposure = nextLeadFormExposure(page);
+    await page.getByRole("link", { name: "Vifnet — accueil" }).click();
+
+    expect((await sent)["sec-fetch-site"]).toBe("same-origin");
+    await expect(page).toHaveURL(url => url.pathname === "/fr" && url.search === "");
+    expect(await exposure).toMatchObject({ experiment: "lead_form", variant: "b", forced: true });
+    await expect(chip(page)).toHaveText(/^A\/B\s*b\s*a\s*a$/);
+  });
+
+  test("a tap in the menu after the language link keeps the earlier force", async ({ page }) => {
+    await page.goto("/fr?ab_lead_form=c");
+    await expect(chip(page)).toBeVisible();
+    await page.locator("footer#footer").getByRole("link", { name: "English" }).click();
+    await expect(page).toHaveURL(url => url.pathname === "/en");
+    await expect(chip(page)).toHaveText(/^A\/B\s*c\s*a\s*a$/);
+
+    const exposure = nextLeadFormExposure(page);
+    await chip(page).click();
+    // This place has no WhatsApp: lead_channel's arms draw nothing here, but a tap still forces one.
+    const channel = page.getByRole("dialog", { name: "A/B test switcher" }).getByRole("group", { name: "Lead channel — inactive here (no WhatsApp)" });
+    await channel.getByRole("button", { name: "VF-4 Sheet" }).click();
+
+    await expect(page).toHaveURL(url => url.pathname === "/en" && url.searchParams.get("ab_lead_channel") === "e" && !url.searchParams.has("ab_lead_form"));
+    expect(await exposure).toMatchObject({ experiment: "lead_form", variant: "c", forced: true });
+    await expect(chip(page)).toHaveText(/^A\/B\s*c\s*a\s*e$/);
+  });
+});
+
+test.describe("the room under the footer", () => {
+  const spacer = (page: Page) => page.locator("footer#footer + div[aria-hidden]");
+
+  /** What a tap at the centre of the footer's language link lands on, as `TAG text`. */
+  async function tapTargetOfEnglish(page: Page): Promise<string> {
+    await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" }));
+    return page
+      .locator("footer#footer")
+      .getByRole("link", { name: "English" })
+      .evaluate(link => {
+        const box = link.getBoundingClientRect();
+        const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+        return hit === null ? "nothing" : `${hit.tagName} ${hit.getAttribute("aria-label") ?? hit.textContent ?? ""}`;
+      });
+  }
+
+  test("leaves the language link tappable under the chip at the page's end", async ({ page }) => {
+    await page.goto("/fr?ab_lead_form=b");
+    await expect(chip(page)).toBeVisible();
+    expect(await tapTargetOfEnglish(page)).toBe("A English");
+  });
+
+  test("is the sticky bar's 56 px for a visitor with no QA", async ({ page }) => {
+    const { exposed } = await gateDecided(page);
+    await page.goto("/fr");
+    await exposed;
+    await expect(chip(page)).toHaveCount(0);
+    await expect(spacer(page)).toHaveCSS("height", "56px");
+  });
+});
+
 test.describe("from the menu", () => {
   const button = (page: Page, name: string) => page.getByRole("dialog", { name: "A/B test switcher" }).getByRole("button", { name });
 
@@ -116,6 +218,7 @@ test.describe("from the menu", () => {
     await button(page, "Reset").click();
 
     // What the reload asks with: no arm, and the own arms in the QA mark for the proxy to give back.
+    // The reload is a same-origin navigation like any of the site's links: no arm at all tells it apart.
     const cookies = await sent;
     expect(cookies).not.toHaveProperty("ab_lead_form");
     expect(cookies).not.toHaveProperty("ab_booking_provider");

@@ -6,7 +6,7 @@ import { abSwitcherExperiments, BOOKING_ARMS, QA_COOKIE } from "@/shared/config/
 import type { Locale } from "@/shared/config/i18n";
 import { ANCHORS, placeNav } from "@/shared/config/nav";
 import { site } from "@/shared/config/site";
-import { type Bucket, cardArms, variantsOf } from "@/shared/lib/experiments";
+import { type Bucket, cardArms, leadChannelOffered, variantsOf } from "@/shared/lib/experiments";
 import { fromPrices } from "@/shared/lib/from-price";
 import { Closing } from "@/widgets/closing";
 import { FaqBand } from "@/widgets/faq";
@@ -123,8 +123,13 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
               <Closing copy={copy} id={SECTION_IDS.closing} quoteHref={nav.quoteHref} />
             </main>
             <SiteFooter copy={copy} year={now.getFullYear()} links={nav.footer} other={nav.other} />
-            {/* Room under the footer for the sticky bar, on the footer's colour. */}
-            <div aria-hidden="true" className="dark h-14 bg-popover" />
+            {/* Room under the footer for the sticky bar, on the footer's colour.
+                While the QA chip is mounted (bottom-20 + its 44 px), more room,
+                so at the page's end the footer's last row — the only language
+                switch — clears the chip's top: 112 + the footer's 32 px padding
+                over 124 px. Keyed on the chip itself, so no other visitor's
+                layout moves, and a Hide gives the room back. */}
+            <div aria-hidden="true" className="dark h-14 bg-popover [:root:has([data-ab-switcher])_&]:h-28" />
             <StickyBar copy={copy} quoteHref={nav.quoteHref} />
           </ExperimentScope>
         </ExperimentScope>
@@ -134,7 +139,7 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
           nothing. Plain props, no cookie read: the gate decides after mount and
           the page stays static. bottom-20 lifts the chip over the StickyBar,
           which spans the bottom at every width (64 px). */}
-      <AbSwitcher experiments={abSwitcherExperiments({ whatsapp: messengers.whatsapp !== null })} qaCookie={QA_COOKIE} className="bottom-20" />
+      <AbSwitcher experiments={abSwitcherExperiments({ whatsapp: leadChannelOffered(messengers), leadChannelOwnsCard: card.superseded })} qaCookie={QA_COOKIE} className="bottom-20" />
     </>
   );
 }

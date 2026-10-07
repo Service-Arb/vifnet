@@ -98,16 +98,26 @@ const AB_SWITCHER_LABELS = {
  * not a constant: this module is in the client bundle (`ExperimentScope`), and
  * a top-level `.map` would ship there although only the server page reads it.
  *
- * `whatsapp`: whether the place has WhatsApp (`messengers.whatsapp`, the test
- * `cardArms` applies). Without it every `lead_channel` arm draws the same
- * card, so the menu says so rather than offer taps that change nothing.
+ * The menu says where a tap changes nothing, rather than offer it silently:
+ * `whatsapp` false — no `lead_channel` arm draws anything at this place
+ * (`leadChannelOffered`); `leadChannelOwnsCard` — the card is
+ * `lead_channel`'s, so `lead_form`'s arms draw nothing (`leadChannelOwnsCard`,
+ * what `cardArms` goes by). Both come from `shared/lib/experiments`, which
+ * imports this module, so the caller asks them.
  */
-export function abSwitcherExperiments({ whatsapp }: { whatsapp: boolean }): AbSwitcherExperiment[] {
-  return Object.entries(AB_SWITCHER_LABELS).map(([key, { label, variants }]) => ({
-    key,
-    label: key === "lead_channel" && !whatsapp ? `${label} — inactive here (no WhatsApp)` : label,
-    variants: Object.entries(variants).map(([value, variantLabel]) => ({ value, label: variantLabel })),
-  }));
+export function abSwitcherExperiments({ whatsapp, leadChannelOwnsCard = false }: { whatsapp: boolean; leadChannelOwnsCard?: boolean }): AbSwitcherExperiment[] {
+  const inactive: Partial<Record<ExperimentKey, string>> = {
+    ...(whatsapp ? {} : { lead_channel: "no WhatsApp" }),
+    ...(leadChannelOwnsCard ? { lead_form: "lead channel owns the card" } : {}),
+  };
+  return Object.entries(AB_SWITCHER_LABELS).map(([key, { label, variants }]) => {
+    const why = inactive[key as ExperimentKey];
+    return {
+      key,
+      label: why === undefined ? label : `${label} — inactive here (${why})`,
+      variants: Object.entries(variants).map(([value, variantLabel]) => ({ value, label: variantLabel })),
+    };
+  });
 }
 
 /** `?ab_<key>=<variant>` forces a variant (QA); the same prefix as the cookie. */
