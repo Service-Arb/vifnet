@@ -53,6 +53,12 @@
             "instrumentation.ts"
           ];
           requiredFiles = [ "assets/fonts/Inter-Regular.ttf" ];
+          # BLOCKER: the unpublished @evinvest/kitstart with the messenger channels
+          # (MESSENGER-CHANNELS-SPEC §2), vendored until the owner publishes it to
+          # npm; then drop this, vendor/ and the `file:` dependency.
+          packageSourceOverrides = {
+            "node_modules/@evinvest/kitstart" = ./vendor/evinvest/evinvest-kitstart-0.17.0-messenger.tgz;
+          };
           smoke = {
             page = "/fr";
             og = "/og?l=vifnet";
