@@ -119,8 +119,10 @@ test("the control's events carry the experiment and its variant", async ({ page 
   });
 
   const base = { experiment: "lead_form", variant: "a", forced: false, brand_id: "vifnet" };
-  // lead_form's events say the visitor's lead_channel arm (pinned to a): lead_form reads with `lead_channel = a`.
-  await expect.poll(() => of(sent, "experiment_exposed")).toEqual([expect.objectContaining({ ...base, lead_channel: "a" })]);
+  // lead_form's events say the visitor's lead_channel arm (pinned to a) and what the card offered: this
+  // place has no messenger, so lead_channel is inert and lead_form is not superseded.
+  await expect.poll(() => of(sent, "experiment_exposed")).toEqual([expect.objectContaining({ ...base, lead_channel: "a", channels_available: "none" })]);
+  expect(of(sent, "experiment_exposed")[0]).not.toHaveProperty("superseded");
   await expect
     .poll(() => of(sent, "experiment_contact").map(p => p["channel"]))
     .toEqual(["form_open", "phone"]);

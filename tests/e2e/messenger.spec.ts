@@ -348,6 +348,24 @@ test("a forced arm is counted under lead_channel, and lead_form's events say it"
   });
   await page.goto("/fr?ab_lead_channel=c#devis");
   const exposed = (experiment: string) => sent.filter(s => s.event === "experiment_exposed" && s.properties["experiment"] === experiment).map(s => s.properties);
-  await expect.poll(() => exposed("lead_channel")).toEqual([expect.objectContaining({ experiment: "lead_channel", variant: "c", forced: true })]);
-  await expect.poll(() => exposed("lead_form")).toEqual([expect.objectContaining({ experiment: "lead_form", variant: "a", lead_channel: "c" })]);
+  const offered = { channels_available: "wa,tg" };
+  await expect.poll(() => exposed("lead_channel")).toEqual([expect.objectContaining({ experiment: "lead_channel", variant: "c", forced: true, ...offered })]);
+  // lead_channel drew the card: lead_form's exposure says it was superseded, and by which arm.
+  await expect.poll(() => exposed("lead_form")).toEqual([expect.objectContaining({ experiment: "lead_form", variant: "a", lead_channel: "c", superseded: true, ...offered })]);
+  await expect.poll(() => exposed("booking_provider")).toEqual([expect.objectContaining({ experiment: "booking_provider", ...offered })]);
+});
+
+test.describe("a visitor in lead_form's price-first arm", () => {
+  test.use({ storageState: abState("c") });
+
+  // Where the place has WhatsApp, lead_channel decides the whole card, its control a too: one form for every arm.
+  test("a: lead_channel's control is the compact card under lead_channel's name, not lead_form's price first", async ({ page }) => {
+    await page.goto("/fr?ab_lead_channel=a#devis");
+    await expect(page.locator("form#devis-form select")).toHaveCount(0);
+    await expect(card(page).getByRole("button", { name: "Voir les prix" })).toHaveCount(0);
+    await expect(card(page).getByRole("radio", { name: "Je ne sais pas" })).toHaveCount(0);
+    await expect(card(page).getByRole("button", { name: "Réserver" })).toBeVisible();
+    await expect(card(page).locator('[data-experiment="lead_channel"][data-variant="a"]').first()).toBeAttached();
+    await expect(card(page).locator('[data-experiment="lead_form"]')).toHaveCount(0);
+  });
 });

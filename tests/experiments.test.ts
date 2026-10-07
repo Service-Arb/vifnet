@@ -94,46 +94,56 @@ describe("lead_channel over lead_form on the quote card", () => {
   const TELEGRAM_ONLY: MessengerFacts = { whatsapp: null, telegram: "vifnet_devis_bot" };
   const NONE: MessengerFacts = { whatsapp: null, telegram: null };
 
-  it("draws a messenger arm on the compact form, whatever lead_form says, and names lead_channel", () => {
+  it("draws a messenger arm on the compact form where the place has WhatsApp, whatever lead_form says", () => {
     expect(cardArms({ lead_form: "b", lead_channel: "c" }, WHATSAPP_ONLY)).toEqual({
       form: "compact",
       messenger: { kind: "tiles" },
       experiment: { name: "lead_channel", variant: "c" },
+      superseded: true,
     });
     expect(cardArms({ lead_form: "c", booking_provider: "b", lead_channel: "b" }, BOTH)).toEqual({
       form: "compact",
       messenger: { kind: "select", side: "suffix" },
       experiment: { name: "lead_channel", variant: "b" },
+      superseded: true,
     });
   });
 
-  it("takes the bot alone as a messenger: the compact form and lead_channel's name", () => {
-    expect(cardArms({ lead_form: "c", lead_channel: "g" }, TELEGRAM_ONLY)).toEqual({
+  // The channel's effect is read on one form: the control is lead_channel's too, compact, under its name.
+  it("draws its control a there too: the compact card, no messenger, lead_channel's name, lead_form superseded", () => {
+    expect(cardArms({ lead_form: "c", lead_channel: "a" }, BOTH)).toEqual({
       form: "compact",
-      messenger: { kind: "split" },
-      experiment: { name: "lead_channel", variant: "g" },
+      messenger: undefined,
+      experiment: { name: "lead_channel", variant: "a" },
+      superseded: true,
     });
   });
 
-  it("leaves lead_form's form and name alone on a place with no messenger", () => {
+  // kitstart's rule (`messengerShownOf`): no arm draws without WhatsApp.
+  it("is inert on a place with the bot alone: lead_form keeps its form and its name", () => {
+    expect(cardArms({ lead_form: "c", lead_channel: "g" }, TELEGRAM_ONLY)).toEqual({
+      form: "price-first",
+      messenger: undefined,
+      experiment: { name: "lead_form", variant: "c" },
+      superseded: false,
+    });
+  });
+
+  it("is inert on a place with no messenger", () => {
     expect(cardArms({ lead_form: "b", lead_channel: "c" }, NONE)).toEqual({
       form: "steps",
       messenger: undefined,
       experiment: { name: "lead_form", variant: "b" },
+      superseded: false,
     });
   });
 
-  it("leaves lead_form alone in lead_channel's control arm, or when lead_channel does not run", () => {
-    expect(cardArms({ lead_form: "c", lead_channel: "a" }, BOTH)).toEqual({
-      form: "price-first",
-      messenger: undefined,
-      experiment: { name: "lead_form", variant: "c" },
-    });
-    expect(cardArms({ lead_form: "b" }, BOTH)).toEqual({ form: "steps", messenger: undefined, experiment: { name: "lead_form", variant: "b" } });
+  it("leaves lead_form alone when lead_channel does not run, WhatsApp or not", () => {
+    expect(cardArms({ lead_form: "b" }, BOTH)).toEqual({ form: "steps", messenger: undefined, experiment: { name: "lead_form", variant: "b" }, superseded: false });
   });
 
   it("is the bare control with no test running", () => {
-    expect(cardArms({}, BOTH)).toEqual({ form: "compact", messenger: undefined, experiment: undefined });
+    expect(cardArms({}, BOTH)).toEqual({ form: "compact", messenger: undefined, experiment: undefined, superseded: false });
   });
 });
 
@@ -251,51 +261,85 @@ describe("the contact a click is", () => {
 });
 
 describe("experiment_lead on /quote", () => {
+  /** What the route read of the post, as kitstart's route reads it. */
+  type Read = Record<string, string>;
   const setup = (accepts: boolean, live = AS_CODED) => {
     const captured: [string, Record<string, unknown> | undefined][] = [];
+    const read: Read[] = [];
     const tasks: (() => unknown)[] = [];
     const defer = (task: () => unknown) => void tasks.push(task);
     const sink: AnalyticsSink = { capture: (e, p) => void captured.push([e, p]) };
     const deferInRoute = witnessedDefer(defer);
-    // kitstart's route defers work only for a lead it accepted.
-    const route = async () => {
+    // kitstart's route takes the body and defers work only for a lead it accepted.
+    const route = async (request: Request) => {
+      read.push(Object.fromEntries([...(await request.formData())].map(([k, v]) => [k, String(v)])));
       if (accepts) deferInRoute(() => undefined);
       return new Response(null, { status: 303 });
     };
     const post = withExperimentLead(route, { sink: () => sink, defer, experiments: async () => live });
-    const run = async (cookie?: string) => {
-      await post(new Request("http://x/quote", { method: "POST", headers: cookie ? { cookie } : {} }));
+    const run = async (cookie?: string, body: Read = { subject: "standard", mobile: "06 12 34 56 78" }) => {
+      const headers: Record<string, string> = { "content-type": "application/x-www-form-urlencoded" };
+      if (cookie) headers["cookie"] = cookie;
+      await post(new Request("http://x/quote", { method: "POST", headers, body: new URLSearchParams(body) }));
       for (const task of tasks.splice(0)) task();
-      return captured;
+      return { captured, read };
     };
     return run;
   };
+  const events = async (...args: Parameters<ReturnType<typeof setup>>) => (await setup(true)(...args)).captured;
 
-  it("is sent once per experiment for an accepted lead, forced or not", async () => {
-    expect(await setup(true)("lang=fr; ab_lead_form=b")).toEqual([["experiment_lead", { experiment: "lead_form", variant: "b", forced: false }]]);
-    expect(await setup(true)("ab_lead_form=a; ab__qa=1")).toEqual([["experiment_lead", { experiment: "lead_form", variant: "a", forced: true }]]);
+  it("is sent once per experiment for an accepted lead, forced or not, as a form lead", async () => {
+    expect(await events("lang=fr; ab_lead_form=b")).toEqual([["experiment_lead", { experiment: "lead_form", variant: "b", forced: false, channel: "form" }]]);
+    expect(await events("ab_lead_form=a; ab__qa=1")).toEqual([["experiment_lead", { experiment: "lead_form", variant: "a", forced: true, channel: "form" }]]);
   });
 
   it("is not sent for a rejected or suspected submission, nor without a cookie", async () => {
-    expect(await setup(false)("ab_lead_form=b")).toEqual([]);
-    expect(await setup(true)()).toEqual([]);
+    expect((await setup(false)("ab_lead_form=b")).captured).toEqual([]);
+    expect(await events()).toEqual([]);
   });
 
-  // EXPERIMENT_PROPS: lead_form reads with `lead_channel = a`, so its lead names the visitor's arm of it.
-  it("says the visitor's lead_channel arm on lead_form's lead, and sends lead_channel's own", async () => {
-    expect(await setup(true)("ab_lead_form=b; ab_lead_channel=d")).toEqual([
-      ["experiment_lead", { experiment: "lead_form", variant: "b", forced: false, lead_channel: "d" }],
-      ["experiment_lead", { experiment: "lead_channel", variant: "d", forced: false }],
+  it("leaves the whole post to the route", async () => {
+    const body = { subject: "standard", mobile: "06 12 34 56 78", channel: "whatsapp", message_ref: "VF-7K3F", channels_available: "wa,tg", experiment: "lead_channel", variant: "c" };
+    expect((await setup(true)("ab_lead_form=b; ab_lead_channel=c", body)).read).toEqual([body]);
+  });
+
+  it("says the lead's channel and the messengers the card posted, on every test's lead", async () => {
+    const body = { subject: "standard", channel: "whatsapp", message_ref: "VF-7K3F", channels_available: "wa,tg", experiment: "lead_channel", variant: "c" };
+    expect(await events("ab_booking_provider=a; ab_lead_channel=c", body)).toEqual([
+      ["experiment_lead", { experiment: "booking_provider", variant: "a", forced: false, channel: "whatsapp", channels_available: "wa,tg" }],
+      ["experiment_lead", { experiment: "lead_channel", variant: "c", forced: false, channel: "whatsapp", channels_available: "wa,tg" }],
     ]);
-    expect(await setup(true)("ab_booking_provider=a; ab_lead_channel=a")).toEqual([
-      ["experiment_lead", { experiment: "booking_provider", variant: "a", forced: false }],
-      ["experiment_lead", { experiment: "lead_channel", variant: "a", forced: false }],
+    expect(await events("ab_lead_channel=b", { subject: "standard", mobile: "06 12 34 56 78", channel: "callback" })).toEqual([
+      ["experiment_lead", { experiment: "lead_channel", variant: "b", forced: false, channel: "callback" }],
+    ]);
+  });
+
+  it("takes a channel that is none of the lead's for a form, and drops messengers that are none of the four", async () => {
+    expect(await events("ab_lead_channel=b", { subject: "standard", channel: "pigeon", channels_available: "wa,fax" })).toEqual([
+      ["experiment_lead", { experiment: "lead_channel", variant: "b", forced: false, channel: "form" }],
+    ]);
+  });
+
+  // EXPERIMENT_PROPS: lead_form reads with `superseded` not true; its lead names the visitor's lead_channel arm.
+  it("marks lead_form's lead superseded when the card posted under lead_channel", async () => {
+    const body = { subject: "standard", mobile: "06 12 34 56 78", channels_available: "wa", experiment: "lead_channel", variant: "a" };
+    expect(await events("ab_lead_form=b; ab_lead_channel=a", body)).toEqual([
+      ["experiment_lead", { experiment: "lead_form", variant: "b", forced: false, channel: "form", channels_available: "wa", lead_channel: "a", superseded: true }],
+      ["experiment_lead", { experiment: "lead_channel", variant: "a", forced: false, channel: "form", channels_available: "wa" }],
+    ]);
+  });
+
+  it("names the visitor's lead_channel arm on lead_form's lead, not superseded, when lead_form drew the card", async () => {
+    const body = { subject: "standard", mobile: "06 12 34 56 78", channels_available: "tg", experiment: "lead_form", variant: "b" };
+    expect(await events("ab_lead_form=b; ab_lead_channel=d", body)).toEqual([
+      ["experiment_lead", { experiment: "lead_form", variant: "b", forced: false, channel: "form", channels_available: "tg", lead_channel: "d" }],
+      ["experiment_lead", { experiment: "lead_channel", variant: "d", forced: false, channel: "form", channels_available: "tg" }],
     ]);
   });
 
   it("is not sent for a test the panel switched off, even with its cookie", async () => {
-    expect(await setup(true, LAYOUT_OFF)("ab_lead_form=b; ab_booking_provider=a")).toEqual([
-      ["experiment_lead", { experiment: "booking_provider", variant: "a", forced: false }],
+    expect((await setup(true, LAYOUT_OFF)("ab_lead_form=b; ab_booking_provider=a")).captured).toEqual([
+      ["experiment_lead", { experiment: "booking_provider", variant: "a", forced: false, channel: "form" }],
     ]);
   });
 });
