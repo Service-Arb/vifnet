@@ -115,6 +115,7 @@ export const EN = {
         messengerQrLede: "The quote opens in WhatsApp, already written.",
         messengerQrWeb: "or WhatsApp Web →",
         messengerQrAlt: "QR code that opens WhatsApp with your quote",
+        messengerPhoneOptional: "Phone (optional)",
       },
       swapLede: "Your quote is ready: send it to us on WhatsApp.",
       callNow: "Call me back within 15 min",

@@ -20,9 +20,13 @@ const PREVIEW =
 /** A channel in a menu (VF-1's select, VF-5's chip): its name 14/20 over its line in 12/16. */
 const MENU_OPTION = "py-2 [&_span.flex-col>span:first-child]:text-sm [&_span.flex-col>span:last-child]:text-xs";
 
-/** VF-2's tiles: the card's estimate tiles, 42 px, the chosen one gold at 10 % with a 2 px gold edge. */
+/**
+ * VF-2's tiles: the card's estimate tiles, 42 px, the chosen one gold at 10 %
+ * with a 2 px gold edge. A third of the card is 96 px: the frame's 13 px
+ * name, the glyph at 16 and 4 px from it leave «WhatsApp» ~6 px inside the edge.
+ */
 const TILE =
-  "h-[42px] gap-1.5 rounded-xl border-input bg-background px-2 text-sm leading-5 text-slate-700 shadow-none data-[state=on]:border-primary data-[state=on]:bg-primary/10 data-[state=on]:font-semibold data-[state=on]:text-brand data-[state=on]:shadow-[inset_0_0_0_1px_var(--primary)]";
+  "h-[42px] gap-1 rounded-xl border-input bg-background px-2 text-[13px] leading-5 text-slate-700 shadow-none data-[state=on]:border-primary data-[state=on]:bg-primary/10 data-[state=on]:font-semibold data-[state=on]:text-brand data-[state=on]:shadow-[inset_0_0_0_1px_var(--primary)] [&>span>span]:size-4";
 
 /**
  * The buttons beside the main one: an outline one (VF-3's [Telegram][Être
@@ -50,7 +54,8 @@ const BASE: Look = {
   others: "hidden",
   // `min-w-0`: a grid item of the contact block, which a button's unbroken label would widen past the card.
   messenger: "min-w-0 gap-3",
-  messengerSlot: "min-h-[72px]",
+  // `gap-3`: the phone's state is the field and its line, which pulls itself up 6 px (`AFTER_PHONE`) for a grid's gap — 50 + 6 + 16 = 72.
+  messengerSlot: "min-h-[72px] gap-3",
   // The card's submit, 52 px: the label is wide, so the frame's 16 px sides rather than 32.
   messengerCta: `${WIDE_BUTTON} px-4`,
   messengerSecondary: SECONDARY,
@@ -85,7 +90,8 @@ const LOOKS: Readonly<Record<MessengerKind, Look>> = {
   chip: {
     messengerTrigger: "-mt-4 h-[30px] gap-1.5 bg-hover px-3 text-sm leading-5 font-semibold text-brand",
   },
-  split: {},
+  // VF-6: «Devis sur WhatsApp» beside two squares has 182 px: the frame's 15 px and a 6 px gap keep it off the edges.
+  split: { messengerCta: `${WIDE_BUTTON} gap-1.5 px-3 text-[15px]` },
   // Not aquafix's arms: never drawn here (`MESSENGER_ARMS`).
   segment: {},
   thanks: {},

@@ -115,6 +115,7 @@ export const FR = {
         messengerQrLede: "Le devis s’ouvre dans WhatsApp, déjà rédigé.",
         messengerQrWeb: "ou WhatsApp Web →",
         messengerQrAlt: "QR code qui ouvre WhatsApp avec votre devis",
+        messengerPhoneOptional: "Tél. (facultatif)",
       },
       swapLede: "Votre devis est prêt : envoyez-le-nous sur WhatsApp.",
       callNow: "Être rappelé sous 15 min",
