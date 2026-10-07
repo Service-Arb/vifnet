@@ -38,6 +38,9 @@ export const FLOWS: Readonly<Record<Subject, LeadFlow>> = {
   "post-construction": "quote",
 };
 
+/** The brand's prefix of a lead's chat reference (`VF-7K3F`, MESSENGER-CHANNELS-SPEC §1); aquafix's is `AQ`. */
+export const MESSAGE_REF_PREFIX = "VF";
+
 /** The quotes priced from photos: the card offers to send them on WhatsApp, when the place has it. */
 export const PHOTO_NEEDS: readonly Subject[] = SUBJECTS.filter(s => FLOWS[s] === "quote");
 

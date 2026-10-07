@@ -5,6 +5,7 @@ import {
   panelChannel,
   panelFlowProperties,
   type BookingWebhookContext,
+  type PanelChannel,
   type LeadWebhookContext,
   type LeadWebhookOptions,
   type PanelFlowProperties,
@@ -67,6 +68,17 @@ export const PANEL_ANALYTICS_ID = true;
 export const PANEL_EXPERIMENTS = true;
 
 /**
+ * Whether a messenger lead goes to the panel as one — `channel` `whatsapp` or
+ * `telegram`, and the chat's reference as `message_ref` (MESSENGER-CHANNELS-SPEC
+ * §2.1, `LeadCreatedV1` field 9) — rather than as a `form` without it. On:
+ * the panel with the messenger channels ships before this site (spec §5), and
+ * the local stand runs that panel. Should the site ship first, the panel
+ * refuses the channel and the lead goes `dead` in the outbox; once the panel
+ * is upgraded, `kitstart-outbox requeue` on the pod sends it again.
+ */
+export const PANEL_MESSENGER = true;
+
+/**
  * `lead.created@1` as protojson — `sa.v1.Event` with `LeadCreatedV1` for
  * properties (Service-Arb/panel `contracts/proto/sa/v1/events.proto`).
  */
@@ -80,14 +92,17 @@ export interface LeadCreatedEvent {
   subject: { brandId: string; locationId?: string; leadId: string };
   /**
    * `channel` is the panel's closed set, `form` or `callback` since kitstart
-   * 0.13.0 (`panelChannel`). `suspect` only when the kit sets
+   * 0.13.0, and `whatsapp` or `telegram` under `PANEL_MESSENGER` (`ctx.channel`,
+   * the kit's `panelChannel`). `suspect` only when the kit sets
    * `ctx.suspect`, which it does only under `PANEL_SUSPECT`: `rate_limited` or
    * `too_fast`, never `honeypot`. The sale's properties only when the kit sets
    * `ctx.flow`, which it does only under `PANEL_FLOW`. `analytics_id` only
    * under `PANEL_ANALYTICS_ID`: the visit's analytics `distinct_id` as the
-   * form posted it (kitstart checks its charset), no PII.
+   * form posted it (kitstart checks its charset), no PII. `message_ref` only
+   * under `PANEL_MESSENGER`, on a lead that has one: the reference the
+   * visitor's chat carries (`VF-7K3F`), no PII.
    */
-  properties: { channel: ReturnType<typeof panelChannel>; suspect?: LeadSuspect; analytics_id?: string } & Partial<PanelFlowProperties>;
+  properties: { channel: PanelChannel; suspect?: LeadSuspect; analytics_id?: string; message_ref?: string } & Partial<PanelFlowProperties>;
   pii?: Record<string, string>;
 }
 
@@ -199,10 +214,13 @@ export function leadCreatedBody(lead: Lead, ctx: LeadWebhookContext, sourceId: s
     occurredAt: ctx.at.toISOString(),
     source: { kind: "site", id: sourceId },
     subject,
-    properties: { channel: panelChannel(channelOf(lead)) },
+    // The kit's word, decided under `panelMessenger`; a context built by hand has none.
+    properties: { channel: ctx.channel ?? panelChannel(channelOf(lead)) },
   };
   if (ctx.suspect !== undefined) event.properties.suspect = ctx.suspect;
   if (analyticsId && ctx.analyticsId) event.properties.analytics_id = ctx.analyticsId;
+  // Set by the kit only under `panelMessenger`, on a lead that has one.
+  if (ctx.messageRef) event.properties.message_ref = ctx.messageRef;
   Object.assign(event.properties, panelFlowProperties(ctx.flow));
   const pii = piiOf(lead);
   if (Object.keys(pii).length > 0) event.pii = pii;
@@ -233,6 +251,7 @@ export interface PanelSwitches {
   panelFlow: boolean;
   panelBooking: boolean;
   panelAnalyticsId: boolean;
+  panelMessenger: boolean;
 }
 
 export const PANEL_SWITCHES: PanelSwitches = {
@@ -240,6 +259,7 @@ export const PANEL_SWITCHES: PanelSwitches = {
   panelFlow: PANEL_FLOW,
   panelBooking: PANEL_BOOKING,
   panelAnalyticsId: PANEL_ANALYTICS_ID,
+  panelMessenger: PANEL_MESSENGER,
 };
 
 /**
@@ -251,7 +271,7 @@ export const PANEL_SWITCHES: PanelSwitches = {
 export function panelWebhookOptions(
   keyId: string,
   switches: Partial<PanelSwitches> = {},
-): Pick<LeadWebhookOptions, "signing" | "buildBody" | "buildBookingBody" | "panelSuspect" | "panelFlow" | "panelBooking"> {
+): Pick<LeadWebhookOptions, "signing" | "buildBody" | "buildBookingBody" | "panelSuspect" | "panelFlow" | "panelBooking" | "panelMessenger"> {
   const { panelAnalyticsId, ...kit } = { ...PANEL_SWITCHES, ...switches };
   return {
     signing: SA_INGEST_SIGNING,
