@@ -42,7 +42,8 @@ export function ExperimentScope({ target, placeSlug, experiment, variant, enable
         ...(leadChannel === undefined ? {} : { lead_channel: leadChannel }),
         ...(superseded ? { superseded: true } : {}),
       };
-      const mapped = experimentEvent(experiment, event, { ...props, ...extra }, readCookie(QA_COOKIE) === "1");
+      // Any value marks a test visit (`isQaMark`, kept off this client module's imports): it holds the visitor's own arms.
+      const mapped = experimentEvent(experiment, event, { ...props, ...extra }, (readCookie(QA_COOKIE) ?? "") !== "");
       if (mapped) sink.capture(mapped[0], mapped[1], { transport: "beacon" });
     },
     [sink, experiment, enabled, channelsAvailable, leadChannel, superseded],

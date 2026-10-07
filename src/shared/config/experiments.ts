@@ -96,23 +96,40 @@ const AB_SWITCHER_LABELS = {
 /**
  * {@link AB_SWITCHER_LABELS} as kitstart's `AbSwitcher` takes them. A function,
  * not a constant: this module is in the client bundle (`ExperimentScope`), and
- * a top-level `.map` would ship there although only the server layout reads it.
+ * a top-level `.map` would ship there although only the server page reads it.
+ *
+ * The menu says where a tap changes nothing, rather than offer it silently:
+ * `whatsapp` false — no `lead_channel` arm draws anything at this place
+ * (`leadChannelOffered`); `leadChannelOwnsCard` — the card is
+ * `lead_channel`'s, so `lead_form`'s arms draw nothing (`leadChannelOwnsCard`,
+ * what `cardArms` goes by). Both come from `shared/lib/experiments`, which
+ * imports this module, so the caller asks them.
  */
-export function abSwitcherExperiments(): AbSwitcherExperiment[] {
-  return Object.entries(AB_SWITCHER_LABELS).map(([key, { label, variants }]) => ({
-    key,
-    label,
-    variants: Object.entries(variants).map(([value, variantLabel]) => ({ value, label: variantLabel })),
-  }));
+export function abSwitcherExperiments({ whatsapp, leadChannelOwnsCard = false }: { whatsapp: boolean; leadChannelOwnsCard?: boolean }): AbSwitcherExperiment[] {
+  const inactive: Partial<Record<ExperimentKey, string>> = {
+    ...(whatsapp ? {} : { lead_channel: "no WhatsApp" }),
+    ...(leadChannelOwnsCard ? { lead_form: "lead channel owns the card" } : {}),
+  };
+  return Object.entries(AB_SWITCHER_LABELS).map(([key, { label, variants }]) => {
+    const why = inactive[key as ExperimentKey];
+    return {
+      key,
+      label: why === undefined ? label : `${label} — inactive here (${why})`,
+      variants: Object.entries(variants).map(([value, variantLabel]) => ({ value, label: variantLabel })),
+    };
+  });
 }
 
 /** `?ab_<key>=<variant>` forces a variant (QA); the same prefix as the cookie. */
 export const FORCE_PARAM = "ab_";
 
 /**
- * Set on a forced visit, for as long as the assignment: every event from that
- * browser says `forced: true`, and PostHog's funnel leaves it out. Not `ab_<key>`
- * shaped on purpose — no experiment may be called `qa_`.
+ * Set on a forced visit, until an outside entry to the home page with no force
+ * or the menu's Reset ends QA (the proxy's `leavesQa`): every
+ * event from that browser says `forced: true`, and PostHog's funnel leaves it
+ * out; kitstart's menu shows while it has a value. The value is the visitor's
+ * own arms, given back when QA ends (`qaSnapshot`, the proxy) — never a flag.
+ * Not `ab_<key>` shaped on purpose — no experiment may be called `qa_`.
  */
 export const QA_COOKIE = "ab__qa";
 

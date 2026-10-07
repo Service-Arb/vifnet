@@ -115,43 +115,93 @@ stop early on a lucky day — the thresholds assume the minimums above.
 
 ## Forcing a variant (QA)
 
-`/fr?ab_lead_form=b` (or `=a`, `=c`) renders that arm and stores it in the cookie. A forced
-visit also sets `ab__qa=1` for 30 days: that browser's experiment events say
-`forced: true`, and so do kitstart's `location_page_view` and `contact_intent_click`
-(`AnalyticsBoundary`'s `qaCookie`); the funnel's `forced` filter leaves them out, and a
-traffic insight does too once it filters `forced` is not `true`. kitstart's lead-form events
-(`lead_form_*`, `lead_booking_*`, the server's `lead_form_submit`) are not tagged yet
-(EV-invest/lib#219): a QA lead still counts there. **Leave test** in the QA menu, or clearing
-the site's cookies, makes the browser a normal visitor again.
+`/fr?ab_lead_form=b` (or `=a`, `=c`) renders that arm. Several forces combine
+in one URL (`?ab_lead_form=b&ab_lead_channel=c`); a force of a test the panel
+has paused is ignored. A test the URL does not name depends on where the
+request came from:
+
+- **from outside the site** (typed, a bookmark, a link from another site —
+  `Sec-Fetch-Site` `none` or `cross-site`, or no such header): the URL is the
+  whole QA state, the unnamed test takes the visitor's own arm. So typing
+  `/fr?ab_lead_form=b` then `/fr?ab_lead_channel=c` renders lead_form on the
+  visitor's own arm again, not on b;
+- **from inside the site** (`same-origin`, `same-site` — the menu's taps
+  among them): the unnamed test keeps the arm it has now. So
+  `/fr?ab_lead_form=c` → the language switch to `/en` → a tap on lead_channel
+  e in the menu (`/en?ab_lead_channel=e`) shows lead_form c and lead_channel e.
+
+A forced visit sets `ab__qa` for 30 days from the last force. Its value is the
+visitor's own arms, taken on the first forced visit and kept until QA ends
+(`lead_form.a~booking_provider.b~lead_channel.e`; `-` for none; a newcomer's
+are the arms drawn on that first visit). The rendered arm is written to
+`ab_<key>` too, so the page's events and the lead's post name the arm on
+screen. While `ab__qa` has a value, that browser's experiment events say
+`forced: true`, and so do kitstart's `location_page_view` and
+`contact_intent_click` (`AnalyticsBoundary`'s `qaCookie`); the funnel's
+`forced` filter leaves them out, and a traffic insight does too once it
+filters `forced` is not `true`. kitstart's lead-form events (`lead_form_*`,
+`lead_booking_*`, the server's `lead_form_submit`) are not tagged yet
+(EV-invest/lib#219): a QA lead still counts there.
+
+**Staying in QA.** Moving around the site keeps the forced arms: the logo,
+the "home" link, the language switch (`/fr?ab_lead_form=b` → `/en` renders
+lead_form b in English) and Next's own client fetches and prefetches all land
+on a home page with no `?ab_*`, but from the site itself (`Sec-Fetch-Site`
+`same-origin` or `same-site`), so the proxy leaves `ab_<key>` and `ab__qa` as
+they are. To check a variant in another language, force it, then switch the
+language in the header — or open `/en?ab_lead_form=b` directly.
+
+**Leaving QA.** A place's home page with no valid `?ab_<key>=` ends the test
+visit when it is an outside entry — typed in the address bar, a bookmark, a
+link from another site, a reload of such a URL (`Sec-Fetch-Site` `none` or
+`cross-site`, or a browser that sends no such header) — or the menu's
+**Reset**. Then `ab_<key>` go back to the visitor's own arms (a paused test's
+too — a pause keeps every arm), `ab__qa` and `ab__qa_off` are dropped, and the
+chip is gone. A running test with no arm in `ab__qa` to give back — every one
+under the old `ab__qa=1`, set before the snapshot — is drawn afresh, so a
+forced arm never stays on as real traffic. Under that old mark a force, too,
+draws the running tests afresh before saving the snapshot. Sub-pages (`/fr/prices`, …)
+neither force nor end it. Clearing the site's cookies does the same, with
+fresh arms.
 
 **The menu (kitstart's `AbSwitcher`).** A test visit carries an "A/B" chip in
 the bottom-right corner of a place's home page, above the sticky bar, with the
 arm of each experiment; a dev server shows it always, production only to a
-browser with `ab__qa`. Sub-pages (`/fr/prices`, …) have no menu: the proxy
-forces and assigns arms on the home page only. To get it on a phone:
+browser with a non-empty `ab__qa`. Sub-pages have no menu: the proxy forces
+and assigns arms on the home page only. To get it on a phone:
 
 1. Open a place with a forced arm, `/fr?ab_lead_form=a` — that sets `ab__qa`
-   and the chip appears on that home page, and on it again on every later visit.
+   and the chip appears on that page.
 2. Tap the chip: each experiment lists its variants (`lead_form`: Compact,
    Steps, Price first; `booking_provider`: Call back, Google Calendar;
    `lead_channel`: Phone (control), VF-1 Select … VF-6 Split). A tap
-   reloads the page on that variant, the same `?ab_<key>=` link as above.
-3. **Reset** draws a new random arm for every experiment; the visit stays a
-   test one (`ab__qa` kept, events still `forced: true`).
-4. **Leave test** clears the arms and `ab__qa`: the browser is a normal visitor
-   again and the chip is gone after the reload.
+   reloads the page on that variant: the same URL with that `?ab_<key>=`
+   added, the forces already in it kept, the other tests as they are. The
+   menu names a test whose taps change nothing on this page: on a place with
+   no WhatsApp, "Lead channel — inactive here (no WhatsApp)" — every arm draws
+   the phone card there; where lead_channel runs and the place has WhatsApp,
+   "Lead form — inactive here (lead channel owns the card)" — the card is
+   lead_channel's (`cardArms`). Both go by one rule in
+   `src/shared/lib/experiments.ts` (`leadChannelOffered`,
+   `leadChannelOwnsCard`), the card's own.
+3. **Reset** reloads the home page without forces and with the arms
+   dropped; seeing `ab__qa` with no arm at all (no other path sends that),
+   the proxy gives the visitor's own arms back and ends QA — the chip is gone.
+4. **Leave test** drops the arms and `ab__qa` (the snapshot with it): the
+   browser is a normal visitor again and draws fresh arms on the reload.
+   Prefer Reset, or the plain home page, to get the own arms back.
 
-`ab__qa` lives 30 days from the last forced visit. Minimize and Hide last until
-the next page load. The labels are `AB_SWITCHER_LABELS` in
-`src/shared/config/experiments.ts`, checked against `EXPERIMENTS`.
+Minimize and Hide last until the next page load. The labels are
+`AB_SWITCHER_LABELS` in `src/shared/config/experiments.ts`, checked against
+`EXPERIMENTS`.
 
 ## Ending an experiment
 
 1. Switch it off in the panel's "Experiments" screen — no deploy: within
    30 s every request gets the control, cookies are ignored and no event is
    sent. It is a pause, not an end: each visitor keeps their `ab_<key>`, so
-   switched back on, the test carries on with the same arms. A QA browser
-   (`ab__qa`) gets a session cookie `ab__qa_off` naming the paused tests, and
+   switched back on, the test carries on with the same arms. A forced visit
+   gets a session cookie `ab__qa_off` naming the paused tests (dropped when QA ends on the home page; after the menu's "Leave test" it lives out the session, harmless — no `ab__qa`, no menu), and
    the QA menu (kitstart 0.17.0, not yet in use here) shows them as "not
    running". (`enabled: false` in `src/shared/config/experiments.ts` does the same
    with a deploy, and is what the next declaration says.)
