@@ -46,6 +46,8 @@ const height = async (page: Page) => Math.round(await card(page).evaluate(node =
 /** The prefilled message names the lead by the brand's reference (`Réf. VF-7K3F`, Crockford base32). */
 const REF = /R%C3%A9f\.%20VF-[0-9A-HJKMNP-TV-Z]{4,8}(&|$)/;
 const BOT = /^https:\/\/t\.me\/vifnet_devis_bot\?start=VF-[0-9A-HJKMNP-TV-Z]{4,8}$/;
+/** Figma's preview line; kitstart joins a number to its unit with a no-break space (`77 €`, `70 m²`). */
+const PREVIEW = /Ménage standard · 2 ch\. · 40–70\sm² · 2 sem\. · env\. 77\s€ · 63130 · Réf\. VF-[0-9A-HJKMNP-TV-Z]{4,8}/;
 const MESSENGER_LINKS = 'a[href*="wa.me/"], a[href*="t.me/"]';
 
 /** The message a wa.me link opens WhatsApp with, decoded. */
@@ -88,12 +90,9 @@ async function heldAt(page: Page, before: number, shown: Locator): Promise<void>
   await fitsThePhone(page);
 }
 
-/** The preview the card shows of the message: the answers, as the card words them, and the price. */
+/** The preview the card shows of the message: the job, the answers in short, the price, the postcode and the reference. */
 async function previewSaysTheJob(page: Page): Promise<void> {
-  const preview = card(page).getByText(/^« Bonjour Vifnet/);
-  await expect(preview).toContainText("2 sem.");
-  await expect(preview).toContainText(/env\.\s77\s€/);
-  await expect(preview).toContainText("63130");
+  await expect(card(page).getByText(PREVIEW)).toBeVisible();
 }
 
 /** The message carries the price per visit, the frequency and the reference. */
@@ -201,14 +200,14 @@ test("e (VF-4): one button; its drawer, and the call in it, lie over the page an
   expect(said).toEqual([]);
 });
 
-test("e (VF-4): Escape closes the drawer from its call, and the card is as it was", async ({ page }) => {
-  test.fail(true, "after «Être rappelé» in the drawer, focus falls to <body> and Escape no longer closes it (finding of 2026-10-07)");
+test("e (VF-4): from its call, focus is on the phone and Escape closes the drawer; the card is as it was", async ({ page }) => {
   await open(page, "e");
   const before = await height(page);
   await card(page).getByRole("button", { name: "Recevoir mon devis" }).click();
   const drawer = page.getByRole("dialog");
   await drawer.getByRole("button", { name: /^Être rappelé/ }).click();
-  await expect(drawer.getByRole("textbox", { name: "Téléphone" })).toBeVisible();
+  // The pressed button leaves; focus goes to the phone, inside the drawer (a frame later, ~20 ms).
+  await expect(drawer.getByRole("textbox", { name: "Téléphone" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(drawer).toBeHidden();
   expect(await height(page)).toBe(before);
@@ -262,8 +261,8 @@ async function beforeHydration(page: Page, arm: string): Promise<{ hydrate: () =
   await page.route(SCRIPTS, hold);
   await page.goto(`/fr?ab_lead_channel=${arm}#devis`);
   await page.evaluate(() => document.fonts.ready);
-  // The contact block streams in after the card (a Suspense boundary, `<template id="B:0">`):
-  // React's inline script swaps it in shortly after load, with or without the page's scripts.
+  // A part of the card streamed after it (a Suspense boundary, `<template id="B:…">`) is swapped in
+  // by React's inline script shortly after load, with or without the page's scripts: measure after.
   await expect(card(page).locator("template")).toHaveCount(0);
   const hydrate = async () => {
     await page.unroute(SCRIPTS, hold);
@@ -305,8 +304,39 @@ for (const arm of ["b", "c", "d", "e", "f", "g"] as const) {
     await hydrate();
     // VF-4's links are in its drawer; every other arm's message link is in the card once it has its reference.
     if (arm !== "e") await expect(card(page).locator('a[href*="wa.me/"]').first()).toHaveAttribute("href", REF);
-    // Hydration collapses the arm's block for a frame or two (8–23 ms, finding of 2026-10-07): what it settles at counts.
-    await expect.poll(() => height(page), { message: "the hydrated card, against the served one" }).toBe(served);
+    expect(await height(page), "the hydrated card, against the served one").toBe(served);
+  });
+}
+
+/**
+ * The card's height at every frame from the first paint for `ms`, as the
+ * heights it went through in order; `window.__heightsDone` once it is over.
+ */
+function recordHeights(ms: number): void {
+  const w = window as unknown as { __heights: number[]; __heightsDone: boolean };
+  w.__heights = [];
+  w.__heightsDone = false;
+  const start = performance.now();
+  const frame = () => {
+    const box = document.getElementById("devis")?.getBoundingClientRect();
+    const last = w.__heights.at(-1);
+    if (box && Math.round(box.height) !== last) w.__heights.push(Math.round(box.height));
+    if (performance.now() - start < ms) requestAnimationFrame(frame);
+    else w.__heightsDone = true;
+  };
+  requestAnimationFrame(frame);
+}
+
+for (const arm of ["a", "b", "c", "d", "e", "f", "g"] as const) {
+  // Hydration used to collapse the arm's block for a frame or two (674 → 526 → 674, 2026-10-07).
+  test(`${arm}: the card never shrinks while the page loads and hydrates`, async ({ page }) => {
+    await page.addInitScript(recordHeights, 3000);
+    await page.goto(`/fr?ab_lead_channel=${arm}#devis`);
+    await expect(page.getByRole("button", { name: "A/B test switcher" })).toBeVisible();
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __heightsDone: boolean }).__heightsDone), { timeout: 10_000 }).toBe(true);
+    const heights = await page.evaluate(() => (window as unknown as { __heights: number[] }).__heights);
+    // Sorted ascending, the heights are as they came: the card only ever grew.
+    expect(heights, "the card's heights, frame by frame").toEqual([...heights].sort((x, y) => x - y));
   });
 }
 
