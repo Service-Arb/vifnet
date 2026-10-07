@@ -1,5 +1,7 @@
 import { cookieName, resolveVariant } from "@evinvest/experiments";
-import { EXPERIMENTS, type ExperimentKey, type LiveExperiments, QA_COOKIE, type VariantOf } from "@/shared/config/experiments";
+import type { MessengerFacts, MessengerVariant } from "@evinvest/kitstart";
+import { EXPERIMENTS, type ExperimentKey, LEAD_FORMS, type LiveExperiments, MESSENGER_ARMS, QA_COOKIE, type VariantOf } from "@/shared/config/experiments";
+import type { LeadForm } from "@/shared/config/lead";
 
 /** Every experiment's variant, the control where nothing else applies. */
 export type Assignment = { [K in ExperimentKey]: VariantOf<K> };
@@ -22,6 +24,31 @@ export const CONTROL: Assignment = Object.fromEntries(KEYS.map(k => [k, control(
 /** What a page renders: the bucket's variants, the control for the rest. */
 export function variantsOf(bucket: Bucket): Assignment {
   return { ...CONTROL, ...bucket };
+}
+
+/** What the quote card draws for a bucket, and the one assignment its own events and post carry. */
+export interface CardArms {
+  form: LeadForm;
+  /** `lead_channel`'s variant; `undefined` → the control. */
+  messenger: MessengerVariant | undefined;
+  experiment: { name: ExperimentKey; variant: string } | undefined;
+}
+
+/**
+ * The card's arms (MESSENGER-CHANNELS-SPEC §4, precedence): a `lead_channel`
+ * arm that draws a messenger wins — the compact form under it, whatever
+ * `lead_form` says, and the card's events (kitstart's `experiment`, one per
+ * card) name `lead_channel`. On a place that offers no messenger every arm of
+ * it is the control, so it changes nothing there: `lead_form` keeps the form
+ * and the events, and a visitor's `lead_form` arm is not overruled for nothing.
+ */
+export function cardArms(bucket: Bucket, messengers: MessengerFacts): CardArms {
+  const { lead_form: form, lead_channel: channel } = variantsOf(bucket);
+  const messenger = bucket.lead_channel === undefined ? undefined : MESSENGER_ARMS[channel];
+  if (messenger !== undefined && (messengers.whatsapp !== null || messengers.telegram !== null)) {
+    return { form: LEAD_FORMS.a, messenger, experiment: { name: "lead_channel", variant: channel } };
+  }
+  return { form: LEAD_FORMS[form], messenger: undefined, experiment: bucket.lead_form === undefined ? undefined : { name: "lead_form", variant: form } };
 }
 
 /**

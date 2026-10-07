@@ -53,10 +53,14 @@ export function withExperimentLead(
     if (state.lead) {
       const { assigned, forced } = assignedBy(await deps.experiments(), cookieReader(request.headers.get("cookie")));
       const entries = Object.entries(assigned);
+      // `lead_form`'s lead says the visitor's `lead_channel` arm, as its page events do (`ExperimentScope`'s `context`).
+      const channel = assigned.lead_channel === undefined ? {} : { lead_channel: assigned.lead_channel };
       if (entries.length) {
         deps.defer(() => {
           const sink = deps.sink();
-          for (const [experiment, variant] of entries) sink.capture(EXPERIMENT_EVENTS.lead, { experiment, variant, forced });
+          for (const [experiment, variant] of entries) {
+            sink.capture(EXPERIMENT_EVENTS.lead, { experiment, variant, forced, ...(experiment === "lead_form" ? channel : {}) });
+          }
         });
       }
     }

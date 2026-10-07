@@ -16,6 +16,8 @@ export interface ExperimentScopeProps {
   variant: string;
   /** Whether the experiment runs at all; a disabled one sends nothing. */
   enabled: boolean;
+  /** Another test's arm every event of this one carries (`lead_channel` on `lead_form`'s, `EXPERIMENT_PROPS`). */
+  context?: { lead_channel: string } | undefined;
   children: ReactNode;
 }
 
@@ -26,17 +28,19 @@ export interface ExperimentScopeProps {
  * browser the proxy assigned (an `ab_<key>` cookie) counts: a crawler gets the
  * same cached control page, runs its script and must not be an exposure.
  */
-export function ExperimentScope({ target, placeSlug, experiment, variant, enabled, children }: ExperimentScopeProps) {
+export function ExperimentScope({ target, placeSlug, experiment, variant, enabled, context, children }: ExperimentScopeProps) {
   const { key, host, brandId } = target;
   const sink = useMemo(() => experimentSink({ key, host, brandId }, placeSlug), [key, host, brandId, placeSlug]);
+  // A string, not the object: a fresh object from the server render each time would rebuild `onEvent`.
+  const leadChannel = context?.lead_channel;
 
   const onEvent = useCallback(
     (event: string, props: Record<string, unknown> = {}) => {
       if (!enabled || readCookie(cookieName(experiment)) === undefined) return;
-      const mapped = experimentEvent(experiment, event, props, readCookie(QA_COOKIE) === "1");
+      const mapped = experimentEvent(experiment, event, leadChannel === undefined ? props : { ...props, lead_channel: leadChannel }, readCookie(QA_COOKIE) === "1");
       if (mapped) sink.capture(mapped[0], mapped[1], { transport: "beacon" });
     },
-    [sink, experiment, enabled],
+    [sink, experiment, enabled, leadChannel],
   );
 
   useEffect(() => {

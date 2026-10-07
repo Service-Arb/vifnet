@@ -1,9 +1,11 @@
-import type { BookingProvider, Place, PricingModel } from "@evinvest/kitstart";
+import type { BookingProvider, MessengerFacts, MessengerVariant, Place, PricingModel } from "@evinvest/kitstart";
 import { leadCaptureText, type Copy } from "@/entities/content";
-import { BEDROOMS, FLOWS, LEAD, PHOTO_NEEDS, SUBJECTS, type LeadForm, type Subject } from "@/shared/config/lead";
+import { BEDROOMS, FLOWS, LEAD, MESSAGE_REF_PREFIX, PHOTO_NEEDS, SUBJECTS, type LeadForm, type Subject } from "@/shared/config/lead";
+import { site } from "@/shared/config/site";
 import { Icon } from "@/shared/ui/Icon";
 import { AfterPhone, BedroomsField } from "./fields";
 import { formShape } from "./forms";
+import { messengerShape } from "./messenger";
 import { QuoteCapture } from "./QuoteCapture";
 
 /**
@@ -11,6 +13,8 @@ import { QuoteCapture } from "./QuoteCapture";
  * back, so the price line says what is left (`price="compact"`).
  */
 const TAX_CREDIT = 0.5;
+
+const NO_MESSENGERS: MessengerFacts = { whatsapp: null, telegram: null };
 
 export interface QuoteCardProps {
   copy: Copy;
@@ -28,6 +32,18 @@ export interface QuoteCardProps {
   form: LeadForm;
   /** The assignment the card's events and its post carry; none when no test runs. */
   experiment: { name: string; variant: string } | undefined;
+  /**
+   * Experiment `lead_channel`'s arm (`MESSENGER_ARMS`): how the card offers
+   * WhatsApp and the bot; `undefined` → the control. With an arm, `form` is
+   * the compact one (`cardArms`).
+   */
+  messenger?: MessengerVariant | undefined;
+  /**
+   * `messengerFacts(site, place)`: the place's own WhatsApp — never the
+   * brand's phone, which `contact` falls back to — and its bot, each `null`
+   * when off. Without WhatsApp every arm draws the control; absent, none is offered.
+   */
+  messengers?: MessengerFacts | undefined;
   /**
    * Experiment `booking_provider`'s arm as a provider: kitstart offers it after
    * a priced lead when the place has it, else the place's default (`bookingOf`);
@@ -50,11 +66,15 @@ export interface QuoteCardProps {
  * with what is left after the tax credit, "Réserver"; the other jobs are
  * quotes, with photos on WhatsApp when the place has it. Under the phone one
  * line says the number stays with us; the other channels are one row.
+ * An arm of `lead_channel` (`messenger`) offers WhatsApp and the bot in the
+ * card instead (`messengerShape`: its words, its parts, its lede).
  */
-export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need, form, experiment, bookingVariant }: QuoteCardProps) {
+export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need, form, experiment, messenger, messengers = NO_MESSENGERS, bookingVariant }: QuoteCardProps) {
   const { t, locale } = copy;
   const shape = formShape(form, t, pricing);
   const priceFirst = form === "price-first";
+  const arm = messenger === undefined ? null : messengerShape(messenger, messengers, t.quote.messenger, t.quoteForm.lede);
+  const lede = arm === null ? t.quoteForm.lede : arm.lede;
   const text = {
     ...leadCaptureText(t, locale),
     callback: t.quote.callback,
@@ -63,8 +83,22 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
     ...(form === "steps" ? { needLabel: t.quote.needQuestion } : {}),
     // "Je ne sais pas" made the clean a quote: the frame's words over the photos ask.
     ...(priceFirst ? { photosTitle: t.quote.unknown.title, photosLede: t.quote.unknown.lede } : {}),
+    ...arm?.text,
   };
   const phone = <Icon name="phone" className="size-4" />;
+  // The control draws no messenger icon. An arm's are 20 px, as its buttons'; the
+  // fallback's «ou via Telegram» and the channel row keep the row's 16.
+  const glyph = arm !== null && messengers.whatsapp !== null ? "size-5" : "size-4";
+  const icons =
+    arm === null
+      ? { phone, callback: phone }
+      : {
+          phone,
+          callback: <Icon name="phone" className={glyph} />,
+          // The mark in the leaf token, not WhatsApp's own green: the palette has none for it.
+          whatsapp: <Icon name="whatsapp" className={`${glyph} text-positive`} />,
+          telegram: <Icon name="telegram" className={glyph} />,
+        };
   return (
     <QuoteCapture
       id={id}
@@ -89,7 +123,7 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
       taxCredit={TAX_CREDIT}
       afterPhone={<AfterPhone text={t.quote.afterPhone} />}
       channelsDisplay="row"
-      channelIcons={{ phone, callback: phone }}
+      channelIcons={icons}
       extras={
         <BedroomsField
           label={`${t.quote.labels.bedrooms} (${text.optional})`}
@@ -98,6 +132,10 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
         />
       }
       experiment={experiment}
+      messenger={messenger}
+      messengers={messengers}
+      refPrefix={MESSAGE_REF_PREFIX}
+      brand={site.brand.name}
       bookingVariant={bookingVariant}
       text={text}
       labels="hidden"
@@ -106,10 +144,10 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
       head={
         <div className={`flex flex-col gap-1 ${shape.head}`}>
           <h2 className="font-display text-2xl leading-8 font-bold text-brand">{t.quoteForm.title}</h2>
-          <p className="text-sm leading-5 text-ink-soft">{t.quoteForm.lede}</p>
+          {lede !== null && <p className="text-sm leading-5 text-ink-soft">{lede}</p>}
         </div>
       }
-      classNames={shape.look}
+      classNames={arm === null ? shape.look : { ...shape.look, ...arm.look }}
       doneText={{ title: t.quote.doneTitle, body: t.quote.doneBody }}
     />
   );

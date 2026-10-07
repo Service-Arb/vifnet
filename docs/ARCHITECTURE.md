@@ -40,6 +40,12 @@ same outbox carries one `experiments.declared@1` per start
 sees such rows go `dead`; `kitstart-outbox requeue` on the pod sends them
 again once the panel is upgraded.
 
+A messenger lead (WhatsApp, the Telegram bot: experiment `lead_channel`) goes
+as one under `PANEL_MESSENGER` — `channel` `whatsapp` / `telegram` and the
+chat's reference `message_ref` (`VF-7K3F`, `MESSAGE_REF_PREFIX`) — on, since
+the panel that takes them ships first; without it the panel would see a
+`form` with no reference.
+
 ## A place without an address
 
 Vifnet goes to its customers. Its place is a `service-area` presence, which
@@ -92,7 +98,7 @@ Google Maps, and a map here did not lift conversion.
 
 Place pages are ISR (`revalidate = 600`): no page reads the request, the link
 mode rides in the `[location]` param — and so does the home page's A/B
-bucket (`_vifnet~lead_form.b~booking_provider.a`, docs/EXPERIMENTS.md),
+bucket (`_vifnet~lead_form.b~booking_provider.a~lead_channel.a`, docs/EXPERIMENTS.md),
 which the proxy writes from the visitor's `ab_<key>` cookies under the
 panel's weights and kill switches; the page never asks the panel. The quote form is kitstart's
 `LeadCapture` — the form every Service-Arb brand shares, drawn as the frame's

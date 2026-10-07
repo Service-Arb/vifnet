@@ -1,4 +1,4 @@
-import type { CopySlice, CoreText, Said as CoreSaid } from "@evinvest/kitstart";
+import type { CopySlice, CoreText, LeadCaptureMessengerText, Said as CoreSaid } from "@evinvest/kitstart";
 import type { Locale } from "@/shared/config/i18n";
 import type { Bedrooms, Subject } from "@/shared/config/lead";
 import type { NavId } from "@/shared/config/nav";
@@ -58,6 +58,22 @@ export interface ServiceItem {
 }
 
 /**
+ * The words of the quote card's messenger arms, over kitstart's
+ * (`LEAD_CAPTURE_MESSENGER_TEXT`); a key left out is the kit's. Sent to the
+ * page only with an arm that draws one, so the control's card never carries them.
+ */
+export interface MessengerCopy {
+  /** Every arm's: the channels' names and lines, the message's preview, the chip, the QR code, the way back. */
+  words: Partial<LeadCaptureMessengerText>;
+  /** VF-3 (`swap`) asks no phone: its lede says where the quote goes. */
+  swapLede: string;
+  /** VF-3's call button and VF-4's drawer button: the call, with its promise. */
+  callNow: string;
+  /** VF-4 (`sheet`): its drawer names the channels its own way. */
+  sheet: Partial<LeadCaptureMessengerText>;
+}
+
+/**
  * Every string that differs between languages. It extends `CoreText`, the
  * words the machinery prints; the rest is the Figma frame's bands, one key per
  * band, EN verbatim from the frame. `FR` and `EN` are checked with
@@ -104,6 +120,8 @@ export interface Text extends CoreText<PageKey, Facts> {
     doneTitle: string;
     /** Around the number as typed, which is set bold. */
     doneBody: readonly [string, string];
+    /** The `lead_channel` arms' words (Figma "Lead form A/B", messengers v3: VF-1 … VF-6), over kitstart's. */
+    messenger: MessengerCopy;
   };
   stats: readonly { value: string; label: string }[];
   services: {
