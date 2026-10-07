@@ -67,11 +67,16 @@ const BASE: Look = {
 };
 
 const LOOKS: Readonly<Record<MessengerKind, Look>> = {
-  // VF-1: the select inside the phone's box, one 50 px field; the input loses its own frame; the trigger in the leaf tint.
+  // VF-1: the channel a suffix segment of the phone's 50 px field (the frame's
+  // 77:3531 VF-1): the addon loses its insets, so the trigger spans the field's
+  // height to its right edge, its outer corners the field's radius less the 1 px
+  // border, a 1 px rule from the input (the addon's own -0.45rem pull is dropped too,
+  // or the trigger runs past the edge). One focus ring, on the whole field.
   select: {
     messengerPicker:
-      "h-[50px] rounded-xl border-input bg-background shadow-none [&_input]:h-full [&_input]:rounded-none [&_input]:border-0 [&_input]:shadow-none [&_input]:focus-visible:ring-0 has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring",
-    messengerTrigger: "rounded-r-xl bg-hover text-sm font-semibold text-brand",
+      "h-[50px] overflow-hidden rounded-xl border-input bg-background shadow-none [&_input]:h-full [&_input]:rounded-none [&_input]:border-0 [&_input]:shadow-none [&_input]:focus-visible:ring-0 [&>[data-slot=input-group-addon]]:h-full [&>[data-slot=input-group-addon]]:self-stretch [&>[data-slot=input-group-addon]]:m-0 [&>[data-slot=input-group-addon]]:p-0 has-[:focus-visible]:border-ring has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
+    messengerTrigger:
+      "h-full gap-1.5 self-stretch rounded-l-none rounded-r-[11px] border-l border-input bg-hover px-3 text-sm leading-5 font-semibold text-brand shadow-none focus-visible:ring-0 focus-visible:outline-none",
   },
   // VF-2: "Recevoir mon devis par" 14/20 semibold forest, the tiles in a row.
   tiles: {
