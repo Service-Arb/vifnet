@@ -4,7 +4,7 @@ import { BEDROOMS, FLOWS, LEAD, MESSAGE_REF_PREFIX, PHOTO_NEEDS, SUBJECTS, type 
 import { site } from "@/shared/config/site";
 import { Icon } from "@/shared/ui/Icon";
 import { AfterPhone, BedroomsField } from "./fields";
-import { formShape } from "./forms";
+import { formShape, type FormShape } from "./forms";
 import { messengerShape } from "./messenger";
 import { QuoteCapture } from "./QuoteCapture";
 
@@ -15,6 +15,14 @@ import { QuoteCapture } from "./QuoteCapture";
 const TAX_CREDIT = 0.5;
 
 const NO_MESSENGERS: MessengerFacts = { whatsapp: null, telegram: null };
+
+/**
+ * The preview's words over each question the form asks: an arm draws the
+ * compact form, which asks every estimate input, so each has its own.
+ */
+function previewed(questions: FormShape["questions"], labels: Readonly<Record<string, Record<string, string>>>): FormShape["questions"] {
+  return Object.fromEntries(Object.entries(questions).map(([id, q]) => [id, labels[id] === undefined ? q : { ...q, previewLabels: labels[id] }]));
+}
 
 /** The price list's frequency question (`shared/config/pricing.ts`), by its id. */
 const TIMING = { input: "frequency" } as const;
@@ -121,7 +129,7 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
       layout={shape.layout}
       needDisplay={shape.needDisplay}
       localityStep={shape.localityStep}
-      questions={shape.questions}
+      questions={arm === null ? shape.questions : previewed(shape.questions, t.quote.messenger.previewLabels)}
       focusNext
       price="compact"
       taxCredit={TAX_CREDIT}

@@ -71,6 +71,12 @@ export interface MessengerCopy {
   callNow: string;
   /** VF-4 (`sheet`): its drawer names the channels its own way. */
   sheet: Partial<LeadCaptureMessengerText>;
+  /**
+   * The estimate's answers in the message's preview, by the price list's
+   * option id («2 ch.», «40–70 m²», «2 sem.»): the tiles' short words
+   * («2», «40–70») say too little out of their question.
+   */
+  previewLabels: { bedrooms: Record<string, string>; surface: Record<string, string>; frequency: Record<string, string> };
 }
 
 /**

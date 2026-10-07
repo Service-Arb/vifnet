@@ -124,6 +124,11 @@ export const EN = {
         messengerOptionCall: "Call me back",
         messengerOptionCallNote: "Within 15 min",
       },
+      previewLabels: {
+        bedrooms: { studio: "Studio", "1": "1 bd.", "2": "2 bd.", "3": "3 bd.", "4": "4 bd.", "5-plus": "5+ bd." },
+        surface: { "under-40": "< 40 m²", "40-70": "40–70 m²", "70-100": "70–100 m²", "over-100": "> 100 m²" },
+        frequency: { weekly: "Weekly", biweekly: "2 wks", monthly: "Monthly", once: "Once" },
+      },
     },
   },
   stats: [
