@@ -76,9 +76,13 @@ const BASE: Look = {
   priceLine: "min-h-6 gap-x-1 text-base leading-6",
   priceTotal: "font-bold text-brand",
   priceTaxCredit: "text-sm leading-5 text-ink-soft",
-  // The summary at the line's height (the frame's 57 × 20), a chevron after it (app/globals.css).
-  priceDetail: "vf-price-detail text-sm leading-5 open:basis-full [&>summary]:min-h-0 [&>summary]:gap-0.5 [&>summary]:font-semibold [&>summary]:text-brand",
-  breakdown: "pt-2 leading-5",
+  // The trigger itself — the popover's button, or the summary without a script —
+  // at the line's height (the frame's 57 × 20), a chevron after it (app/globals.css).
+  priceDetail: "vf-price-detail min-h-0 gap-0.5 text-sm leading-5 font-semibold text-brand",
+  // The popover over the card: the card's white, its field's edge, a soft shadow, 13/20.
+  priceDetailContent: "w-72 rounded-xl border border-input bg-background p-4 text-[13px] leading-5 text-ink-soft shadow-lg",
+  // Inside the popover's padding: no gap of its own above it.
+  breakdown: "leading-5",
   priceNote: "text-[11px] leading-4 text-slate-400",
   photos: "w-full rounded-xl border-input",
   // After a priced lead: under the Done check, centred like it.

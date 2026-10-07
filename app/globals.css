@@ -110,7 +110,7 @@
    checks are drawn around them from the same icon files. */
 .vf-chevron-right::after,
 .vf-step-back::before,
-.vf-price-detail > summary::after,
+.vf-price-detail::after,
 .vf-chip > span:nth-child(2)::before {
   content: "";
   display: block;
