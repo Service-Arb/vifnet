@@ -57,13 +57,18 @@ A/B tests on the home page. Three places, each with one job:
 
   | event | props | sent |
   | --- | --- | --- |
-  | `experiment_exposed` | experiment, variant, forced | once per page view |
+  | `experiment_exposed` | experiment, variant, channels_available, forced | once per page view |
   | `experiment_contact` | experiment, variant, channel, forced | a `tel:`/WhatsApp tap, or a `data-intent` of `form_open`/`booking`/`telegram` |
   | `experiment_step` | experiment, variant, step, forced | nothing since `quote_single_step` ended (its two-step card sent it); kept for that history |
-  | `experiment_lead` | experiment, variant, forced | server side, in `/quote`, after kitstart accepted the lead |
+  | `experiment_lead` | experiment, variant, channel, channels_available, forced | server side, in `/quote`, after kitstart accepted the lead |
 
-  Every event also carries `brand_id`; the client ones carry `location_id`;
-  `lead_form`'s carry the visitor's `lead_channel` arm when it runs.
+  Every event also carries `brand_id`; the client ones carry `location_id`.
+  `channels_available` is the messengers the card offered (`wa,tg` | `wa` |
+  `tg` | `none`; the page's, or on a lead what the card posted), so the weeks
+  `lead_channel` was inert read apart. `experiment_lead`'s `channel` is the
+  lead's: `form`, `callback`, `whatsapp` or `telegram`. `lead_form`'s events
+  carry the visitor's `lead_channel` arm when it runs, and `superseded: true`
+  where `lead_channel` drew the card instead (below).
   Client events are sent only by a browser that has an `ab_<key>` cookie, so
   a crawler rendering the cached control page is never an exposure.
   `experiment_lead` is sent only when kitstart stored the lead and did not
@@ -254,31 +259,32 @@ the arms pool; aquafix is to run it with the same arms.
   their share is the same in both arms. `provider` is what was offered, so
   while the arm is inert both read `manual`.
 
-### `lead_channel` — inert until the panel gives the place WhatsApp or a bot
+### `lead_channel` — inert until the panel gives the place a WhatsApp number
 
 The key aquafix runs with its own arms (MESSENGER-CHANNELS-SPEC §4, Service-Arb):
 where the quote goes. Each arm is kitstart's `LeadCapture` `messenger` variant
 (`MESSENGER_ARMS`), drawn to the Figma page "Lead form A/B", messengers v3
 (section 109:3739, VF-1 … VF-6 and the fallback 110:4836).
 
-- **Inert today.** An arm draws only on a place with a WhatsApp number of its
-  own (the panel's place `whatsapp`, never the brand's phone) — kitstart's
-  rule; with a bot and no WhatsApp it is the control with «ou via Telegram»
-  under the submit; with neither, the control. The arm stays assigned and
-  counted either way, and every kitstart event says what the card had
-  (`channels_available`: `wa,tg` | `wa` | `tg` | `none`).
-- **Precedence over `lead_form`** (`cardArms`). An arm that draws (WhatsApp or
-  a bot on the place) takes the compact card whatever the visitor's
-  `lead_form` arm, and the card's own events and post (kitstart's
-  `experiment`, one per card) name `lead_channel` — kitstart adds
-  `messenger_variant`. Where nothing draws, `lead_form` keeps the card and its
-  events. `lead_form`'s `experiment_*` events carry the visitor's
-  `lead_channel` arm (`lead_channel`): read `lead_form` with
-  `lead_channel = a` once a place offers a messenger — or pause one of the two.
+- **Inert today.** The test draws only on a place with a WhatsApp number of
+  its own (the panel's place `whatsapp`, never the brand's phone) —
+  kitstart's rule. A bot alone leaves it inert: every arm is `lead_form`'s
+  card. The arm stays assigned and counted either way, and every event says
+  what the card had (`channels_available`: `wa,tg` | `wa` | `tg` | `none`) —
+  ours (`experiment_exposed`, `experiment_lead`) and kitstart's.
+- **Precedence over `lead_form`** (`cardArms`). Where it draws, `lead_channel`
+  decides the whole card for every arm, the control `a` too: the compact form
+  whatever the visitor's `lead_form` arm, so the channel's effect is never
+  read through two forms; the card's own events and post (kitstart's
+  `experiment`, one per card) name `lead_channel`, kitstart adds
+  `messenger_variant`. `lead_form` is superseded there: its `experiment_*`
+  events say `superseded: true` (and the visitor's `lead_channel` arm) —
+  read `lead_form` with `superseded` not `true`. Without WhatsApp nothing
+  changes: `lead_form` keeps the card and its events.
 - **Hypothesis**: sending the quote as our prefilled WhatsApp message (or
   through the bot), the phone asked only for a call, lifts leads per visit
   over the phone-only card (a).
-- **Control (a)**: the card as `lead_form` draws it.
+- **Control (a)**: the compact card, phone and «Réserver», as `lead_form`'s a draws it.
 - **Variants**: b VF-1, the channel in a select at the end of the phone field
   (WhatsApp: the number optional); c VF-2, «Recevoir mon devis par» and three
   tiles over a 72 px slot (the message / the bot / the phone); d VF-3, no
@@ -291,9 +297,13 @@ where the quote goes. Each arm is kitstart's `LeadCapture` `messenger` variant
   the chat reference `message_ref`, `VF-7K3F`), then opens the chat;
   `lead.created` says the channel and carries the reference under
   `PANEL_MESSENGER`.
-- **Primary metric**: lead rate, `experiment_lead / experiment_exposed`. A
-  messenger lead is posted on the tap, before the visitor sends anything, so
-  the chats actually started are the panel's (`lead.messaged`).
+- **Primary metric**: leads that reached us per exposure — form and callback
+  leads (`experiment_lead` with `channel` `form` | `callback`) plus messenger
+  leads the customer confirmed by writing (the panel's `lead.messaged`, in
+  PostHog `sa_lead_messaged`), over `experiment_exposed`, with
+  `channels_available` not `none`. Not the raw `experiment_lead`: a messenger
+  tap posts its lead before any message, so `experiment_lead` with `channel`
+  `whatsapp` | `telegram` is an intent, not a lead.
 - **Guardrail**: contact rate; `experiment_contact` counts a Telegram tap too
   (`channel = telegram`).
 - **Diagnostic**: kitstart's `lead_messenger_open`, `lead_messenger_return

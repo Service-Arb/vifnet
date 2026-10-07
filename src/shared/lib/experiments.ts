@@ -32,23 +32,31 @@ export interface CardArms {
   /** `lead_channel`'s variant; `undefined` → the control. */
   messenger: MessengerVariant | undefined;
   experiment: { name: ExperimentKey; variant: string } | undefined;
+  /** `lead_channel` decides the card, `lead_form` does not: its events say so (`superseded`). */
+  superseded: boolean;
 }
 
 /**
- * The card's arms (MESSENGER-CHANNELS-SPEC §4, precedence): a `lead_channel`
- * arm that draws a messenger wins — the compact form under it, whatever
- * `lead_form` says, and the card's events (kitstart's `experiment`, one per
- * card) name `lead_channel`. On a place that offers no messenger every arm of
- * it is the control, so it changes nothing there: `lead_form` keeps the form
- * and the events, and a visitor's `lead_form` arm is not overruled for nothing.
+ * The card's arms (MESSENGER-CHANNELS-SPEC §4, precedence). `lead_channel`
+ * draws only where the place has WhatsApp — kitstart's rule
+ * (`messengerShownOf`): a bot alone leaves every arm inert. There it decides
+ * the whole card for every arm, its control `a` too: the compact form, and the
+ * card's events (kitstart's `experiment`, one per card) name `lead_channel` —
+ * otherwise the channel's effect would be read through two different forms.
+ * `lead_form` is superseded there. Elsewhere `lead_form` keeps the form and
+ * the events, as before the test.
  */
 export function cardArms(bucket: Bucket, messengers: MessengerFacts): CardArms {
   const { lead_form: form, lead_channel: channel } = variantsOf(bucket);
-  const messenger = bucket.lead_channel === undefined ? undefined : MESSENGER_ARMS[channel];
-  if (messenger !== undefined && (messengers.whatsapp !== null || messengers.telegram !== null)) {
-    return { form: LEAD_FORMS.a, messenger, experiment: { name: "lead_channel", variant: channel } };
+  if (bucket.lead_channel !== undefined && messengers.whatsapp !== null) {
+    return { form: LEAD_FORMS.a, messenger: MESSENGER_ARMS[channel], experiment: { name: "lead_channel", variant: channel }, superseded: true };
   }
-  return { form: LEAD_FORMS[form], messenger: undefined, experiment: bucket.lead_form === undefined ? undefined : { name: "lead_form", variant: form } };
+  return {
+    form: LEAD_FORMS[form],
+    messenger: undefined,
+    experiment: bucket.lead_form === undefined ? undefined : { name: "lead_form", variant: form },
+    superseded: false,
+  };
 }
 
 /**

@@ -1,4 +1,4 @@
-import { contactOf, faqPageNode, messengerFacts, placeGraph, type AnalyticsTarget, type PlaceView, type PricingModel } from "@evinvest/kitstart";
+import { channelsAvailable, contactOf, faqPageNode, messengerFacts, placeGraph, type AnalyticsTarget, type PlaceView, type PricingModel } from "@evinvest/kitstart";
 import { AbSwitcher, JsonLd } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { ExperimentScope } from "@/features/experiment";
@@ -62,6 +62,8 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
   const messengers = messengerFacts(site, view.place);
   // `lead_channel` over `lead_form` (`cardArms`): its arm's form, and the one name the card's events carry.
   const card = cardArms(experiments.bucket, messengers);
+  // On every test's events: which messengers this card had (kitstart's events say it too).
+  const offered = channelsAvailable(messengers);
   return (
     <>
       <JsonLd data={graph} />
@@ -72,7 +74,9 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
         experiment="lead_form"
         variant={variant}
         enabled={running}
-        context={channelRunning ? { lead_channel: channel } : undefined}
+        channelsAvailable={offered}
+        leadChannel={channelRunning ? channel : undefined}
+        superseded={card.superseded}
       >
         {/* Its own exposures and contacts, so PostHog's funnel reads both tests alike. */}
         <ExperimentScope
@@ -81,6 +85,7 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
           experiment="booking_provider"
           variant={booking}
           enabled={bookingRunning}
+          channelsAvailable={offered}
         >
           <ExperimentScope
             target={experiments.target}
@@ -88,6 +93,7 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
             experiment="lead_channel"
             variant={channel}
             enabled={channelRunning}
+            channelsAvailable={offered}
           >
             <SiteHeader copy={copy} home={view.href("")} quoteHref={nav.quoteHref} links={nav.header} />
             <main>

@@ -16,8 +16,11 @@ export interface ExperimentScopeProps {
   variant: string;
   /** Whether the experiment runs at all; a disabled one sends nothing. */
   enabled: boolean;
-  /** Another test's arm every event of this one carries (`lead_channel` on `lead_form`'s, `EXPERIMENT_PROPS`). */
-  context?: { lead_channel: string } | undefined;
+  /** The messengers the card offered (`wa,tg` | `wa` | `tg` | `none`), on every event: an inert test's weeks read apart. */
+  channelsAvailable?: string | undefined;
+  /** On `lead_form`'s events: the visitor's `lead_channel` arm, and whether that test drew the card instead (`cardArms`). */
+  leadChannel?: string | undefined;
+  superseded?: boolean | undefined;
   children: ReactNode;
 }
 
@@ -28,19 +31,21 @@ export interface ExperimentScopeProps {
  * browser the proxy assigned (an `ab_<key>` cookie) counts: a crawler gets the
  * same cached control page, runs its script and must not be an exposure.
  */
-export function ExperimentScope({ target, placeSlug, experiment, variant, enabled, context, children }: ExperimentScopeProps) {
+export function ExperimentScope({ target, placeSlug, experiment, variant, enabled, channelsAvailable, leadChannel, superseded, children }: ExperimentScopeProps) {
   const { key, host, brandId } = target;
   const sink = useMemo(() => experimentSink({ key, host, brandId }, placeSlug), [key, host, brandId, placeSlug]);
-  // A string, not the object: a fresh object from the server render each time would rebuild `onEvent`.
-  const leadChannel = context?.lead_channel;
-
   const onEvent = useCallback(
     (event: string, props: Record<string, unknown> = {}) => {
       if (!enabled || readCookie(cookieName(experiment)) === undefined) return;
-      const mapped = experimentEvent(experiment, event, leadChannel === undefined ? props : { ...props, lead_channel: leadChannel }, readCookie(QA_COOKIE) === "1");
+      const extra = {
+        ...(channelsAvailable === undefined ? {} : { channels_available: channelsAvailable }),
+        ...(leadChannel === undefined ? {} : { lead_channel: leadChannel }),
+        ...(superseded ? { superseded: true } : {}),
+      };
+      const mapped = experimentEvent(experiment, event, { ...props, ...extra }, readCookie(QA_COOKIE) === "1");
       if (mapped) sink.capture(mapped[0], mapped[1], { transport: "beacon" });
     },
-    [sink, experiment, enabled, leadChannel],
+    [sink, experiment, enabled, channelsAvailable, leadChannel, superseded],
   );
 
   useEffect(() => {

@@ -97,7 +97,7 @@ const LOOKS: Readonly<Record<MessengerKind, Look>> = {
   },
   // VF-6: «Devis sur WhatsApp» beside two squares has 182 px: the frame's 15 px and a 6 px gap keep it off the edges.
   split: { messengerCta: `${WIDE_BUTTON} gap-1.5 px-3 text-[15px]` },
-  // Not aquafix's arms: never drawn here (`MESSENGER_ARMS`).
+  // aquafix's kinds (AQ-2, AQ-3, AQ-5, AQ-6): no vifnet arm draws them (`MESSENGER_ARMS`).
   segment: {},
   thanks: {},
   saga: {},

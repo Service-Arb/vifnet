@@ -133,8 +133,21 @@ export const EXPERIMENT_EVENTS = {
 
 /**
  * Everything an experiment event may carry; the sink drops (dev: throws on) the
- * rest. `lead_channel`: on `lead_form`'s events, the visitor's arm of it — an
- * arm other than `a` draws the compact card whatever `lead_form` says
- * (`cardArms`), so `lead_form` reads with `lead_channel = a`.
+ * rest. `channel`: a contact's, or on `experiment_lead` the lead's (`form`,
+ * `callback`, `whatsapp`, `telegram`). `channels_available`: the messengers the
+ * card offered (`wa,tg` | `wa` | `tg` | `none`), so the weeks a test was inert
+ * read apart. On `lead_form`'s events, `lead_channel` (the visitor's arm of it)
+ * and `superseded: true` where `lead_channel` drew the card instead (`cardArms`).
  */
-export const EXPERIMENT_PROPS = ["brand_id", "location_id", "experiment", "variant", "channel", "forced", "step", "lead_channel"] as const;
+export const EXPERIMENT_PROPS = [
+  "brand_id",
+  "location_id",
+  "experiment",
+  "variant",
+  "channel",
+  "forced",
+  "step",
+  "lead_channel",
+  "channels_available",
+  "superseded",
+] as const;
