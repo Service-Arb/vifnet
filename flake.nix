@@ -8,7 +8,7 @@
     v_flakes.url = "github:valeratrades/v_flakes?ref=v1.6";
     # The lib flake at the tag of the @evinvest/kitstart version in
     # package-lock.json — mkLanding refuses a mismatch.
-    ev.url = "github:EV-invest/lib?ref=@evinvest/kitstart-v0.17.0";
+    ev.url = "github:EV-invest/lib?ref=@evinvest/kitstart-v0.18.0";
     ev.inputs.v_flakes.follows = "v_flakes";
   };
 
@@ -53,12 +53,6 @@
             "instrumentation.ts"
           ];
           requiredFiles = [ "assets/fonts/Inter-Regular.ttf" ];
-          # BLOCKER: the unpublished @evinvest/kitstart with the messenger channels
-          # (MESSENGER-CHANNELS-SPEC §2), vendored until the owner publishes it to
-          # npm; then drop this, vendor/ and the `file:` dependency.
-          packageSourceOverrides = {
-            "node_modules/@evinvest/kitstart" = ./vendor/evinvest/evinvest-kitstart-0.17.0-messenger.tgz;
-          };
           smoke = {
             page = "/fr";
             og = "/og?l=vifnet";
