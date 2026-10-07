@@ -1,4 +1,11 @@
-import { HOUSE, STAR, SWOOSH, TAGLINE, WINDOW, WORD } from "./paths";
+import type { StaticImageData } from "next/image";
+import lockupSvg from "./lockup.svg";
+
+// Next types an `.svg` import as `any` (room for SVGR); it is this static
+// import's data. The hashed URL is cached immutably, so the paths are fetched
+// once per visitor rather than inlined in every page's HTML and RSC payload.
+const lockup: StaticImageData = lockupSvg;
+const part = (id: string) => `${lockup.src}#${id}`;
 
 /**
  * Figma Logo 5:66, per size: the mark's height, the gap after it, the word's
@@ -11,7 +18,7 @@ const SIZE = {
   sm: { mark: 24, gap: 8, word: [18, 22], wordWidth: 58, tagline: [4.2, 6], taglineGap: 1 },
 } as const;
 
-/** The frame the paths are drawn in (`./paths`): md's mark, and where its word and tagline sit. */
+/** The frame the paths are drawn in (`./lockup.svg`): md's mark, and where its word and tagline sit. */
 const MD = { mark: [65.333, 42], x: 79.333, wordBaseline: 26, wordSize: 30, taglineBaseline: 40, taglineSize: 7.4 } as const;
 /** Baseline below the middle of the line box, in em, as the outlines sit in md. */
 const WORD_DROP = 11 / 30;
@@ -54,8 +61,9 @@ export interface LogoProps {
 
 /**
  * The Vifnet lock-up (Figma Logo 5:66): the mark, the word and the tagline,
- * inline so each part paints through a class bound to a token
- * (`app/globals.css`) — the gold star stays gold in either tone.
+ * each a `<use>` of `./lockup.svg` rather than an `<img>`: a part's `fill`
+ * comes from a class bound to a token (`app/globals.css`) and inherits into
+ * the `<use>` — the gold star stays gold in either tone.
  */
 export function Logo({ size = "md", tone = "dark", tagline = size === "md", className }: LogoProps) {
   const l = layout(size, tagline);
@@ -71,13 +79,13 @@ export function Logo({ size = "md", tone = "dark", tagline = size === "md", clas
       xmlns="http://www.w3.org/2000/svg"
     >
       <g transform={l.mark}>
-        <path className="vifnet-mark-house" d={HOUSE} />
-        <path className="vifnet-mark-house" d={WINDOW} />
-        <path className="vifnet-mark-swoosh" d={SWOOSH} />
-        <path className="vifnet-mark-star" d={STAR} />
+        <use className="vifnet-mark-house" href={part("house")} />
+        <use className="vifnet-mark-house" href={part("window")} />
+        <use className="vifnet-mark-swoosh" href={part("swoosh")} />
+        <use className="vifnet-mark-star" href={part("star")} />
       </g>
-      <path className="vifnet-lockup-word" transform={l.word} d={WORD} />
-      {tagline && <path className="vifnet-lockup-tagline" transform={l.tagline} d={TAGLINE} />}
+      <use className="vifnet-lockup-word" transform={l.word} href={part("word")} />
+      {tagline && <use className="vifnet-lockup-tagline" transform={l.tagline} href={part("tagline")} />}
     </svg>
   );
 }
