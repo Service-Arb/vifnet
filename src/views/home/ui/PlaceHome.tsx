@@ -1,12 +1,12 @@
-import { contactOf, faqPageNode, placeGraph, type AnalyticsTarget, type PlaceView, type PricingModel } from "@evinvest/kitstart";
+import { channelsAvailable, contactOf, faqPageNode, messengerFacts, placeGraph, type AnalyticsTarget, type PlaceView, type PricingModel } from "@evinvest/kitstart";
 import { AbSwitcher, JsonLd } from "@evinvest/kitstart/react";
 import type { Copy } from "@/entities/content";
 import { ExperimentScope } from "@/features/experiment";
-import { abSwitcherExperiments, BOOKING_ARMS, LEAD_FORMS, QA_COOKIE } from "@/shared/config/experiments";
+import { abSwitcherExperiments, BOOKING_ARMS, QA_COOKIE } from "@/shared/config/experiments";
 import type { Locale } from "@/shared/config/i18n";
 import { ANCHORS, placeNav } from "@/shared/config/nav";
 import { site } from "@/shared/config/site";
-import { type Bucket, variantsOf } from "@/shared/lib/experiments";
+import { type Bucket, cardArms, variantsOf } from "@/shared/lib/experiments";
 import { fromPrices } from "@/shared/lib/from-price";
 import { Closing } from "@/widgets/closing";
 import { FaqBand } from "@/widgets/faq";
@@ -55,9 +55,15 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
   const now = new Date(renderedAt);
   const nav = placeNav(view, t.nav, site.pages.home);
   const graph = placeGraph(site, view, "home", { placeName: f.place, title: t.pages.home.title(f), description: t.pages.home.description(f) }, now);
-  const { lead_form: variant, booking_provider: booking } = variantsOf(experiments.bucket);
+  const { lead_form: variant, booking_provider: booking, lead_channel: channel } = variantsOf(experiments.bucket);
   const running = experiments.bucket.lead_form !== undefined;
   const bookingRunning = experiments.bucket.booking_provider !== undefined;
+  const channelRunning = experiments.bucket.lead_channel !== undefined;
+  const messengers = messengerFacts(site, view.place);
+  // `lead_channel` over `lead_form` (`cardArms`): its arm's form, and the one name the card's events carry.
+  const card = cardArms(experiments.bucket, messengers);
+  // On every test's events: which messengers this card had (kitstart's events say it too).
+  const offered = channelsAvailable(messengers);
   return (
     <>
       <JsonLd data={graph} />
@@ -68,6 +74,9 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
         experiment="lead_form"
         variant={variant}
         enabled={running}
+        channelsAvailable={offered}
+        leadChannel={channelRunning ? channel : undefined}
+        superseded={card.superseded}
       >
         {/* Its own exposures and contacts, so PostHog's funnel reads both tests alike. */}
         <ExperimentScope
@@ -76,36 +85,48 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
           experiment="booking_provider"
           variant={booking}
           enabled={bookingRunning}
+          channelsAvailable={offered}
         >
-          <SiteHeader copy={copy} home={view.href("")} quoteHref={nav.quoteHref} links={nav.header} />
-          <main>
-            <Hero
-              copy={copy}
-              form={
-                <QuoteCard
-                  copy={copy}
-                  id={SECTION_IDS.quote}
-                  place={view.place}
-                  contact={contactOf(site, view.place)}
-                  renderedAt={renderedAt}
-                  pricing={pricing}
-                  form={LEAD_FORMS[variant]}
-                  experiment={running ? { name: "lead_form", variant } : undefined}
-                  bookingVariant={bookingRunning ? BOOKING_ARMS[booking] : null}
-                />
-              }
-            />
-            <Stats copy={copy} />
-            <Services copy={copy} id={SECTION_IDS.services} quoteHref={nav.quoteHref} from={fromPrices(pricing)} />
-            <Reviews copy={copy} id={SECTION_IDS.reviews} quoteHref={nav.quoteHref} />
-            <Guarantee copy={copy} />
-            <FaqBand copy={copy} id={SECTION_IDS.faq} />
-            <Closing copy={copy} id={SECTION_IDS.closing} quoteHref={nav.quoteHref} />
-          </main>
-          <SiteFooter copy={copy} year={now.getFullYear()} links={nav.footer} other={nav.other} />
-          {/* Room under the footer for the sticky bar, on the footer's colour. */}
-          <div aria-hidden="true" className="dark h-14 bg-popover" />
-          <StickyBar copy={copy} quoteHref={nav.quoteHref} />
+          <ExperimentScope
+            target={experiments.target}
+            placeSlug={view.place.slug}
+            experiment="lead_channel"
+            variant={channel}
+            enabled={channelRunning}
+            channelsAvailable={offered}
+          >
+            <SiteHeader copy={copy} home={view.href("")} quoteHref={nav.quoteHref} links={nav.header} />
+            <main>
+              <Hero
+                copy={copy}
+                form={
+                  <QuoteCard
+                    copy={copy}
+                    id={SECTION_IDS.quote}
+                    place={view.place}
+                    contact={contactOf(site, view.place)}
+                    renderedAt={renderedAt}
+                    pricing={pricing}
+                    form={card.form}
+                    experiment={card.experiment}
+                    messenger={card.messenger}
+                    messengers={messengers}
+                    bookingVariant={bookingRunning ? BOOKING_ARMS[booking] : null}
+                  />
+                }
+              />
+              <Stats copy={copy} />
+              <Services copy={copy} id={SECTION_IDS.services} quoteHref={nav.quoteHref} from={fromPrices(pricing)} />
+              <Reviews copy={copy} id={SECTION_IDS.reviews} quoteHref={nav.quoteHref} />
+              <Guarantee copy={copy} />
+              <FaqBand copy={copy} id={SECTION_IDS.faq} />
+              <Closing copy={copy} id={SECTION_IDS.closing} quoteHref={nav.quoteHref} />
+            </main>
+            <SiteFooter copy={copy} year={now.getFullYear()} links={nav.footer} other={nav.other} />
+            {/* Room under the footer for the sticky bar, on the footer's colour. */}
+            <div aria-hidden="true" className="dark h-14 bg-popover" />
+            <StickyBar copy={copy} quoteHref={nav.quoteHref} />
+          </ExperimentScope>
         </ExperimentScope>
       </ExperimentScope>
       {/* The QA menu, here and not in the layout: the proxy forces and assigns

@@ -1,5 +1,5 @@
 import type { ExperimentConfig, OverriddenConfig } from "@evinvest/experiments";
-import type { BookingProvider } from "@evinvest/kitstart";
+import type { BookingProvider, MessengerVariant } from "@evinvest/kitstart";
 import type { AbSwitcherExperiment } from "@evinvest/kitstart/react";
 import type { LeadForm } from "./lead";
 
@@ -29,6 +29,15 @@ export const EXPERIMENTS = {
    * place a schedule: without one, kitstart offers b the call too.
    */
   booking_provider: { variants: ["a", "b"], weights: [0.5, 0.5], enabled: true },
+  /**
+   * Where the quote goes (Figma "Lead form A/B", messengers v3,
+   * MESSENGER-CHANNELS-SPEC §4): a, the phone and "Réserver" as today; b–g,
+   * the visitor sends our prefilled message on WhatsApp (or opens the bot),
+   * the phone asked only for a call — VF-1 … VF-6 (`MESSENGER_ARMS`). A place
+   * offering no messenger draws the control in every arm. The key is the one
+   * aquafix runs, so the two sites' control arms pool.
+   */
+  lead_channel: { variants: ["a", "b", "c", "d", "e", "f", "g"], weights: [1, 1, 1, 1, 1, 1, 1], enabled: true },
 } as const satisfies ExperimentConfig;
 
 export type ExperimentKey = keyof typeof EXPERIMENTS;
@@ -44,11 +53,28 @@ export type LiveExperiments = OverriddenConfig<typeof EXPERIMENTS>;
 export const EXPERIMENT_SUMMARIES: Record<ExperimentKey, string> = {
   lead_form: "One question per screen (b), or the price of each frequency first with an \"I don't know\" way to a quote (c), lifts leads per visit over the compact one-screen form (a).",
   booking_provider: "After a priced lead, picking a slot on the owner's Google schedule books more slots than the promise of a call.",
+  lead_channel: "Sending the quote as a prefilled WhatsApp message (or through the Telegram bot), in one of six layouts (b–g), lifts leads per visit over the phone-only card (a).",
 };
 export type VariantOf<K extends ExperimentKey> = (typeof EXPERIMENTS)[K]["variants"][number];
 
 /** `lead_form`'s arms as the quote card's forms. */
 export const LEAD_FORMS = { a: "compact", b: "steps", c: "price-first" } as const satisfies Record<VariantOf<"lead_form">, LeadForm>;
+
+/**
+ * `lead_channel`'s arms as kitstart's `LeadCapture` draws them (`messenger`):
+ * a, the control (`undefined`); b VF-1, the channel in the phone field; c
+ * VF-2, tiles over a slot; d VF-3, no phone until «Être rappelé»; e VF-4, one
+ * button and a drawer; f VF-5, the lede a channel chip; g VF-6, a split button.
+ */
+export const MESSENGER_ARMS = {
+  a: undefined,
+  b: { kind: "select", side: "suffix" },
+  c: { kind: "tiles" },
+  d: { kind: "swap" },
+  e: { kind: "sheet" },
+  f: { kind: "chip" },
+  g: { kind: "split" },
+} as const satisfies Record<VariantOf<"lead_channel">, MessengerVariant | undefined>;
 
 /** `booking_provider`'s arms as kitstart's `bookingOf` names the providers. */
 export const BOOKING_ARMS = { a: "manual", b: "google_calendar" } as const satisfies Record<VariantOf<"booking_provider">, BookingProvider>;
@@ -61,6 +87,10 @@ export const BOOKING_ARMS = { a: "manual", b: "google_calendar" } as const satis
 const AB_SWITCHER_LABELS = {
   lead_form: { label: "Lead form", variants: { a: "Compact", b: "Steps", c: "Price first" } },
   booking_provider: { label: "Booking", variants: { a: "Call back", b: "Google Calendar" } },
+  lead_channel: {
+    label: "Lead channel",
+    variants: { a: "Phone (control)", b: "VF-1 Select", c: "VF-2 Tiles", d: "VF-3 Swap", e: "VF-4 Sheet", f: "VF-5 Chip", g: "VF-6 Split" },
+  },
 } as const satisfies { [K in ExperimentKey]: { label: string; variants: Record<VariantOf<K>, string> } };
 
 /**
@@ -101,5 +131,23 @@ export const EXPERIMENT_EVENTS = {
   lead: "experiment_lead",
 } as const;
 
-/** Everything an experiment event may carry; the sink drops (dev: throws on) the rest. */
-export const EXPERIMENT_PROPS = ["brand_id", "location_id", "experiment", "variant", "channel", "forced", "step"] as const;
+/**
+ * Everything an experiment event may carry; the sink drops (dev: throws on) the
+ * rest. `channel`: a contact's, or on `experiment_lead` the lead's (`form`,
+ * `callback`, `whatsapp`, `telegram`). `channels_available`: the messengers the
+ * card offered (`wa,tg` | `wa` | `tg` | `none`), so the weeks a test was inert
+ * read apart. On `lead_form`'s events, `lead_channel` (the visitor's arm of it)
+ * and `superseded: true` where `lead_channel` drew the card instead (`cardArms`).
+ */
+export const EXPERIMENT_PROPS = [
+  "brand_id",
+  "location_id",
+  "experiment",
+  "variant",
+  "channel",
+  "forced",
+  "step",
+  "lead_channel",
+  "channels_available",
+  "superseded",
+] as const;

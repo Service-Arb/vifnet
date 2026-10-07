@@ -119,7 +119,10 @@ test("the control's events carry the experiment and its variant", async ({ page 
   });
 
   const base = { experiment: "lead_form", variant: "a", forced: false, brand_id: "vifnet" };
-  await expect.poll(() => of(sent, "experiment_exposed")).toEqual([expect.objectContaining(base)]);
+  // lead_form's events say the visitor's lead_channel arm (pinned to a) and what the card offered: this
+  // place has no messenger, so lead_channel is inert and lead_form is not superseded.
+  await expect.poll(() => of(sent, "experiment_exposed")).toEqual([expect.objectContaining({ ...base, lead_channel: "a", channels_available: "none" })]);
+  expect(of(sent, "experiment_exposed")[0]).not.toHaveProperty("superseded");
   await expect
     .poll(() => of(sent, "experiment_contact").map(p => p["channel"]))
     .toEqual(["form_open", "phone"]);
@@ -164,6 +167,7 @@ test.describe("a new visitor", () => {
     expect(home.headers()["set-cookie"] ?? "").toMatch(/ab_lead_form=[abc];/);
     // The panel's weights (mock-panel.mjs: booking_provider all on b), not the code's 50/50.
     expect(home.headers()["set-cookie"] ?? "").toMatch(/ab_booking_provider=b;/);
+    expect(home.headers()["set-cookie"] ?? "").toMatch(/ab_lead_channel=[a-g];/);
     const sub = await request.get("/fr/prices", { headers: { cookie: "" } });
     expect(sub.headers()["set-cookie"] ?? "").not.toContain("ab_");
   });

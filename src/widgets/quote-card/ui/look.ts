@@ -15,7 +15,7 @@ export const FIELD =
   "h-[50px] rounded-xl bg-background py-3.5 text-sm leading-5 text-slate-700 shadow-none md:text-sm placeholder:text-slate-400 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring";
 
 /** The frame's full-width gold buttons: Button lg, 52 px at 32 × 14 and 16/24 bold, with shadow-sm. */
-const WIDE_BUTTON = "h-[52px] w-full px-(--control-px) py-3.5 text-(length:--control-text) leading-6 font-bold shadow-sm hover:bg-amber-400";
+export const WIDE_BUTTON = "h-[52px] w-full px-(--control-px) py-3.5 text-(length:--control-text) leading-6 font-bold shadow-sm hover:bg-amber-400";
 
 /** The 12 px line under the phone (`afterPhone`), beside the shield. */
 export const AFTER_PHONE = "vf-after-phone -mt-1.5 flex items-start gap-1.5 text-xs leading-4 text-ink-soft";
@@ -76,9 +76,13 @@ const BASE: Look = {
   priceLine: "min-h-6 gap-x-1 text-base leading-6",
   priceTotal: "font-bold text-brand",
   priceTaxCredit: "text-sm leading-5 text-ink-soft",
-  // The summary at the line's height (the frame's 57 × 20), a chevron after it (app/globals.css).
-  priceDetail: "vf-price-detail text-sm leading-5 open:basis-full [&>summary]:min-h-0 [&>summary]:gap-0.5 [&>summary]:font-semibold [&>summary]:text-brand",
-  breakdown: "pt-2 leading-5",
+  // The trigger itself — the popover's button, or the summary without a script —
+  // at the line's height (the frame's 57 × 20), a chevron after it (app/globals.css).
+  priceDetail: "vf-price-detail min-h-0 gap-0.5 text-sm leading-5 font-semibold text-brand",
+  // The popover over the card: the card's white, its field's edge, a soft shadow, 13/20.
+  priceDetailContent: "w-72 rounded-xl border border-input bg-background p-4 text-[13px] leading-5 text-ink-soft shadow-lg",
+  // Inside the popover's padding: no gap of its own above it.
+  breakdown: "leading-5",
   priceNote: "text-[11px] leading-4 text-slate-400",
   photos: "w-full rounded-xl border-input",
   // After a priced lead: under the Done check, centred like it.

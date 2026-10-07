@@ -61,9 +61,16 @@ test.describe("a regular clean, priced live", () => {
     // 45 + 30 + 10 = 85 €, 10 % off = 76,50 €, to the euro: 77 €.
     await expect(price(page)).toHaveAttribute("data-price-cents", "7700");
     await expect(price(page)).toHaveText(/^env\.\s77\s€$/);
-    // How it was reached sits behind "Détail" on the compact card.
-    await form(page).getByText("Détail", { exact: true }).click();
-    await expect(form(page).getByRole("listitem").filter({ hasText: "Toutes les 2 semaines" })).toContainText("8,50");
+    // How it was reached sits behind "Détail" on the compact card: a popover
+    // over the page (kitstart's, portalled to <body>), so the card keeps its height.
+    const before = await card(page).evaluate(node => node.getBoundingClientRect().height);
+    await form(page).getByRole("button", { name: "Détail" }).click();
+    const breakdown = page.getByRole("dialog", { name: "Détail" });
+    await expect(breakdown.getByRole("listitem").filter({ hasText: "Toutes les 2 semaines" })).toContainText("8,50");
+    expect(await card(page).evaluate(node => node.getBoundingClientRect().height)).toBe(before);
+    await page.keyboard.press("Escape");
+    await expect(breakdown).toBeHidden();
+    await expect(form(page).getByRole("button", { name: "Détail" })).toBeFocused();
 
     await answer(page, "Une fois");
     await expect(price(page)).toHaveAttribute("data-price-cents", "8500");

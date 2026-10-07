@@ -34,11 +34,13 @@ export function experimentEvent(experiment: string, event: string, props: Props,
   return [name, { experiment, ...props, forced }];
 }
 
-const INTENTS = ["form_open", "booking"];
+// `telegram`: the bot's link in a `lead_channel` arm (kitstart marks it, `t.me` is no contact link to the marketing kit).
+const INTENTS = ["form_open", "booking", "telegram"];
 
 /**
  * The contact a click is, found where kitstart's own tracking finds it: a
- * `tel:` or WhatsApp link, or a `data-intent` of `form_open` / `booking`.
+ * `tel:` or WhatsApp link, or a `data-intent` of `form_open` / `booking` /
+ * `telegram`.
  */
 export function contactOf(target: EventTarget | null): string | null {
   if (!(target instanceof Element)) return null;

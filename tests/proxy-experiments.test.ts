@@ -9,7 +9,10 @@ vi.mock("@/shared/config/env", () => ({ liveExperiments: async () => applyOverri
 
 const { proxy } = await import("../proxy");
 
-const BROWSER = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/131 Safari/537.36";
+/** A visitor the proxy has put in an arm of every test: nothing left for it to draw. */
+const ASSIGNED = "ab_lead_form=b; ab_booking_provider=a; ab_lead_channel=e";
+
+const BROWSER ="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/131 Safari/537.36";
 
 function get(path: string, cookie = ""): NextRequest {
   return new NextRequest(new URL(path, "http://localhost"), { headers: { host: "localhost", "user-agent": BROWSER, cookie } });
@@ -27,19 +30,29 @@ describe("the proxy under the panel's overrides", () => {
   });
 
   it("rewrites an assigned visitor to a path naming every running test", async () => {
-    expect(await rewrittenTo(get("/fr", "ab_lead_form=b; ab_booking_provider=a"))).toBe("/fr/_vifnet~lead_form.b~booking_provider.a");
+    expect(await rewrittenTo(get("/fr", ASSIGNED))).toBe("/fr/_vifnet~lead_form.b~booking_provider.a~lead_channel.e");
   });
 
   it("drops a switched-off test from the path even with its cookie: the page renders its control and counts nothing", async () => {
     overrides = { lead_form: { enabled: false } };
-    expect(await rewrittenTo(get("/fr", "ab_lead_form=b; ab_booking_provider=a"))).toBe("/fr/_vifnet~booking_provider.a");
+    expect(await rewrittenTo(get("/fr", ASSIGNED))).toBe("/fr/_vifnet~booking_provider.a~lead_channel.e");
+    overrides = { lead_channel: { enabled: false } };
+    expect(await rewrittenTo(get("/fr", ASSIGNED))).toBe("/fr/_vifnet~lead_form.b~booking_provider.a");
   });
 
   it("assigns no cookie for a switched-off test, and the panel's weights for a running one", async () => {
-    overrides = { lead_form: { enabled: false }, booking_provider: { weights: [0, 1] } };
+    overrides = { lead_form: { enabled: false }, booking_provider: { weights: [0, 1] }, lead_channel: { weights: [0, 0, 0, 0, 0, 0, 1] } };
     const cookies = (await proxy(get("/fr"))).cookies;
     expect(cookies.get("ab_lead_form")).toBeUndefined();
     expect(cookies.get("ab_booking_provider")?.value).toBe("b");
+    expect(cookies.get("ab_lead_channel")?.value).toBe("g");
+  });
+
+  it("forces a lead_channel arm by its link, beside the visitor's other arms", async () => {
+    const response = await proxy(get("/fr?ab_lead_channel=c", "ab_lead_form=b; ab_booking_provider=a"));
+    expect(response.cookies.get("ab_lead_channel")?.value).toBe("c");
+    expect(response.cookies.get("ab__qa")?.value).toBe("1");
+    expect(new URL(response.headers.get("x-middleware-rewrite") ?? "http://x/").pathname).toBe("/fr/_vifnet~lead_form.b~booking_provider.a~lead_channel.c");
   });
 
   describe("the paused list a QA browser gets", () => {
@@ -78,7 +91,7 @@ describe("the proxy under the panel's overrides", () => {
 
     it("gives a visitor who is not QA no new cookie at all, paused test or not", async () => {
       overrides = { lead_form: { enabled: false } };
-      expect((await proxy(get("/fr", "ab_lead_form=b; ab_booking_provider=a"))).headers.getSetCookie()).toEqual([]);
+      expect((await proxy(get("/fr", ASSIGNED))).headers.getSetCookie()).toEqual([]);
     });
 
     it("gives a bot nothing, QA cookie or not", async () => {
@@ -90,9 +103,9 @@ describe("the proxy under the panel's overrides", () => {
 
   it("takes no forced variant of a switched-off test, so the browser is not marked QA for it", async () => {
     overrides = { lead_form: { enabled: false } };
-    const response = await proxy(get("/fr?ab_lead_form=b", "ab_booking_provider=a"));
+    const response = await proxy(get("/fr?ab_lead_form=b", "ab_booking_provider=a; ab_lead_channel=a"));
     expect(response.cookies.get("ab__qa")).toBeUndefined();
-    expect(new URL(response.headers.get("x-middleware-rewrite") ?? "http://x/").pathname).toBe("/fr/_vifnet~booking_provider.a");
+    expect(new URL(response.headers.get("x-middleware-rewrite") ?? "http://x/").pathname).toBe("/fr/_vifnet~booking_provider.a~lead_channel.a");
   });
 
   it("serves a bucket path as it is, and strips a test switched off since it was written", async () => {
@@ -103,6 +116,6 @@ describe("the proxy under the panel's overrides", () => {
 
   it("ignores a malformed override: the config in code", async () => {
     overrides = { lead_form: { enabled: "no" as unknown as boolean, weights: [1] } };
-    expect(await rewrittenTo(get("/fr", "ab_lead_form=b; ab_booking_provider=a"))).toBe("/fr/_vifnet~lead_form.b~booking_provider.a");
+    expect(await rewrittenTo(get("/fr", ASSIGNED))).toBe("/fr/_vifnet~lead_form.b~booking_provider.a~lead_channel.e");
   });
 });

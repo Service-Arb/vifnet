@@ -1,6 +1,7 @@
 import "server-only";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { AnalyticsSink } from "@evinvest/analytics";
+import { CHANNEL_FIELD, LEAD_CHANNELS, submitTagsOf, type LeadChannel } from "@evinvest/kitstart";
 import { EXPERIMENT_EVENTS, type LiveExperiments } from "@/shared/config/experiments";
 import { assignedBy } from "@/shared/lib/experiments";
 
@@ -34,6 +35,24 @@ function cookieReader(header: string | null): (name: string) => string | undefin
   return name => jar.get(name);
 }
 
+const isChannel = (value: unknown): value is LeadChannel => typeof value === "string" && (LEAD_CHANNELS as readonly string[]).includes(value);
+
+/**
+ * What a lead's `experiment_lead` says beyond its arm, from the post: its
+ * `channel` (`form` unless the card said otherwise — a messenger lead is
+ * posted on the tap, before any message) and the messengers the card offered;
+ * on `lead_form`'s, the visitor's `lead_channel` arm and whether that test
+ * drew the card (it posted under `lead_channel`), as the page's events say.
+ */
+function postedProps(form: FormData | null, leadChannel: string | undefined): { all: Record<string, string>; leadForm: Record<string, string | boolean> } {
+  const posted = form?.get(CHANNEL_FIELD);
+  const tags = form ? submitTagsOf(form) : {};
+  return {
+    all: { channel: isChannel(posted) ? posted : "form", ...(tags.channels_available ? { channels_available: tags.channels_available } : {}) },
+    leadForm: { ...(leadChannel === undefined ? {} : { lead_channel: leadChannel }), ...(tags.experiment === "lead_channel" ? { superseded: true } : {}) },
+  };
+}
+
 /**
  * `/quote` with `experiment_lead`: once kitstart has accepted the lead, one
  * event per experiment the visitor's `ab_<key>` cookies put them in, after
@@ -49,14 +68,19 @@ export function withExperimentLead(
 ): (request: Request) => Promise<Response> {
   return async request => {
     const state = { lead: false };
+    // Read before the route takes the body: what the card posted says how the lead came.
+    const posted = request.clone().formData().catch(() => null);
     const response = await accepted.run(state, () => route(request));
     if (state.lead) {
       const { assigned, forced } = assignedBy(await deps.experiments(), cookieReader(request.headers.get("cookie")));
       const entries = Object.entries(assigned);
       if (entries.length) {
+        const props = postedProps(await posted, assigned.lead_channel);
         deps.defer(() => {
           const sink = deps.sink();
-          for (const [experiment, variant] of entries) sink.capture(EXPERIMENT_EVENTS.lead, { experiment, variant, forced });
+          for (const [experiment, variant] of entries) {
+            sink.capture(EXPERIMENT_EVENTS.lead, { experiment, variant, forced, ...props.all, ...(experiment === "lead_form" ? props.leadForm : {}) });
+          }
         });
       }
     }

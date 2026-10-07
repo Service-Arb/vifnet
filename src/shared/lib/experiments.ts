@@ -1,5 +1,7 @@
 import { cookieName, resolveVariant } from "@evinvest/experiments";
-import { EXPERIMENTS, type ExperimentKey, type LiveExperiments, QA_COOKIE, type VariantOf } from "@/shared/config/experiments";
+import type { MessengerFacts, MessengerVariant } from "@evinvest/kitstart";
+import { EXPERIMENTS, type ExperimentKey, LEAD_FORMS, type LiveExperiments, MESSENGER_ARMS, QA_COOKIE, type VariantOf } from "@/shared/config/experiments";
+import type { LeadForm } from "@/shared/config/lead";
 
 /** Every experiment's variant, the control where nothing else applies. */
 export type Assignment = { [K in ExperimentKey]: VariantOf<K> };
@@ -22,6 +24,39 @@ export const CONTROL: Assignment = Object.fromEntries(KEYS.map(k => [k, control(
 /** What a page renders: the bucket's variants, the control for the rest. */
 export function variantsOf(bucket: Bucket): Assignment {
   return { ...CONTROL, ...bucket };
+}
+
+/** What the quote card draws for a bucket, and the one assignment its own events and post carry. */
+export interface CardArms {
+  form: LeadForm;
+  /** `lead_channel`'s variant; `undefined` → the control. */
+  messenger: MessengerVariant | undefined;
+  experiment: { name: ExperimentKey; variant: string } | undefined;
+  /** `lead_channel` decides the card, `lead_form` does not: its events say so (`superseded`). */
+  superseded: boolean;
+}
+
+/**
+ * The card's arms (MESSENGER-CHANNELS-SPEC §4, precedence). `lead_channel`
+ * draws only where the place has WhatsApp — kitstart's rule
+ * (`messengerShownOf`): a bot alone leaves every arm inert. There it decides
+ * the whole card for every arm, its control `a` too: the compact form, and the
+ * card's events (kitstart's `experiment`, one per card) name `lead_channel` —
+ * otherwise the channel's effect would be read through two different forms.
+ * `lead_form` is superseded there. Elsewhere `lead_form` keeps the form and
+ * the events, as before the test.
+ */
+export function cardArms(bucket: Bucket, messengers: MessengerFacts): CardArms {
+  const { lead_form: form, lead_channel: channel } = variantsOf(bucket);
+  if (bucket.lead_channel !== undefined && messengers.whatsapp !== null) {
+    return { form: LEAD_FORMS.a, messenger: MESSENGER_ARMS[channel], experiment: { name: "lead_channel", variant: channel }, superseded: true };
+  }
+  return {
+    form: LEAD_FORMS[form],
+    messenger: undefined,
+    experiment: bucket.lead_form === undefined ? undefined : { name: "lead_form", variant: form },
+    superseded: false,
+  };
 }
 
 /**

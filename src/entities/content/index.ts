@@ -8,6 +8,7 @@ export {
   type BandHeadCopy,
   type Copy,
   type Facts,
+  type MessengerCopy,
   type PageHeadCopy,
   type Review,
   type ReviewKey,
