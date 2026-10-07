@@ -6,10 +6,10 @@ import { contactOf, experimentEvent } from "@/features/experiment/model/events";
 import { withExperimentLead, witnessedDefer } from "@/features/experiment/server";
 import { BOOKING_EXPERIMENT, bookingOf, messengerFacts, type MessengerFacts } from "@evinvest/kitstart";
 import { messengerRuleDisagreements } from "@evinvest/kitstart/testing";
-import { BOOKING_ARMS, EXPERIMENT_SUMMARIES, EXPERIMENTS } from "@/shared/config/experiments";
+import { abSwitcherExperiments, BOOKING_ARMS, EXPERIMENT_SUMMARIES, EXPERIMENTS } from "@/shared/config/experiments";
 import { LEAD } from "@/shared/config/lead";
 import { site } from "@/shared/config/site";
-import { assignedBy, bucketSuffix, cardArms, CONTROL, isBot, parseLocation, placeOfLocation, runningOf, variantsOf } from "@/shared/lib/experiments";
+import { assignedBy, bucketSuffix, cardArms, CONTROL, isBot, isQaMark, parseLocation, parseQaSnapshot, placeOfLocation, qaSnapshot, runningOf, variantsOf } from "@/shared/lib/experiments";
 
 /** The config as the panel serves it: none of its overrides, or lead_form switched off. */
 const AS_CODED = applyOverrides(EXPERIMENTS, {});
@@ -200,6 +200,46 @@ describe("who is in the experiment", () => {
     }
     expect(isBot("Mozilla/5.0 (Linux; Android 14; CUBOT_X30) AppleWebKit/537.36 Chrome/128 Mobile Safari/537.36")).toBe(false);
     expect(isBot("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 HeadlessChrome/131 Safari/537.36")).toBe(false);
+  });
+});
+
+describe("the QA mark", () => {
+  it("is any non-empty value: the snapshot, or the legacy 1", () => {
+    expect(isQaMark("lead_form.b~lead_channel.e")).toBe(true);
+    expect(isQaMark("-")).toBe(true);
+    expect(isQaMark("1")).toBe(true);
+    expect(isQaMark("")).toBe(false);
+    expect(isQaMark(undefined)).toBe(false);
+  });
+
+  it("holds the own arms in the bucket's order, and reads them back", () => {
+    expect(qaSnapshot({ lead_channel: "e", lead_form: "b" })).toBe("lead_form.b~lead_channel.e");
+    expect(parseQaSnapshot("lead_form.b~lead_channel.e")).toEqual({ lead_form: "b", lead_channel: "e" });
+  });
+
+  it("says no arm with a dash, never an empty value the menu would read as no QA", () => {
+    expect(qaSnapshot({})).toBe("-");
+    expect(parseQaSnapshot("-")).toEqual({});
+  });
+
+  it("skips a part naming a key or variant the code no longer has, and the legacy 1", () => {
+    expect(parseQaSnapshot("lead_form.z~hero.b~booking_provider.b")).toEqual({ booking_provider: "b" });
+    expect(parseQaSnapshot("1")).toEqual({});
+  });
+});
+
+describe("the QA menu's experiments", () => {
+  it("calls lead_channel inactive on a place with no WhatsApp, and leaves the rest as labelled", () => {
+    expect(abSwitcherExperiments({ whatsapp: false }).map(e => e.label)).toEqual(["Lead form", "Booking", "Lead channel — inactive here (no WhatsApp)"]);
+  });
+
+  it("calls lead_channel plainly on a place with WhatsApp", () => {
+    expect(abSwitcherExperiments({ whatsapp: true }).map(e => e.label)).toEqual(["Lead form", "Booking", "Lead channel"]);
+  });
+
+  it("offers every variant either way: a tap still forces it", () => {
+    const channel = abSwitcherExperiments({ whatsapp: false }).find(e => e.key === "lead_channel");
+    expect(channel?.variants.map(v => v.value)).toEqual(["a", "b", "c", "d", "e", "f", "g"]);
   });
 });
 

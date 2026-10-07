@@ -134,7 +134,7 @@ export function PlaceHome({ view, copy, renderedAt, pricing, experiments }: Plac
           nothing. Plain props, no cookie read: the gate decides after mount and
           the page stays static. bottom-20 lifts the chip over the StickyBar,
           which spans the bottom at every width (64 px). */}
-      <AbSwitcher experiments={abSwitcherExperiments()} qaCookie={QA_COOKIE} className="bottom-20" />
+      <AbSwitcher experiments={abSwitcherExperiments({ whatsapp: messengers.whatsapp !== null })} qaCookie={QA_COOKIE} className="bottom-20" />
     </>
   );
 }

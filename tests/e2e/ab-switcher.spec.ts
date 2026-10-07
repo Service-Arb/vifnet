@@ -2,7 +2,8 @@ import { expect, test, type Browser, type Page } from "@playwright/test";
 import { abState, POSTHOG_HOST } from "./env";
 
 // kitstart's QA menu (docs/EXPERIMENTS.md, "Forcing a variant"): a forced
-// visit gets the chip; a visitor without `ab__qa` downloads none of it.
+// visit gets the chip; a visitor without `ab__qa` downloads none of it, and
+// the home page with no force ends the test visit.
 
 const MARKER = "data-ab-switcher";
 const chip = (page: Page) => page.getByRole("button", { name: "A/B test switcher" });
@@ -97,25 +98,37 @@ test("the menu switches the lead form to price first", async ({ page }) => {
   await expect(chip(page)).toHaveText(/^A\/B\s*c\s*a\s*a$/);
 });
 
+test("the menu calls lead_channel inactive on a place with no WhatsApp", async ({ page }) => {
+  await page.goto("/fr?ab_lead_form=a");
+  await chip(page).click();
+  const menu = page.getByRole("dialog", { name: "A/B test switcher" });
+  await expect(menu.getByRole("group", { name: "Lead channel — inactive here (no WhatsApp)" })).toBeVisible();
+});
+
 test.describe("from the menu", () => {
   const button = (page: Page, name: string) => page.getByRole("dialog", { name: "A/B test switcher" }).getByRole("button", { name });
 
-  test("Reset drops the arms and the force, and keeps the visit a test", async ({ page, context }) => {
+  test("Reset ends the test visit: the own arms back, and no chip after the reload", async ({ page, context }) => {
     await page.goto("/fr?ab_lead_form=b");
     await chip(page).click();
     const sent = nextDocumentCookies(page);
+    const { exposed } = await gateDecided(page);
     await button(page, "Reset").click();
 
-    // What the reload asks with: no arm, so the proxy draws one again; still a test visit.
+    // What the reload asks with: no arm, and the own arms in the QA mark for the proxy to give back.
     const cookies = await sent;
     expect(cookies).not.toHaveProperty("ab_lead_form");
     expect(cookies).not.toHaveProperty("ab_booking_provider");
     expect(cookies).not.toHaveProperty("ab_lead_channel");
-    expect(cookies).toMatchObject({ ab__qa: "1" });
+    expect(cookies).toMatchObject({ ab__qa: "lead_form.a~booking_provider.a~lead_channel.a" });
     await expect(page).toHaveURL(url => !url.searchParams.has("ab_lead_form"));
-    await expect(chip(page)).toHaveText(/^A\/B\s*[abc]\s*[ab]\s*[a-g]$/);
+    await exposed;
+    await expect(chip(page)).toHaveCount(0);
+    // booking_provider on a although the panel draws every new arm on b (mock-panel.mjs): given back, not drawn.
     const jar = Object.fromEntries((await context.cookies()).map(c => [c.name, c.value]));
-    expect(jar).toMatchObject({ ab__qa: "1" });
+    expect(jar).toMatchObject({ ab_lead_form: "a", ab_booking_provider: "a", ab_lead_channel: "a" });
+    expect(jar).not.toHaveProperty("ab__qa");
+    expect(jar).not.toHaveProperty("ab__qa_off");
   });
 
   test("Leave test drops the QA mark, and the chip with it", async ({ page, context }) => {
@@ -132,11 +145,11 @@ test.describe("from the menu", () => {
     expect((await context.cookies()).map(c => c.name)).not.toContain("ab__qa");
   });
 
-  test("Leave test from the form's anchor reloads the page, not just the hash", async ({ page, context }) => {
-    // The test visit is marked; the page left is then the plain home page at
-    // its form, so Leave's target differs from it by nothing but the reload.
-    await page.goto("/fr?ab_lead_form=b");
-    await page.goto("/fr#devis");
+  test("Leave test from the form's anchor lands on the plain home page, its anchor dropped", async ({ page, context }) => {
+    // A menu shows on a forced URL only (the plain home page ends the test
+    // visit), so Leave's target differs by its query anyway; what is left to
+    // hold is that kitstart drops the anchor rather than scroll to it.
+    await page.goto("/fr?ab_lead_form=b#devis");
     await chip(page).click();
     const { exposed } = await gateDecided(page);
     const loaded = page.waitForEvent("load");
@@ -144,8 +157,7 @@ test.describe("from the menu", () => {
 
     await loaded;
     await exposed;
-    // kitstart drops the anchor on purpose: a URL differing by its hash alone would only scroll.
-    await expect(page).toHaveURL(url => url.pathname === "/fr" && url.hash === "");
+    await expect(page).toHaveURL(url => url.pathname === "/fr" && url.search === "" && url.hash === "");
     await expect(chip(page)).toHaveCount(0);
     expect((await context.cookies()).map(c => c.name)).not.toContain("ab__qa");
   });

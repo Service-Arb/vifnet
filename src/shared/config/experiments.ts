@@ -96,12 +96,16 @@ const AB_SWITCHER_LABELS = {
 /**
  * {@link AB_SWITCHER_LABELS} as kitstart's `AbSwitcher` takes them. A function,
  * not a constant: this module is in the client bundle (`ExperimentScope`), and
- * a top-level `.map` would ship there although only the server layout reads it.
+ * a top-level `.map` would ship there although only the server page reads it.
+ *
+ * `whatsapp`: whether the place has WhatsApp (`messengers.whatsapp`, the test
+ * `cardArms` applies). Without it every `lead_channel` arm draws the same
+ * card, so the menu says so rather than offer taps that change nothing.
  */
-export function abSwitcherExperiments(): AbSwitcherExperiment[] {
+export function abSwitcherExperiments({ whatsapp }: { whatsapp: boolean }): AbSwitcherExperiment[] {
   return Object.entries(AB_SWITCHER_LABELS).map(([key, { label, variants }]) => ({
     key,
-    label,
+    label: key === "lead_channel" && !whatsapp ? `${label} — inactive here (no WhatsApp)` : label,
     variants: Object.entries(variants).map(([value, variantLabel]) => ({ value, label: variantLabel })),
   }));
 }
@@ -110,9 +114,11 @@ export function abSwitcherExperiments(): AbSwitcherExperiment[] {
 export const FORCE_PARAM = "ab_";
 
 /**
- * Set on a forced visit, for as long as the assignment: every event from that
- * browser says `forced: true`, and PostHog's funnel leaves it out. Not `ab_<key>`
- * shaped on purpose — no experiment may be called `qa_`.
+ * Set on a forced visit, until the home page is opened with no force: every
+ * event from that browser says `forced: true`, and PostHog's funnel leaves it
+ * out; kitstart's menu shows while it has a value. The value is the visitor's
+ * own arms, given back when QA ends (`qaSnapshot`, the proxy) — never a flag.
+ * Not `ab_<key>` shaped on purpose — no experiment may be called `qa_`.
  */
 export const QA_COOKIE = "ab__qa";
 

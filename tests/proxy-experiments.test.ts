@@ -20,8 +20,43 @@ function get(path: string, cookie = ""): NextRequest {
 
 /** Where the proxy sends the request: the rewrite target's path, or `null` for none. */
 async function rewrittenTo(request: NextRequest): Promise<string | null> {
-  const target = (await proxy(request)).headers.get("x-middleware-rewrite");
+  return rewriteOf(await proxy(request));
+}
+
+function rewriteOf(response: Response): string | null {
+  const target = response.headers.get("x-middleware-rewrite");
   return target === null ? null : new URL(target).pathname;
+}
+
+/** The raw `Set-Cookie` lines a response sends for one cookie name. */
+const setCookies = (response: Response, name: string) => response.headers.getSetCookie().filter(c => c.startsWith(`${name}=`));
+
+/** `ASSIGNED`'s own arms, as the QA mark keeps them. */
+const ASSIGNED_SNAPSHOT = "lead_form.b~booking_provider.a~lead_channel.e";
+
+/**
+ * One browser across visits: each response's `Set-Cookie` lands in its jar
+ * (`Max-Age=0` removes), and the next visit sends the jar — what a QA tester's
+ * phone does between taps.
+ */
+function browser(cookie: string) {
+  const jar = new Map(
+    cookie.split("; ").map(pair => {
+      const [name = "", value = ""] = pair.split("=");
+      return [name, value] as const;
+    }),
+  );
+  return {
+    jar,
+    async visit(path: string) {
+      const response = await proxy(get(path, [...jar].map(([name, value]) => `${name}=${value}`).join("; ")));
+      for (const c of response.cookies.getAll()) {
+        if (c.maxAge === 0) jar.delete(c.name);
+        else jar.set(c.name, c.value);
+      }
+      return response;
+    },
+  };
 }
 
 describe("the proxy under the panel's overrides", () => {
@@ -48,45 +83,116 @@ describe("the proxy under the panel's overrides", () => {
     expect(cookies.get("ab_lead_channel")?.value).toBe("g");
   });
 
-  it("forces a lead_channel arm by its link, beside the visitor's other arms", async () => {
-    const response = await proxy(get("/fr?ab_lead_channel=c", "ab_lead_form=b; ab_booking_provider=a"));
+  it("forces a lead_channel arm by its link, beside the visitor's other arms, and keeps the own arms in the QA mark", async () => {
+    const response = await proxy(get("/fr?ab_lead_channel=c", ASSIGNED));
     expect(response.cookies.get("ab_lead_channel")?.value).toBe("c");
-    expect(response.cookies.get("ab__qa")?.value).toBe("1");
-    expect(new URL(response.headers.get("x-middleware-rewrite") ?? "http://x/").pathname).toBe("/fr/_vifnet~lead_form.b~booking_provider.a~lead_channel.c");
+    expect(response.cookies.get("ab__qa")?.value).toBe(ASSIGNED_SNAPSHOT);
+    expect(rewriteOf(response)).toBe("/fr/_vifnet~lead_form.b~booking_provider.a~lead_channel.c");
   });
 
-  describe("the paused list a QA browser gets", () => {
-    const pausedCookie = (response: Response) => response.headers.getSetCookie().filter(c => c.startsWith("ab__qa_off="));
+  describe("a QA visit, the URL its whole state", () => {
+    it("puts lead_form back on the visitor's own arm when the next force names lead_channel only", async () => {
+      const phone = browser(ASSIGNED);
+      await phone.visit("/fr?ab_lead_form=c");
+      const response = await phone.visit("/fr?ab_lead_channel=b");
+      expect(response.cookies.get("ab_lead_form")?.value).toBe("b");
+      expect(response.cookies.get("ab__qa")?.value).toBe(ASSIGNED_SNAPSHOT);
+      expect(rewriteOf(response)).toBe("/fr/_vifnet~lead_form.b~booking_provider.a~lead_channel.b");
+    });
+
+    it("ends on the home page with no force: own arms back, the mark and the paused list dropped", async () => {
+      overrides = { booking_provider: { enabled: false } };
+      const phone = browser(ASSIGNED);
+      await phone.visit("/fr?ab_lead_form=c");
+      await phone.visit("/fr?ab_lead_channel=b");
+      expect(phone.jar.get("ab__qa_off")).toBe("booking_provider");
+
+      const response = await phone.visit("/fr");
+      expect(rewriteOf(response)).toBe("/fr/_vifnet~lead_form.b~lead_channel.e");
+      expect(setCookies(response, "ab__qa")).toEqual([expect.stringMatching(/^ab__qa=;.*Max-Age=0/i)]);
+      expect(setCookies(response, "ab__qa_off")).toEqual([expect.stringMatching(/^ab__qa_off=;.*Max-Age=0/i)]);
+      expect(Object.fromEntries(phone.jar)).toEqual({ ab_lead_form: "b", ab_booking_provider: "a", ab_lead_channel: "e" });
+    });
+
+    it("gives the own arms back after Reset dropped every arm, rather than drawing new ones", async () => {
+      // The panel's weights would draw c, a and g: the arms that come back are the snapshot's.
+      overrides = { lead_form: { weights: [0, 0, 1] }, booking_provider: { weights: [1, 0] }, lead_channel: { weights: [0, 0, 0, 0, 0, 0, 1] } };
+      const response = await proxy(get("/fr", "ab__qa=lead_form.b~booking_provider.b~lead_channel.e"));
+      expect(response.cookies.get("ab_lead_form")?.value).toBe("b");
+      expect(response.cookies.get("ab_booking_provider")?.value).toBe("b");
+      expect(response.cookies.get("ab_lead_channel")?.value).toBe("e");
+      expect(rewriteOf(response)).toBe("/fr/_vifnet~lead_form.b~booking_provider.b~lead_channel.e");
+      expect(setCookies(response, "ab__qa")).toEqual([expect.stringMatching(/^ab__qa=;.*Max-Age=0/i)]);
+    });
+
+    it("takes a newcomer's snapshot from the arms drawn on that first forced visit", async () => {
+      overrides = { lead_form: { weights: [0, 1, 0] }, booking_provider: { weights: [0, 1] }, lead_channel: { weights: [0, 0, 0, 1, 0, 0, 0] } };
+      const response = await proxy(get("/fr?ab_lead_form=c"));
+      expect(setCookies(response, "ab__qa")).toEqual([expect.stringMatching(/^ab__qa=lead_form\.b~booking_provider\.b~lead_channel\.d;/)]);
+      expect(response.cookies.get("ab_lead_form")?.value).toBe("c");
+      expect(response.cookies.get("ab_booking_provider")?.value).toBe("b");
+      expect(response.cookies.get("ab_lead_channel")?.value).toBe("d");
+    });
+
+    it("keeps the first snapshot on a later force, and sends the mark again for its 30 days", async () => {
+      const phone = browser(ASSIGNED);
+      await phone.visit("/fr?ab_lead_form=c");
+      const response = await phone.visit("/fr?ab_lead_form=a");
+      expect(response.cookies.get("ab_lead_form")?.value).toBe("a");
+      expect(setCookies(response, "ab__qa")).toEqual([expect.stringMatching(new RegExp(`^ab__qa=${ASSIGNED_SNAPSHOT};.*Max-Age=2592000`, "i"))]);
+    });
+
+    it("drops the legacy mark `1` on the home page with no force, and leaves the arms as they are", async () => {
+      const response = await proxy(get("/fr", "ab__qa=1; ab_lead_form=c; ab_booking_provider=a; ab_lead_channel=e"));
+      expect(setCookies(response, "ab__qa")).toEqual([expect.stringMatching(/^ab__qa=;.*Max-Age=0/i)]);
+      expect(response.headers.getSetCookie().filter(c => /^ab_[a-z]/.test(c))).toEqual([]);
+      expect(rewriteOf(response)).toBe("/fr/_vifnet~lead_form.c~booking_provider.a~lead_channel.e");
+    });
+
+    it("takes a legacy browser's cookies as its own arms on its next force", async () => {
+      const response = await proxy(get("/fr?ab_lead_channel=b", "ab__qa=1; ab_lead_form=c; ab_booking_provider=a; ab_lead_channel=e"));
+      expect(response.cookies.get("ab__qa")?.value).toBe("lead_form.c~booking_provider.a~lead_channel.e");
+    });
+
+    it("neither forces nor ends QA on a sub-page", async () => {
+      const response = await proxy(get("/fr/prices?ab_lead_form=c", `ab__qa=${ASSIGNED_SNAPSHOT}; ab_lead_form=a; ab_booking_provider=a; ab_lead_channel=e`));
+      expect(response.headers.getSetCookie().filter(c => c.startsWith("ab_"))).toEqual([]);
+    });
+  });
+
+  describe("the paused list a forced visit gets", () => {
+    const pausedCookie = (response: Response) => setCookies(response, "ab__qa_off");
+    const QA = `ab__qa=${ASSIGNED_SNAPSHOT}; ${ASSIGNED}`;
 
     it("names a paused test, as a session cookie, and keeps the test's arm", async () => {
       overrides = { lead_form: { enabled: false } };
-      const response = await proxy(get("/fr", "ab__qa=1; ab_lead_form=b; ab_booking_provider=a"));
+      const response = await proxy(get("/fr?ab_booking_provider=b", QA));
       const [sent, ...more] = pausedCookie(response);
       expect(more).toEqual([]);
       expect(sent).toMatch(/^ab__qa_off=lead_form;/);
       expect(sent).toMatch(/Path=\//i);
       expect(sent).toMatch(/SameSite=Lax/i);
       expect(sent).not.toMatch(/Max-Age|Expires/i);
-      expect(response.headers.getSetCookie().filter(c => c.startsWith("ab_lead_form="))).toEqual([]);
+      expect(setCookies(response, "ab_lead_form")).toEqual([]);
     });
 
     it("names it on the forced visit that makes the browser QA, beside the QA mark", async () => {
       overrides = { lead_form: { enabled: false } };
-      const response = await proxy(get("/fr?ab_booking_provider=b", "ab_lead_form=b"));
+      const response = await proxy(get("/fr?ab_booking_provider=b", ASSIGNED));
       expect(pausedCookie(response)).toEqual([expect.stringMatching(/^ab__qa_off=lead_form;/)]);
-      expect(response.cookies.get("ab__qa")?.value).toBe("1");
+      expect(response.cookies.get("ab__qa")?.value).toBe(ASSIGNED_SNAPSHOT);
       expect(response.cookies.get("ab_booking_provider")?.value).toBe("b");
     });
 
     it("drops the list once nothing is paused", async () => {
-      const [sent, ...more] = pausedCookie(await proxy(get("/fr", "ab__qa=1; ab__qa_off=lead_form; ab_lead_form=b; ab_booking_provider=a")));
+      const [sent, ...more] = pausedCookie(await proxy(get("/fr?ab_booking_provider=b", `ab__qa_off=lead_form; ${QA}`)));
       expect(more).toEqual([]);
       expect(sent).toMatch(/^ab__qa_off=;/);
       expect(sent).toMatch(/Max-Age=0/i);
     });
 
     it("sends nothing when nothing is paused and the browser has no list", async () => {
-      expect(pausedCookie(await proxy(get("/fr", "ab__qa=1; ab_lead_form=b; ab_booking_provider=a")))).toEqual([]);
+      expect(pausedCookie(await proxy(get("/fr?ab_booking_provider=b", QA)))).toEqual([]);
     });
 
     it("gives a visitor who is not QA no new cookie at all, paused test or not", async () => {
@@ -94,10 +200,10 @@ describe("the proxy under the panel's overrides", () => {
       expect((await proxy(get("/fr", ASSIGNED))).headers.getSetCookie()).toEqual([]);
     });
 
-    it("gives a bot nothing, QA cookie or not", async () => {
+    it("gives a bot nothing, QA cookie and force or not", async () => {
       overrides = { lead_form: { enabled: false } };
-      const bot = new NextRequest(new URL("/fr", "http://localhost"), { headers: { host: "localhost", "user-agent": "Googlebot/2.1", cookie: "ab__qa=1; ab_lead_form=b" } });
-      expect(pausedCookie(await proxy(bot))).toEqual([]);
+      const bot = new NextRequest(new URL("/fr?ab_booking_provider=b", "http://localhost"), { headers: { host: "localhost", "user-agent": "Googlebot/2.1", cookie: QA } });
+      expect((await proxy(bot)).headers.getSetCookie().filter(c => c.startsWith("ab_"))).toEqual([]);
     });
   });
 

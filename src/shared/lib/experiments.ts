@@ -117,7 +117,60 @@ export function assignedBy(live: LiveExperiments, cookie: (name: string) => stri
     const raw = cookie(cookieName(key));
     if (live[key].enabled !== false && raw !== undefined) assigned[key] = resolveVariant(live, key, raw);
   }
-  return { assigned: assigned as Bucket, forced: cookie(QA_COOKIE) === "1" };
+  return { assigned: assigned as Bucket, forced: isQaMark(cookie(QA_COOKIE)) };
+}
+
+/**
+ * Whether `QA_COOKIE`'s value marks a test visit: any non-empty value, the
+ * rule of kitstart's menu gate and `qaVisit`. Its value is the visitor's own
+ * arms ({@link qaSnapshot}), not a flag, so it is never compared to `"1"`.
+ */
+export function isQaMark(value: string | undefined): boolean {
+  return value !== undefined && value !== "";
+}
+
+/**
+ * Stands for "no arm at all" in `QA_COOKIE`: an empty value would read as no
+ * QA visit to kitstart's gate and `qaVisit`, so the menu would vanish on the
+ * very visit that forced a variant. `-` is no key, so it never parses as one.
+ */
+const NO_ARMS = "-";
+
+/**
+ * The visitor's own arms, kept in `QA_COOKIE` while a forced visit overrides
+ * their `ab_<key>`, so leaving QA gives them back: `lead_form.b~lead_channel.c`,
+ * {@link bucketSuffix} without its leading mark — cookie-safe as it stands.
+ */
+export function qaSnapshot(bucket: Bucket): string {
+  return bucketSuffix(bucket).slice(MARK.length) || NO_ARMS;
+}
+
+/**
+ * Inverse of {@link qaSnapshot}, against the code's keys and variants only: a
+ * part naming a key or variant since removed is skipped, the rest still
+ * restore. The legacy value `1` (before the snapshot) is no part: no arm.
+ */
+export function parseQaSnapshot(raw: string): Bucket {
+  const bucket: Record<string, string> = {};
+  for (const part of raw.split(MARK)) {
+    const [key = "", variant = ""] = part.split(".");
+    if ((KEYS as string[]).includes(key) && isVariant(key as ExperimentKey, variant)) bucket[key] = variant;
+  }
+  return bucket as Bucket;
+}
+
+/**
+ * Every `ab_<key>` that holds one of the code's variants, paused tests too —
+ * unlike {@link assignedBy}, which reads them under the live config: this is
+ * what the browser stores, for the QA snapshot to keep and give back.
+ */
+export function storedArms(cookie: (name: string) => string | undefined): Bucket {
+  const bucket: Record<string, string> = {};
+  for (const key of KEYS) {
+    const raw = cookie(cookieName(key));
+    if (raw !== undefined && isVariant(key, raw)) bucket[key] = raw;
+  }
+  return bucket as Bucket;
 }
 
 /** The experiments `live` has switched off (paused): their visitors keep their arms. */
