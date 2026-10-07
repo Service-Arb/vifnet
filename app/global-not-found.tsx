@@ -2,6 +2,7 @@ import "./globals.css";
 import { GONE_HEADER, parseGoneHeader } from "@evinvest/kitstart";
 import { headers } from "next/headers";
 import { site } from "@/shared/config/site";
+import { LockupSprite } from "@/shared/ui/brand/LockupSprite";
 import { display, text } from "@/shared/ui/fonts";
 import { Gone } from "@/views/not-found/server";
 
@@ -21,6 +22,7 @@ export default async function GlobalNotFound() {
   return (
     <html lang={locale} data-brand={site.brand.id} className={`light ${text.variable} ${display.variable}`}>
       <body>
+        <LockupSprite />
         <Gone locale={locale} location={gone.location ?? null} />
       </body>
     </html>

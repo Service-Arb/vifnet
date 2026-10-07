@@ -3,6 +3,7 @@ import { loadLocale, metadataBase } from "@evinvest/kitstart/next";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { site } from "@/shared/config/site";
+import { LockupSprite } from "@/shared/ui/brand/LockupSprite";
 import { display, text } from "@/shared/ui/fonts";
 
 /**
@@ -22,7 +23,10 @@ export default async function RootLayout({ children, params }: { children: React
   const locale = await loadLocale(site, params);
   return (
     <html lang={locale} data-brand={site.brand.id} className={`light ${text.variable} ${display.variable}`}>
-      <body>{children}</body>
+      <body>
+        <LockupSprite />
+        {children}
+      </body>
     </html>
   );
 }
