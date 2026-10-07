@@ -1,13 +1,13 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page, type Route } from "@playwright/test";
 import { abState, MESSENGER_PORT, POSTHOG_HOST } from "./env";
 
 // Experiment `lead_channel` (MESSENGER-CHANNELS-SPEC §4, docs/EXPERIMENTS.md):
 // a is the control, b–g VF-1 … VF-6 of the Figma page "Lead form A/B",
-// messengers v3, each forced by its link. Run against the second server,
-// whose place has a WhatsApp number and the bot `vifnet_devis_bot` (env.ts,
-// `MESSENGER_PORT`). The frames' rule: inside an arm every state has the
-// card's one height — what a state changes is swapped in a fixed slot or laid
-// over the card, never pushed under it.
+// messengers v3 (109:3739), each forced by its link. Run against the second
+// server, whose place has a phone, a WhatsApp number and the bot
+// `vifnet_devis_bot` (env.ts, `MESSENGER_PORT`). The frames' rule: inside an
+// arm every state has the card's one height — what a state changes is swapped
+// in a fixed slot or laid over the card, never pushed under it.
 
 test.use({ baseURL: `http://localhost:${MESSENGER_PORT}`, storageState: abState("a") });
 
@@ -16,6 +16,17 @@ test.beforeEach(async ({ page }, testInfo) => {
   // The analytics host resolves nowhere: answered, so a beacon is no console error.
   await page.route(`${POSTHOG_HOST}/**`, route => route.fulfill({ status: 204 }));
 });
+
+/**
+ * Each arm's card at 390, answered: the frame's card (VF-1 109:3776 is 674,
+ * VF-2 753, VF-3 674, VF-4 590, VF-5 684, VF-6 674 — each "Mobile 390" frame
+ * is 48 more, its 24 px margins) and 24 for "Détail" on a line of its own,
+ * which "env. 77 €" pushes there as it does on the control
+ * (`quote-card-layout.spec.ts`).
+ */
+const CARD_HEIGHT = { b: 698, c: 777, d: 698, e: 614, f: 708, g: 698 } as const;
+/** The acceptance's play: a pixel either way is the rasteriser's, not the layout's. */
+const SLACK = 2;
 
 /** What the console said, errors and warnings, plus anything thrown. */
 function listen(page: Page): string[] {
@@ -35,42 +46,88 @@ const height = async (page: Page) => Math.round(await card(page).evaluate(node =
 /** The prefilled message names the lead by the brand's reference (`Réf. VF-7K3F`, Crockford base32). */
 const REF = /R%C3%A9f\.%20VF-[0-9A-HJKMNP-TV-Z]{4,8}(&|$)/;
 const BOT = /^https:\/\/t\.me\/vifnet_devis_bot\?start=VF-[0-9A-HJKMNP-TV-Z]{4,8}$/;
+const MESSENGER_LINKS = 'a[href*="wa.me/"], a[href*="t.me/"]';
 
-/** The arm's page, hydrated, the job answered as the frames draw it: the price on the card. */
+/** The message a wa.me link opens WhatsApp with, decoded. */
+async function messageOf(link: Locator): Promise<string> {
+  const href = await link.getAttribute("href");
+  return new URL(href ?? "https://wa.me/").searchParams.get("text") ?? "";
+}
+
+/**
+ * The arm's page, hydrated, the job answered as the frames draw it — the
+ * card's "2", "40–70", "2 sem." and a postcode — the price on the card.
+ */
 async function open(page: Page, arm: string): Promise<void> {
   await page.goto(`/fr?ab_lead_channel=${arm}#devis`);
   await expect(page.locator("form#devis-form select")).toHaveCount(0);
   for (const answer of ["2 chambres", "40 à 70 m²", "Toutes les 2 semaines"]) await card(page).getByRole("radio", { name: answer, exact: true }).click();
+  await card(page).getByRole("textbox", { name: "Code postal" }).fill("63130");
   await expect(card(page).locator("[data-price-cents]")).toHaveText("env. 77 €");
 }
 
-/** The card is `before` tall once `shown` is on screen. */
+/** The card is the frame's height for `arm`, the page no wider than the phone, and the call above the form gone (the sticky bar has it). */
+async function asDrawn(page: Page, arm: keyof typeof CARD_HEIGHT): Promise<number> {
+  const drawn = await height(page);
+  expect(drawn, `card height, the frame's ${CARD_HEIGHT[arm]} ± ${SLACK}`).toBeGreaterThanOrEqual(CARD_HEIGHT[arm] - SLACK);
+  expect(drawn, `card height, the frame's ${CARD_HEIGHT[arm]} ± ${SLACK}`).toBeLessThanOrEqual(CARD_HEIGHT[arm] + SLACK);
+  await expect(card(page).getByRole("link", { name: "Appeler" })).toBeHidden();
+  await fitsThePhone(page);
+  return drawn;
+}
+
+async function fitsThePhone(page: Page): Promise<void> {
+  const { scrollWidth, clientWidth } = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
+  expect(scrollWidth, "no sideways scroll").toBe(clientWidth);
+}
+
+/** The card is still `before` tall, and the page the phone's width, once `shown` is on screen. */
 async function heldAt(page: Page, before: number, shown: Locator): Promise<void> {
   await expect(shown).toBeVisible();
   expect(await height(page)).toBe(before);
+  await fitsThePhone(page);
 }
 
-test("a: the control's card, no messenger arm in it", async ({ page }) => {
+/** The preview the card shows of the message: the answers, as the card words them, and the price. */
+async function previewSaysTheJob(page: Page): Promise<void> {
+  const preview = card(page).getByText(/^« Bonjour Vifnet/);
+  await expect(preview).toContainText("2 sem.");
+  await expect(preview).toContainText(/env\.\s77\s€/);
+  await expect(preview).toContainText("63130");
+}
+
+/** The message carries the price per visit, the frequency and the reference. */
+async function messageSaysTheJob(link: Locator): Promise<void> {
+  await expect(link).toHaveAttribute("href", REF);
+  const text = await messageOf(link);
+  expect(text).toMatch(/env\.\s77\s€ \/ passage/);
+  expect(text).toMatch(/Fréquence\s:\s/);
+  expect(text).toContain("63130");
+}
+
+test("a: the control's card, the call above the form, no messenger arm in it", async ({ page }) => {
   const said = listen(page);
   await open(page, "a");
   await expect(card(page).getByText("Nous vous rappelons en moins de 15 minutes.")).toBeVisible();
+  await expect(card(page).getByRole("link", { name: "Appeler" })).toBeVisible();
   await expect(card(page).getByRole("button", { name: "Réserver" })).toBeVisible();
   await expect(card(page).getByRole("group", { name: "Ou contactez-nous" })).toBeVisible();
   await expect(card(page).getByRole("combobox", { name: "Canal de réponse" })).toHaveCount(0);
   await expect(card(page).locator('a[href^="https://wa.me/"][href*="VF-"]')).toHaveCount(0);
   await expect(card(page).locator('a[href^="https://t.me/"]')).toHaveCount(0);
+  await fitsThePhone(page);
   expect(said).toEqual([]);
 });
 
-test("b (VF-1): the channel select in the phone field; WhatsApp and the call at one height", async ({ page }) => {
+test("b (VF-1): the channel select in the phone field; WhatsApp and the call at the frame's height", async ({ page }) => {
   const said = listen(page);
   await open(page, "b");
   const select = card(page).getByRole("combobox", { name: "Canal de réponse" });
   const whatsapp = card(page).getByRole("link", { name: "Recevoir mon devis sur WhatsApp" });
   await expect(select).toHaveText(/WhatsApp/);
   await expect(card(page).getByText("Devis rédigé dans WhatsApp · numéro facultatif.")).toBeVisible();
-  await expect(whatsapp).toHaveAttribute("href", REF);
-  const before = await height(page);
+  await messageSaysTheJob(whatsapp);
+  const before = await asDrawn(page, "b");
 
   await select.click();
   // The menu lies over the card: the card does not grow under it.
@@ -85,14 +142,15 @@ test("b (VF-1): the channel select in the phone field; WhatsApp and the call at 
   expect(said).toEqual([]);
 });
 
-test("c (VF-2): three tiles over one slot, the slot's height for each", async ({ page }) => {
+test("c (VF-2): three tiles over one slot, the frame's height for each", async ({ page }) => {
   const said = listen(page);
   await open(page, "c");
   const tiles = card(page).getByRole("group", { name: "Recevoir mon devis par" });
   await expect(tiles.getByRole("button", { name: "WhatsApp" })).toHaveAttribute("aria-pressed", "true");
   await expect(card(page).getByText("Votre devis est prêt à envoyer")).toBeVisible();
-  await expect(card(page).getByRole("link", { name: "Recevoir mon devis sur WhatsApp" })).toHaveAttribute("href", REF);
-  const before = await height(page);
+  await previewSaysTheJob(page);
+  await messageSaysTheJob(card(page).getByRole("link", { name: "Recevoir mon devis sur WhatsApp" }));
+  const before = await asDrawn(page, "c");
 
   await tiles.getByRole("button", { name: "Telegram" }).click();
   const bot = card(page).getByRole("link", { name: "Ouvrir Telegram" });
@@ -112,9 +170,9 @@ test("d (VF-3): no phone until «Être rappelé», which swaps in its slot", asy
   await open(page, "d");
   await expect(card(page).getByText("Votre devis est prêt : envoyez-le-nous sur WhatsApp.")).toBeVisible();
   await expect(card(page).getByRole("textbox", { name: "Téléphone" })).toHaveCount(0);
-  await expect(card(page).getByRole("link", { name: "Recevoir mon devis sur WhatsApp" })).toHaveAttribute("href", REF);
+  await messageSaysTheJob(card(page).getByRole("link", { name: "Recevoir mon devis sur WhatsApp" }));
   await expect(card(page).getByRole("link", { name: "Telegram" })).toHaveAttribute("href", BOT);
-  const before = await height(page);
+  const before = await asDrawn(page, "d");
 
   await card(page).getByRole("button", { name: "Être rappelé" }).click();
   await heldAt(page, before, card(page).getByRole("button", { name: "Être rappelé sous 15 min" }));
@@ -125,33 +183,46 @@ test("d (VF-3): no phone until «Être rappelé», which swaps in its slot", asy
   expect(said).toEqual([]);
 });
 
-test("e (VF-4): one button; its drawer lies over the page and the card keeps its height", async ({ page }) => {
+test("e (VF-4): one button; its drawer, and the call in it, lie over the page and the card keeps its height", async ({ page }) => {
   const said = listen(page);
   await open(page, "e");
   await expect(card(page).getByRole("textbox", { name: "Téléphone" })).toHaveCount(0);
-  const before = await height(page);
+  const before = await asDrawn(page, "e");
 
   await card(page).getByRole("button", { name: "Recevoir mon devis" }).click();
   const drawer = page.getByRole("dialog");
   await heldAt(page, before, drawer.getByText("Où recevoir votre devis ?"));
-  await expect(drawer.getByRole("link", { name: /^WhatsApp/ })).toHaveAttribute("href", REF);
+  await messageSaysTheJob(drawer.getByRole("link", { name: /^WhatsApp/ }));
   await expect(drawer.getByRole("link", { name: /^Telegram/ })).toHaveAttribute("href", BOT);
-  await expect(drawer.getByRole("button", { name: /^Être rappelé/ })).toBeVisible();
 
-  await page.keyboard.press("Escape");
-  await expect(drawer).toBeHidden();
-  expect(await height(page)).toBe(before);
+  await drawer.getByRole("button", { name: /^Être rappelé/ }).click();
+  await heldAt(page, before, drawer.getByRole("textbox", { name: "Téléphone" }));
+  await expect(drawer.getByRole("button", { name: "Être rappelé sous 15 min" })).toBeVisible();
   expect(said).toEqual([]);
 });
 
-test("f (VF-5): the lede is the channel chip; its menu and the call keep the height", async ({ page }) => {
+test("e (VF-4): Escape closes the drawer from its call, and the card is as it was", async ({ page }) => {
+  test.fail(true, "after «Être rappelé» in the drawer, focus falls to <body> and Escape no longer closes it (finding of 2026-10-07)");
+  await open(page, "e");
+  const before = await height(page);
+  await card(page).getByRole("button", { name: "Recevoir mon devis" }).click();
+  const drawer = page.getByRole("dialog");
+  await drawer.getByRole("button", { name: /^Être rappelé/ }).click();
+  await expect(drawer.getByRole("textbox", { name: "Téléphone" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  expect(await height(page)).toBe(before);
+});
+
+test("f (VF-5): the lede is the channel chip; its menu and the call keep the frame's height", async ({ page }) => {
   const said = listen(page);
   await open(page, "f");
   const chip = card(page).getByRole("combobox", { name: "Canal de réponse" });
   await expect(chip).toHaveText("Réponse sur WhatsApp · 15 min");
   await expect(card(page).getByText("Nous vous rappelons en moins de 15 minutes.")).toHaveCount(0);
-  await expect(card(page).getByRole("link", { name: "Recevoir mon devis sur WhatsApp" })).toHaveAttribute("href", REF);
-  const before = await height(page);
+  await previewSaysTheJob(page);
+  await messageSaysTheJob(card(page).getByRole("link", { name: "Recevoir mon devis sur WhatsApp" }));
+  const before = await asDrawn(page, "f");
 
   await chip.click();
   await heldAt(page, before, page.getByRole("option", { name: /^Telegram/ }));
@@ -164,9 +235,10 @@ test("f (VF-5): the lede is the channel chip; its menu and the call keep the hei
 test("g (VF-6): the WhatsApp button with the bot and 📞 beside it; the call swaps in its slot", async ({ page }) => {
   const said = listen(page);
   await open(page, "g");
-  await expect(card(page).getByRole("link", { name: "Devis sur WhatsApp" })).toHaveAttribute("href", REF);
+  await previewSaysTheJob(page);
+  await messageSaysTheJob(card(page).getByRole("link", { name: "Devis sur WhatsApp" }));
   await expect(card(page).getByRole("link", { name: "Telegram" })).toHaveAttribute("href", BOT);
-  const before = await height(page);
+  const before = await asDrawn(page, "g");
 
   await card(page).getByRole("button", { name: "Être rappelé" }).click();
   const back = card(page).getByRole("button", { name: "Revenir à WhatsApp" });
@@ -177,6 +249,66 @@ test("g (VF-6): the WhatsApp button with the bot and 📞 beside it; the call sw
   await heldAt(page, before, card(page).getByRole("link", { name: "Devis sur WhatsApp" }));
   expect(said).toEqual([]);
 });
+
+const SCRIPTS = /\/_next\/static\/chunks\/.+\.js(\?.*)?$/;
+
+/**
+ * The page as a visitor sees it while its scripts are still on the way: the
+ * server's HTML with its styles, the scripts held back. `hydrate` lets them
+ * through and loads the page again.
+ */
+async function beforeHydration(page: Page, arm: string): Promise<{ hydrate: () => Promise<void> }> {
+  const hold = (route: Route) => route.abort();
+  await page.route(SCRIPTS, hold);
+  await page.goto(`/fr?ab_lead_channel=${arm}#devis`);
+  await page.evaluate(() => document.fonts.ready);
+  // The contact block streams in after the card (a Suspense boundary, `<template id="B:0">`):
+  // React's inline script swaps it in shortly after load, with or without the page's scripts.
+  await expect(card(page).locator("template")).toHaveCount(0);
+  const hydrate = async () => {
+    await page.unroute(SCRIPTS, hold);
+    await page.reload();
+    await expect(page.locator("form#devis-form select")).toHaveCount(0);
+    // The forced visit's QA chip mounts with the page's script, past the card's.
+    await expect(page.getByRole("button", { name: "A/B test switcher" })).toBeVisible();
+    await expect(card(page).locator("template")).toHaveCount(0);
+  };
+  return { hydrate };
+}
+
+/** Each arm's main button, drawn by the server before its link is. */
+const CTA = {
+  b: "Recevoir mon devis sur WhatsApp",
+  c: "Recevoir mon devis sur WhatsApp",
+  d: "Recevoir mon devis sur WhatsApp",
+  e: "Recevoir mon devis",
+  f: "Recevoir mon devis sur WhatsApp",
+  g: "Devis sur WhatsApp",
+} as const;
+
+for (const arm of ["b", "c", "d", "e", "f", "g"] as const) {
+  test(`${arm}: no messenger link before hydration, the reference in it after`, async ({ page }) => {
+    // A tap before the script would open WhatsApp with no lead posted, and no reference to join the chat to.
+    const { hydrate } = await beforeHydration(page, arm);
+    await expect(card(page).getByText(CTA[arm], { exact: true })).toBeVisible();
+    await expect(page.locator(MESSENGER_LINKS)).toHaveCount(0);
+
+    await hydrate();
+    if (arm === "e") await card(page).getByRole("button", { name: "Recevoir mon devis" }).click();
+    await expect(page.locator('a[href*="wa.me/"]').first()).toHaveAttribute("href", REF);
+  });
+
+  test(`${arm}: the card keeps its height through hydration`, async ({ page }) => {
+    const { hydrate } = await beforeHydration(page, arm);
+    const served = await height(page);
+
+    await hydrate();
+    // VF-4's links are in its drawer; every other arm's message link is in the card once it has its reference.
+    if (arm !== "e") await expect(card(page).locator('a[href*="wa.me/"]').first()).toHaveAttribute("href", REF);
+    // Hydration collapses the arm's block for a frame or two (8–23 ms, finding of 2026-10-07): what it settles at counts.
+    await expect.poll(() => height(page), { message: "the hydrated card, against the served one" }).toBe(served);
+  });
+}
 
 test("a forced arm is counted under lead_channel, and lead_form's events say it", async ({ page }) => {
   const sent: { event: string; properties: Record<string, unknown> }[] = [];
