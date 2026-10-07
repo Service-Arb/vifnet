@@ -28,6 +28,11 @@
      family name brand.toml can spell. */
   --brand-font-sans: var(--font-instrument-sans);
   --brand-font-display: var(--font-fraunces);
+  /* The messengers' own colours, for their app badges (Figma "Lead form A/B",
+     messengers v3): their brand rules, not the palette's. */
+  --whatsapp: #25d366;
+  --telegram: #2aabee;
+  --messenger-ink: #ffffff;
 }
 
 /* The frame's icons (Figma 5:5), one file each in assets/icons, painted in the
@@ -62,13 +67,38 @@
 .vf-icon-x {
   --vf-icon: url("../assets/icons/x.svg");
 }
-/* The messengers' own marks, unchanged (their brand rules): painted in a
-   token, not their brand hex — the palette has none for them. */
+/* The messengers' app badges, as their brand rules draw them and the same on
+   every surface (a gold button too): WhatsApp's white glyph on its green
+   disc; Telegram's disc in its blue, the plane cut out of it showing white.
+   Both fill their box; the glyphs are Simple Icons' (CC0). */
+.vf-icon-whatsapp,
+.vf-icon-telegram {
+  mask: none;
+  border-radius: 9999px;
+}
 .vf-icon-whatsapp {
-  --vf-icon: url("../assets/icons/whatsapp.svg");
+  background-color: var(--whatsapp);
 }
 .vf-icon-telegram {
+  /* White only inside the disc's edge, under the cut-out plane. */
+  padding: 15%;
+  background: var(--messenger-ink) content-box;
+}
+.vf-icon-whatsapp::after,
+.vf-icon-telegram::after {
+  content: "";
+  position: absolute;
+  mask: var(--vf-icon) center / 100% 100% no-repeat;
+}
+.vf-icon-whatsapp::after {
+  --vf-icon: url("../assets/icons/whatsapp.svg");
+  inset: 20%;
+  background-color: var(--messenger-ink);
+}
+.vf-icon-telegram::after {
   --vf-icon: url("../assets/icons/telegram.svg");
+  inset: 0;
+  background-color: var(--telegram);
 }
 .vf-icon-google-g {
   background: url("../assets/icons/google-g.svg") center / 100% 100% no-repeat;

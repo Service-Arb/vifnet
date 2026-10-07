@@ -107,8 +107,8 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
           // The kit draws `phone` before every call inside an arm («Être rappelé», its submit, the squares).
           phone: <Icon name="phone" className={glyph} />,
           callback: <Icon name="phone" className={glyph} />,
-          // The mark in the leaf token, not WhatsApp's own green: the palette has none for it.
-          whatsapp: <Icon name="whatsapp" className={`${glyph} text-positive`} />,
+          // The apps' own badges, in their colours (`app/globals.css`), on every surface.
+          whatsapp: <Icon name="whatsapp" className={glyph} />,
           telegram: <Icon name="telegram" className={glyph} />,
         };
   return (

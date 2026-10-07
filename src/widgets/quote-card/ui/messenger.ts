@@ -12,10 +12,10 @@ export interface MessengerShape {
 
 /**
  * The message ready (and the bot's card): the frame's 72 px box in the leaf
- * tint, the title 14/18 semibold forest over two lines of 12/16.
+ * tint, the badge at 24, the title 14/18 semibold forest over two lines of 12/16.
  */
 const PREVIEW =
-  "items-center gap-3 rounded-xl bg-hover px-3 py-2.5 [&>div>p:first-child]:text-sm [&>div>p:first-child]:leading-[18px] [&>div>p:first-child]:font-semibold [&>div>p:first-child]:text-brand [&>div>p:last-child]:text-xs [&>div>p:last-child]:leading-4";
+  "items-center gap-3 [&>span>span]:size-6 rounded-xl bg-hover px-3 py-2.5 [&>div>p:first-child]:text-sm [&>div>p:first-child]:leading-[18px] [&>div>p:first-child]:font-semibold [&>div>p:first-child]:text-brand [&>div>p:last-child]:text-xs [&>div>p:last-child]:leading-4";
 
 /** A channel in a menu (VF-1's select, VF-5's chip): its name 14/20 over its line in 12/16. */
 const MENU_OPTION = "py-2 [&_span.flex-col>span:first-child]:text-sm [&_span.flex-col>span:last-child]:text-xs";
