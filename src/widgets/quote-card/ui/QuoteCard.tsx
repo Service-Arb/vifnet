@@ -16,6 +16,9 @@ const TAX_CREDIT = 0.5;
 
 const NO_MESSENGERS: MessengerFacts = { whatsapp: null, telegram: null };
 
+/** The price list's frequency question (`shared/config/pricing.ts`), by its id. */
+const TIMING = { input: "frequency" } as const;
+
 export interface QuoteCardProps {
   copy: Copy;
   /** The anchor every CTA on the page points at (`#devis`). */
@@ -93,7 +96,8 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
     arm === null
       ? { phone, callback: phone }
       : {
-          phone,
+          // The kit draws `phone` before every call inside an arm («Être rappelé», its submit, the squares).
+          phone: <Icon name="phone" className={glyph} />,
           callback: <Icon name="phone" className={glyph} />,
           // The mark in the leaf token, not WhatsApp's own green: the palette has none for it.
           whatsapp: <Icon name="whatsapp" className={`${glyph} text-positive`} />,
@@ -135,6 +139,8 @@ export function QuoteCard({ copy, id, place, contact, renderedAt, pricing, need,
       messenger={messenger}
       messengers={messengers}
       refPrefix={MESSAGE_REF_PREFIX}
+      // The regular clean's frequency is the message's timing line («Fréquence : toutes les 2 semaines»).
+      messengerTiming={TIMING}
       brand={site.brand.name}
       bookingVariant={bookingVariant}
       text={text}

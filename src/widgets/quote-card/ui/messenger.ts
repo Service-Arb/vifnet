@@ -1,6 +1,6 @@
 import type { LeadCaptureText, MessengerFacts, MessengerKind, MessengerVariant } from "@evinvest/kitstart";
 import type { MessengerCopy } from "@/entities/content";
-import { AFTER_PHONE, type Look } from "./look";
+import { AFTER_PHONE, type Look, WIDE_BUTTON } from "./look";
 
 /** What a `lead_channel` arm changes on the card: the words over the kit's, the parts' look, and the lede. */
 export interface MessengerShape {
@@ -9,18 +9,6 @@ export interface MessengerShape {
   /** The lede under the title; `null`: none — the arm draws its own there (VF-5's chip). */
   lede: string | null;
 }
-
-/**
- * The frame's buttons inside an arm (kitstart's messenger links and squares
- * take no class of their own): 52 px, rounded-xl, 16/24 bold, as the card's submit —
- * not the kit's text links (`variant="link"`: «Autre canal», «Copier le message»).
- */
-const BUTTONS =
-  "[&_[data-slot=button]:not(.underline-offset-4)]:min-h-[52px] [&_[data-slot=button]:not(.underline-offset-4)]:rounded-xl [&_[data-slot=button]:not(.underline-offset-4)]:text-base [&_[data-slot=button]:not(.underline-offset-4)]:leading-6 [&_[data-slot=button]:not(.underline-offset-4)]:font-bold [&_[data-slot=button]:not(.underline-offset-4)]:shadow-sm";
-
-/** {@link BUTTONS} for VF-4's one button, the drawer's trigger — written out whole, for Tailwind to see. */
-const TRIGGER =
-  "[&_[data-slot=drawer-trigger]]:min-h-[52px] [&_[data-slot=drawer-trigger]]:rounded-xl [&_[data-slot=drawer-trigger]]:text-base [&_[data-slot=drawer-trigger]]:leading-6 [&_[data-slot=drawer-trigger]]:font-bold [&_[data-slot=drawer-trigger]]:shadow-sm";
 
 /**
  * The message ready (and the bot's card): the frame's 72 px box in the leaf
@@ -37,50 +25,65 @@ const TILE =
   "h-[42px] gap-1.5 rounded-xl border-input bg-background px-2 text-sm leading-5 text-slate-700 shadow-none data-[state=on]:border-primary data-[state=on]:bg-primary/10 data-[state=on]:font-semibold data-[state=on]:text-brand data-[state=on]:shadow-[inset_0_0_0_1px_var(--primary)]";
 
 /**
+ * The buttons beside the main one: an outline one (VF-3's [Telegram][Être
+ * rappelé]) is the frame's 52 px white button; a text link («ou via
+ * Telegram», the QR code's «Être rappelé») is 14/20 semibold in leaf.
+ */
+const SECONDARY =
+  "rounded-xl text-sm leading-5 font-semibold [&:not(.underline-offset-4)]:min-h-[52px] [&:not(.underline-offset-4)]:border-input [&:not(.underline-offset-4)]:font-bold [&:not(.underline-offset-4)]:text-brand [&.underline-offset-4]:min-h-0 [&.underline-offset-4]:text-primary-ink";
+
+/**
  * Parts every arm shares. The slot is the frame's 72 px for each of its
  * states — `min-h`, not `h`: the QR code a computer draws in it is taller,
  * and the frame lets the card grow there (VF-3 on a computer, 808 px).
- * The channel row under the form goes: every arm offers the call itself.
+ * The channel row under the form goes, and so does the call leading above it
+ * while the place is open (`primary`): every arm offers the call itself, and
+ * the sticky bar has it (Figma v3 draws neither).
  */
 const BASE: Look = {
   // One column at every width: the postcode is the arm's only field beside it, and spans the card (VF-3 on a computer).
   contact: "grid gap-3",
+  // The submit is the arm's: the box left here holds only the no-script submit,
+  // whose <noscript> is no box with a script — `contents` drops the box's gap with it.
+  trust: "contents",
+  primary: "hidden",
+  others: "hidden",
   // `min-w-0`: a grid item of the contact block, which a button's unbroken label would widen past the card.
-  messenger: `min-w-0 gap-3 ${BUTTONS}`,
+  messenger: "min-w-0 gap-3",
   messengerSlot: "min-h-[72px]",
+  // The card's submit, 52 px: the label is wide, so the frame's 16 px sides rather than 32.
+  messengerCta: `${WIDE_BUTTON} px-4`,
+  messengerSecondary: SECONDARY,
+  messengerSquare: "size-[52px] rounded-xl border-input",
   messengerPreview: PREVIEW,
   messengerOption: MENU_OPTION,
-  messengerSquare: "size-[52px] rounded-xl border-input",
   messengerHint: `vf-shield-before ${AFTER_PHONE}`,
   messengerReturn: "gap-3 rounded-2xl px-7",
-  others: "hidden",
 };
 
 const LOOKS: Readonly<Record<MessengerKind, Look>> = {
-  // VF-1: the select inside the phone's box, one 50 px field; the input loses its own frame.
+  // VF-1: the select inside the phone's box, one 50 px field; the input loses its own frame; the trigger in the leaf tint.
   select: {
     messengerPicker:
       "h-[50px] rounded-xl border-input bg-background shadow-none [&_input]:h-full [&_input]:rounded-none [&_input]:border-0 [&_input]:shadow-none [&_input]:focus-visible:ring-0 has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring",
+    messengerTrigger: "rounded-r-xl bg-hover text-sm font-semibold text-brand",
   },
   // VF-2: "Recevoir mon devis par" 14/20 semibold forest, the tiles in a row.
   tiles: {
-    messenger: `min-w-0 gap-3 ${BUTTONS} [&>p:first-child]:-mb-1.5 [&>p:first-child]:font-semibold [&>p:first-child]:text-brand`,
+    messenger: "min-w-0 gap-3 [&>p:first-child]:-mb-1.5 [&>p:first-child]:font-semibold [&>p:first-child]:text-brand",
     messengerPicker: "gap-1.5",
-    messengerOption: TILE,
+    messengerTile: TILE,
   },
   // VF-3: slot A is a button (52) or the phone (50), not the preview's 72.
   swap: { messengerSlot: "min-h-[52px]" },
-  // VF-4: the card's one button is the drawer's trigger (its slot says so, not `button`);
-  // the drawer's channels as cards, the recommended one gold at 10 %.
+  // VF-4: the drawer's channels as cards, the recommended one gold at 10 %.
   sheet: {
-    messenger: `min-w-0 gap-3 ${TRIGGER}`,
-    // The drawer is portalled out of the card: its call button takes the card's look here.
-    messengerPicker: `gap-3 px-5 pt-2 pb-6 [&_h2]:text-2xl [&_h2]:leading-8 [&_h2]:text-brand ${BUTTONS}`,
+    messengerPicker: "gap-3 px-5 pt-2 pb-6 [&_h2]:text-2xl [&_h2]:leading-8 [&_h2]:text-brand",
     messengerOption: "gap-3 rounded-xl p-4 [&.border-primary]:border-2 [&.border-primary]:bg-primary/10 [&:not(.border-primary)]:border-input",
   },
-  // VF-5: the chip 8 px under the title (the card's rows are 20 apart), in the leaf tint.
+  // VF-5: the chip 4 px under the title (the card's rows are 20 apart), 30 high, in the leaf tint.
   chip: {
-    messengerPicker: "-mt-3 h-8 gap-1.5 bg-hover px-3 text-sm leading-5 font-semibold text-brand",
+    messengerTrigger: "-mt-4 h-[30px] gap-1.5 bg-hover px-3 text-sm leading-5 font-semibold text-brand",
   },
   split: {},
   // Not aquafix's arms: never drawn here (`MESSENGER_ARMS`).
@@ -94,10 +97,7 @@ const LOOKS: Readonly<Record<MessengerKind, Look>> = {
  * No WhatsApp on the place, a bot: the control, «ou via Telegram» under its
  * submit — 14/20 semibold in leaf (Figma "Lead form A/B", the fallback "switched off in the panel").
  */
-const FALLBACK: Look = {
-  trust:
-    "w-full gap-3 [&_a[data-intent=telegram]]:min-h-0 [&_a[data-intent=telegram]]:text-sm [&_a[data-intent=telegram]]:leading-5 [&_a[data-intent=telegram]]:font-semibold [&_a[data-intent=telegram]]:text-primary-ink",
-};
+const FALLBACK: Look = { messengerSecondary: SECONDARY };
 
 /**
  * The arm's words, look and lede. Only a place with WhatsApp draws the arm —

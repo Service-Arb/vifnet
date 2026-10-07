@@ -15,7 +15,7 @@ export const FIELD =
   "h-[50px] rounded-xl bg-background py-3.5 text-sm leading-5 text-slate-700 shadow-none md:text-sm placeholder:text-slate-400 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring";
 
 /** The frame's full-width gold buttons: Button lg, 52 px at 32 × 14 and 16/24 bold, with shadow-sm. */
-const WIDE_BUTTON = "h-[52px] w-full px-(--control-px) py-3.5 text-(length:--control-text) leading-6 font-bold shadow-sm hover:bg-amber-400";
+export const WIDE_BUTTON = "h-[52px] w-full px-(--control-px) py-3.5 text-(length:--control-text) leading-6 font-bold shadow-sm hover:bg-amber-400";
 
 /** The 12 px line under the phone (`afterPhone`), beside the shield. */
 export const AFTER_PHONE = "vf-after-phone -mt-1.5 flex items-start gap-1.5 text-xs leading-4 text-ink-soft";

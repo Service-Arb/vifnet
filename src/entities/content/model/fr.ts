@@ -101,7 +101,9 @@ export const FR = {
     doneBody: ["Nous appelons le ", " d’ici 15 minutes avec un devis ferme."],
     messenger: {
       words: {
-        messagePrice: "Estimation vue sur le site : env. {price}",
+        messagePrice: "Estimation vue sur le site : env. {price} / passage",
+        messageTiming: "Fréquence : {timing}",
+        messengerPreviewPrice: "env. {price}",
         messengerOptionWhatsappNote: "Recommandé · devis déjà rédigé",
         messengerOptionCallNote: "On vous rappelle sous 15 min",
         messengerWhatsappHint: "Devis rédigé dans WhatsApp · numéro facultatif.",

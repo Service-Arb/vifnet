@@ -101,7 +101,9 @@ export const EN = {
     doneBody: ["We'll call ", " within 15 minutes with a firm quote."],
     messenger: {
       words: {
-        messagePrice: "Estimate seen on the site: about {price}",
+        messagePrice: "Estimate seen on the site: about {price} / visit",
+        messageTiming: "Frequency: {timing}",
+        messengerPreviewPrice: "about {price}",
         messengerOptionWhatsappNote: "Recommended · quote already written",
         messengerOptionCallNote: "We call you back within 15 min",
         messengerWhatsappHint: "Quote written in WhatsApp · number optional.",
