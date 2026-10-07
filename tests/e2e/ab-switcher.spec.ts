@@ -58,8 +58,8 @@ async function nextDocumentCookies(page: Page): Promise<Record<string, string>> 
 
 test("a forced visit shows the chip with the forced arm", async ({ page }) => {
   await page.goto("/fr?ab_lead_form=b");
-  // The badges, in the menu's order: lead_form, then booking_provider.
-  await expect(chip(page)).toHaveText(/^A\/B\s*b\s*a$/);
+  // The badges, in the menu's order: lead_form, booking_provider, then lead_channel.
+  await expect(chip(page)).toHaveText(/^A\/B\s*b\s*a\s*a$/);
 });
 
 test.describe("a new visitor", () => {
@@ -94,7 +94,7 @@ test("the menu switches the lead form to price first", async ({ page }) => {
 
   await expect(page).toHaveURL(/[?&]ab_lead_form=c(&|#|$)/);
   await expect(card.getByRole("radio", { name: "Je ne sais pas" }).first()).toBeVisible();
-  await expect(chip(page)).toHaveText(/^A\/B\s*c\s*a$/);
+  await expect(chip(page)).toHaveText(/^A\/B\s*c\s*a\s*a$/);
 });
 
 test.describe("from the menu", () => {
@@ -110,9 +110,10 @@ test.describe("from the menu", () => {
     const cookies = await sent;
     expect(cookies).not.toHaveProperty("ab_lead_form");
     expect(cookies).not.toHaveProperty("ab_booking_provider");
+    expect(cookies).not.toHaveProperty("ab_lead_channel");
     expect(cookies).toMatchObject({ ab__qa: "1" });
     await expect(page).toHaveURL(url => !url.searchParams.has("ab_lead_form"));
-    await expect(chip(page)).toHaveText(/^A\/B\s*[abc]\s*[ab]$/);
+    await expect(chip(page)).toHaveText(/^A\/B\s*[abc]\s*[ab]\s*[a-g]$/);
     const jar = Object.fromEntries((await context.cookies()).map(c => [c.name, c.value]));
     expect(jar).toMatchObject({ ab__qa: "1" });
   });

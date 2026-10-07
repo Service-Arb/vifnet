@@ -5,6 +5,13 @@
 // down, so every price on the page and in the leads file is the baked model's.
 // The operator has put every new visitor on booking_provider's b, so a spec
 // can see the panel's weights reach the proxy; the rest keep the code's.
+//
+// Under `/messengers` the same panel answers for a place that offers both
+// messengers (MESSENGER-CHANNELS-SPEC §4, the local stack's seed): a
+// WhatsApp number and the fake bot `vifnet_devis_bot`. The place has one slug
+// only, so it is a second server under test (`MESSENGER_PORT`) that reads this
+// base, not a second place; the first server's pages — and the geometry the
+// control's specs pin — never see a messenger.
 import { createServer } from "node:http";
 
 const port = Number(process.env["E2E_MOCK_PORT"]);
@@ -14,11 +21,19 @@ const json = (res, status, body) => {
   res.end(JSON.stringify(body));
 };
 
+/** The place as each mode's panel serves it. */
+const PLACES = {
+  "": {},
+  "/messengers": { phone: "+33 6 12 34 56 78", whatsapp: "+33 6 12 34 56 78", telegram: "vifnet_devis_bot" },
+};
+
 createServer((req, res) => {
   const url = new URL(req.url ?? "/", "http://mock");
   if (url.pathname === "/health") return json(res, 200, { ok: true });
-  if (url.pathname === `${base}/pricing`) return json(res, 503, { error: "down" });
-  if (url.pathname === `${base}/locations/vifnet`) return json(res, 200, {});
-  if (url.pathname === `${base}/experiments`) return json(res, 200, { experiments: { booking_provider: { weights: [0, 1] } } });
+  const mode = url.pathname.startsWith("/messengers/") ? "/messengers" : "";
+  const path = url.pathname.slice(mode.length);
+  if (path === `${base}/pricing`) return json(res, 503, { error: "down" });
+  if (path === `${base}/locations/vifnet`) return json(res, 200, PLACES[mode]);
+  if (path === `${base}/experiments`) return json(res, 200, { experiments: { booking_provider: { weights: [0, 1] } } });
   return json(res, 404, { error: "no such route" });
 }).listen(port, "127.0.0.1");

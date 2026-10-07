@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { TEXT } from "@/entities/content";
 import { PANEL_NEED, SUBJECTS } from "@/shared/config/lead";
 import { site } from "@/shared/config/site";
-import { isOpaqueId, leadCreatedBody, PANEL_ANALYTICS_ID, PANEL_FLOW, PANEL_SUSPECT, panelLeadId, panelWebhookOptions, SA_INGEST_SIGNING, uuidV7 } from "@/shared/lib/funnel-event";
+import { isOpaqueId, leadCreatedBody, PANEL_ANALYTICS_ID, PANEL_FLOW, PANEL_MESSENGER, PANEL_SUSPECT, panelLeadId, panelWebhookOptions, SA_INGEST_SIGNING, uuidV7 } from "@/shared/lib/funnel-event";
 
 const lead: Lead = {
   subject: "deep",
@@ -38,7 +38,8 @@ const LEAD_ID = "lead-42-9f8e7d6c";
  * protojson accepts too (the kit writes the sale's properties that way).
  */
 function protoFields(): Map<string, Set<string>> {
-  const proto = readFileSync(new URL("./support/sa-events.proto", import.meta.url), "utf8");
+  // Without its comments: one quotes a regex (`{2,4}`), and its brace would end the message there.
+  const proto = readFileSync(new URL("./support/sa-events.proto", import.meta.url), "utf8").replace(/\/\/.*$/gm, "");
   const messages = new Map<string, Set<string>>();
   for (const [, name, body] of proto.matchAll(/^message (\w+) \{([^}]*)\}/gm)) {
     const fields = new Set<string>();
@@ -147,6 +148,26 @@ describe("lead.created for the panel", () => {
   it("keeps a job that is none of ours as it was posted", () => {
     const [event] = leadCreatedBody({ ...lead, subject: "windows" }, ctx, "vifnet-site").events;
     expect(event.pii?.["need"]).toBe("windows");
+  });
+
+  // MESSENGER-CHANNELS-SPEC §2.1: the kit decides the channel (`ctx.channel`) and passes the chat's reference.
+  it("sends a messenger lead as the kit names it, with the chat's reference, in the proto's spelling", () => {
+    const whatsapp = { ...lead, channel: "whatsapp" as const, messageRef: "VF-7K3F" };
+    const [wa] = leadCreatedBody(whatsapp, { ...ctx, channel: "whatsapp", messageRef: "VF-7K3F" }, "vifnet-site").events;
+    expect(wa.properties).toEqual({ channel: "whatsapp", message_ref: "VF-7K3F" });
+    keysWithin(wa.properties, "LeadCreatedV1");
+    const [tg] = leadCreatedBody({ ...whatsapp, channel: "telegram" }, { ...ctx, channel: "telegram", messageRef: "VF-7K3F" }, "vifnet-site").events;
+    expect(tg.properties).toEqual({ channel: "telegram", message_ref: "VF-7K3F" });
+  });
+
+  it("keeps the kit's word over the lead's own: a messenger lead the panel cannot take yet is a form", () => {
+    const whatsapp = { ...lead, channel: "whatsapp" as const, messageRef: "VF-7K3F" };
+    expect(leadCreatedBody(whatsapp, { ...ctx, channel: "form" }, "vifnet-site").events[0].properties).toEqual({ channel: "form" });
+  });
+
+  it("names the lead's channel itself for a context built by hand, and no empty reference", () => {
+    expect(leadCreatedBody({ ...lead, channel: "callback" }, ctx, "vifnet-site").events[0].properties).toEqual({ channel: "callback" });
+    expect(leadCreatedBody(lead, { ...ctx, messageRef: "" }, "vifnet-site").events[0].properties).toEqual({ channel: "form" });
   });
 
   it("marks a suspect lead only when the kit says it is one", () => {
@@ -291,6 +312,21 @@ describe("the lead webhook, wired as the site wires it", () => {
     expect(on.bodies).toEqual([withProperties({ channel: "form", analytics_id: meta.analyticsId })]);
     const off = await delivered(panelWebhookOptions("vifnet-site", { panelAnalyticsId: false }), [lead], meta);
     expect(off.bodies).toEqual([withProperties({ channel: "form" })]);
+  });
+
+  // MESSENGER-CHANNELS-SPEC §2.1, §5: on, since the panel with the messenger channels ships first.
+  it("sends a messenger lead's channel and reference through the outbox, and a form with neither when switched off", async () => {
+    expect(PANEL_MESSENGER).toBe(true);
+    const whatsapp: Lead = { ...lead, channel: "whatsapp", messageRef: "VF-7K3F" };
+    const telegram: Lead = { ...lead, channel: "telegram", messageRef: "VF-9QX2" };
+    const on = await delivered(panelWebhookOptions("vifnet-site"), [whatsapp, telegram, lead]);
+    expect(on.bodies).toEqual([
+      withProperties({ channel: "whatsapp", message_ref: "VF-7K3F" }),
+      withProperties({ channel: "telegram", message_ref: "VF-9QX2" }),
+      withProperties({ channel: "form" }),
+    ]);
+    const off = await delivered(panelWebhookOptions("vifnet-site", { panelMessenger: false }), [whatsapp, telegram]);
+    expect(off.bodies).toEqual([withProperties({ channel: "form" }), withProperties({ channel: "form" })]);
   });
 
   it("switched off, sends no sale", async () => {

@@ -1,7 +1,7 @@
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 import { BREAKPOINTS } from "@evinvest/kitstart/testing/e2e";
-import { abState, LEADS_DB, LOCATIONS_API_URL, MOCK_PORT, PORT, POSTHOG_HOST } from "./env";
+import { abState, LEADS_DB, LOCATIONS_API_URL, MESSENGER_DIR, MESSENGER_LOCATIONS_API_URL, MESSENGER_PORT, MOCK_PORT, PORT, POSTHOG_HOST } from "./env";
 
 // Run through the flake (`nix run .#test`), which supplies `@playwright/test`
 // and the nixpkgs-pinned browsers — the pin is what makes a screenshot render
@@ -50,6 +50,25 @@ export default defineConfig({
         POSTHOG_KEY: "phc_e2e",
         POSTHOG_HOST,
         LOCATIONS_API_URL,
+      },
+    },
+    // The same build with a place that offers both messengers (env.ts,
+    // `MESSENGER_PORT`), for `messenger.spec.ts` only: its own copy of the
+    // build (the ISR cache on disk) and its own leads file.
+    {
+      command: `rm -rf "${MESSENGER_DIR}" && mkdir -p "${MESSENGER_DIR}" && cp -R .next/standalone "${MESSENGER_DIR}/app" && cd "${MESSENGER_DIR}/app" && node server.js`,
+      cwd: "../..",
+      url: `http://localhost:${MESSENGER_PORT}/health`,
+      reuseExistingServer: false,
+      timeout: 60_000,
+      env: {
+        PORT: String(MESSENGER_PORT),
+        HOSTNAME: "127.0.0.1",
+        LEADS_DB_PATH: join(MESSENGER_DIR, "leads.db"),
+        TRUSTED_PROXY: "xff:1",
+        POSTHOG_KEY: "phc_e2e",
+        POSTHOG_HOST,
+        LOCATIONS_API_URL: MESSENGER_LOCATIONS_API_URL,
       },
     },
   ],
